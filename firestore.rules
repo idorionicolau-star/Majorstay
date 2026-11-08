@@ -372,7 +372,50 @@ service cloud.firestore {
         allow create, update, delete: if can(companyId, 'finance', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
       }
 
-      match /reports/{reportId} {
+      
+      // --- MajorStay: Módulo de Hotelaria, Quartos & Estadias ---
+
+      // Quartos (Quadro de Quartos e Configurações)
+      match /rooms/{roomId} {
+        allow get, list: if can(companyId, 'rooms', 'read') || can(companyId, 'dashboard', 'read');
+        allow create, update: if can(companyId, 'rooms', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+        allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
+      }
+
+      // Estadias (Check-in, Extensões, Check-out com proteção anti-fraude)
+      match /stays/{stayId} {
+        allow get, list: if can(companyId, 'rooms', 'read');
+        // Check-in: carimbo do servidor obrigatório (request.time), status inicial 'open', e autor = utilizador
+        allow create: if can(companyId, 'rooms', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
+          && request.resource.data.checkInAt == request.time
+          && request.resource.data.status == 'open'
+          && request.resource.data.openedBy == request.auth.uid;
+        // Atualizações: o checkInAt e openedBy são imutáveis;
+        // Fecho exige checkOutAt == request.time se feito pelo cliente (ou gerido pelo endpoint de checkout);
+        // Gestor pode corrigir mediante permissão.
+        allow update: if can(companyId, 'rooms', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
+          && request.resource.data.checkInAt == resource.data.checkInAt
+          && request.resource.data.openedBy == resource.data.openedBy
+          && (
+            isManagerOf(companyId) ||
+            // Se está a fechar a estadia pelo cliente, checkOutAt tem de ser request.time
+            (request.resource.data.status == 'closed' && request.resource.data.checkOutAt == request.time) ||
+            // Ou prorrogação/extensão mantendo a estadia aberta
+            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied']))
+          );
+        // Eliminação de estadia: apenas gestor
+        allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
+      }
+
+      // Registo de auditoria de hotelaria (correções, anulações, extensões, desvios). Imutável.
+      match /hospitalityAudit/{logId} {
+        allow get, list: if isManagerOf(companyId);
+        allow create: if isEmployeeOf(companyId)
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.timestamp == request.time;
+        allow update, delete: if false;
+      }
+match /reports/{reportId} {
         // Relatórios são tipicamente apenas de leitura para a maioria dos papéis.
         allow get, list: if can(companyId, 'reports', 'read');
         allow create, update, delete: if can(companyId, 'reports', 'write');

@@ -550,3 +550,86 @@ type CatalogProduct = Omit<
 >;
 
 export type CatalogCategory = { id: string; name: string };
+
+// ==========================================
+// HOSPITALITY / QUARTOS & ESTADIAS (MajorStay)
+// ==========================================
+
+export type RoomStatus = 'free' | 'occupied' | 'overtime' | 'cleaning' | 'maintenance';
+
+export type RoomType = 'standard' | 'suite' | 'luxo' | 'executivo' | 'casal' | 'solteiro';
+
+export type Room = {
+  id: string;
+  name: string; // Ex: "Quarto 101"
+  type?: RoomType | string;
+  ratePerHour: number; // Preço por hora em MT
+  minimumHours: number; // Mínimo de horas (padrão: 1)
+  cleaningDurationMinutes?: number; // Duração estimada da limpeza (minutos)
+  active: boolean;
+  status: RoomStatus;
+  currentStayId?: string; // ID da estadia ativa (quando occupied ou overtime)
+  notes?: string;
+  createdAt: string | any;
+  updatedAt?: string | any;
+};
+
+export type StayExtension = {
+  hours: number;
+  addedAt: string | any;
+  addedBy: string; // ID do utilizador
+  addedByName?: string;
+  notes?: string;
+};
+
+export type StayStatus = 'open' | 'closed' | 'cancelled';
+
+export type Stay = {
+  id: string;
+  roomId: string;
+  roomName: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientDoc?: string; // BI / Passaporte
+  checkInAt: string | any; // Timestamp do servidor (Firestore ou ISO)
+  expectedCheckOutAt?: string | any;
+  checkOutAt?: string | any;
+  contractedHours: number; // Horas inicialmente contratadas (ex: 1, 2)
+  extensions?: StayExtension[]; // Prorrogações efetuadas
+  billedHours?: number; // Total de horas faturadas (hora começada = hora paga)
+  ratePerHourApplied: number; // Tarifa horária aplicada na estadia
+  totalAmountDue: number; // Total calculado a cobrar
+  totalAmountPaid: number; // Total pago pelo cliente
+  paymentMethod?: string; // Dinheiro, M-Pesa, E-Mola, Cartão, Ponto24
+  openedBy: string; // ID do funcionário que abriu o check-in
+  openedByName?: string;
+  closedBy?: string; // ID do funcionário que fechou o check-out
+  closedByName?: string;
+  status: StayStatus;
+  saleId?: string; // ID da venda correspondente gerada no Caixa
+  notes?: string;
+  createdAt: string | any;
+};
+
+export type HospitalityAuditAction =
+  | 'create_stay'
+  | 'extend_stay'
+  | 'close_stay'
+  | 'cancel_stay'
+  | 'edit_stay'
+  | 'rate_change'
+  | 'delete_stay';
+
+export type HospitalityAuditLog = {
+  id: string;
+  action: HospitalityAuditAction;
+  targetId: string; // stayId ou roomId
+  targetType: 'stay' | 'room';
+  before?: Record<string, any>;
+  after?: Record<string, any>;
+  reason: string;
+  userId: string;
+  userName?: string;
+  timestamp: string | any;
+  companyId: string;
+};

@@ -1,4 +1,5 @@
-import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification } from "@/lib/types";
+import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification, Room, Stay } from "@/lib/types";
+import { calculateStayPricing } from "@/lib/hospitality-calc";
 import { GUEST_PRODUCTS, GUEST_LOCATIONS, guestLocation } from "@/lib/demo-data";
 import { GUEST_TRIAL_LIMIT_MS, GUEST_TRIAL_GAP_MS } from "@/lib/guest-trial";
 
@@ -900,4 +901,213 @@ function daysAgoIso(days: number, hour = 11, minute = 0): string {
   d.setDate(d.getDate() - days);
   d.setHours(hour, minute, 0, 0);
   return d.toISOString();
+}
+
+
+// --- MajorStay: Quartos & Estadias (Modo Convidado) --------------------------
+
+export const INITIAL_GUEST_ROOMS: Room[] = [
+  {
+    id: "room-101",
+    name: "Quarto 101 - Standard",
+    type: "standard",
+    ratePerHour: 300,
+    minimumHours: 1,
+    cleaningDurationMinutes: 15,
+    active: true,
+    status: "occupied",
+    currentStayId: "stay-demo-1",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "room-102",
+    name: "Quarto 102 - Suíte Casal",
+    type: "suite",
+    ratePerHour: 450,
+    minimumHours: 2,
+    cleaningDurationMinutes: 20,
+    active: true,
+    status: "overtime",
+    currentStayId: "stay-demo-2",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "room-103",
+    name: "Quarto 103 - Executivo",
+    type: "executivo",
+    ratePerHour: 500,
+    minimumHours: 2,
+    cleaningDurationMinutes: 25,
+    active: true,
+    status: "free",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "room-104",
+    name: "Quarto 104 - Standard Solteiro",
+    type: "solteiro",
+    ratePerHour: 250,
+    minimumHours: 1,
+    cleaningDurationMinutes: 15,
+    active: true,
+    status: "cleaning",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "room-105",
+    name: "Quarto 105 - Suíte Luxo",
+    type: "luxo",
+    ratePerHour: 600,
+    minimumHours: 2,
+    cleaningDurationMinutes: 30,
+    active: true,
+    status: "free",
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export const INITIAL_GUEST_STAYS: Stay[] = [
+  {
+    id: "stay-demo-1",
+    roomId: "room-101",
+    roomName: "Quarto 101 - Standard",
+    clientName: "Hóspede Particular",
+    clientPhone: "84 123 4567",
+    checkInAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+    contractedHours: 1,
+    ratePerHourApplied: 300,
+    totalAmountDue: 300,
+    totalAmountPaid: 300,
+    paymentMethod: "Dinheiro",
+    openedBy: GUEST_USER.id,
+    openedByName: GUEST_USER.username,
+    status: "open",
+    createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "stay-demo-2",
+    roomId: "room-102",
+    roomName: "Quarto 102 - Suíte Casal",
+    clientName: "Carlos Mondlane",
+    clientPhone: "87 987 6543",
+    checkInAt: new Date(Date.now() - 85 * 60 * 1000).toISOString(),
+    contractedHours: 1,
+    ratePerHourApplied: 450,
+    totalAmountDue: 900,
+    totalAmountPaid: 450,
+    paymentMethod: "M-Pesa",
+    openedBy: GUEST_USER.id,
+    openedByName: GUEST_USER.username,
+    status: "open",
+    createdAt: new Date(Date.now() - 85 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getGuestRooms(): Room[] {
+  return readStore<Room[]>("rooms", () => INITIAL_GUEST_ROOMS);
+}
+
+export function addGuestRoom(room: Room): void {
+  writeStore("rooms", [...getGuestRooms(), room]);
+}
+
+export function updateGuestRoom(id: string, data: Partial<Room>): void {
+  writeStore("rooms", getGuestRooms().map((r) => (r.id === id ? { ...r, ...data } : r)));
+}
+
+export function deleteGuestRoom(id: string): void {
+  writeStore("rooms", getGuestRooms().filter((r) => r.id !== id));
+}
+
+export function getGuestStays(): Stay[] {
+  return readStore<Stay[]>("stays", () => INITIAL_GUEST_STAYS);
+}
+
+export function addGuestStay(stay: Stay): void {
+  writeStore("stays", [stay, ...getGuestStays()]);
+  if (stay.roomId) {
+    updateGuestRoom(stay.roomId, {
+      status: "occupied",
+      currentStayId: stay.id,
+    });
+  }
+}
+
+export function updateGuestStay(id: string, data: Partial<Stay>): void {
+  writeStore("stays", getGuestStays().map((s) => (s.id === id ? { ...s, ...data } : s)));
+}
+
+export function checkoutGuestStay(stayId: string, options?: { amountPaid?: number; paymentMethod?: string; roomNextStatus?: 'cleaning' | 'free'; notes?: string }) {
+  const stays = getGuestStays();
+  const stay = stays.find((s) => s.id === stayId);
+  if (!stay) throw new Error("Estadia não encontrada.");
+  const rooms = getGuestRooms();
+  const room = rooms.find((r) => r.id === stay.roomId);
+
+  const now = new Date();
+  const pricing = calculateStayPricing({
+    checkInAt: stay.checkInAt,
+    checkOutAt: now,
+    contractedHours: stay.contractedHours,
+    ratePerHour: stay.ratePerHourApplied || room?.ratePerHour || 300,
+    graceMinutes: 2,
+  });
+
+  const amountPaid = typeof options?.amountPaid === 'number' ? options.amountPaid : pricing.totalAmountDue;
+  const paymentMethod = options?.paymentMethod || stay.paymentMethod || 'Dinheiro';
+  const guideNumber = `VD-${now.getFullYear()}/${String(Math.floor(Math.random() * 800) + 200).padStart(4, '0')}`;
+  const saleId = `guest-sale-${Date.now()}`;
+
+  const closedStay: Stay = {
+    ...stay,
+    status: 'closed',
+    checkOutAt: now.toISOString(),
+    billedHours: pricing.billedHours,
+    totalAmountDue: pricing.totalAmountDue,
+    totalAmountPaid: amountPaid,
+    paymentMethod,
+    closedBy: GUEST_USER.id,
+    closedByName: GUEST_USER.username,
+    saleId,
+    notes: options?.notes ? (stay.notes ? stay.notes + ' | ' + options.notes : options.notes) : stay.notes,
+  };
+
+  const sale: Sale = {
+    id: saleId,
+    date: now.toISOString().slice(0, 10),
+    productId: stay.roomId,
+    productName: `Estadia: ${stay.roomName || room?.name || 'Quarto'}`,
+    quantity: pricing.billedHours,
+    unit: 'horas',
+    unitPrice: pricing.ratePerHour,
+    subtotal: pricing.totalAmountDue,
+    totalValue: pricing.totalAmountDue,
+    amountPaid,
+    soldBy: GUEST_USER.username,
+    guideNumber,
+    location: room?.name || 'Geral',
+    status: 'Pago',
+    documentType: 'Venda a Dinheiro',
+    clientName: stay.clientName || 'Hóspede Particular',
+    paymentMethod,
+    notes: `Quarto: ${stay.roomName}. Horas: ${pricing.billedHours}h (${pricing.contractedHours}h contr. + ${pricing.overtimeHours}h exc.).`,
+    timestamp: fsTimestamp(now),
+  };
+
+  // Add sale to guest sales
+  addGuestSale(sale);
+
+  // Update stays in store
+  writeStore("stays", getGuestStays().map((s) => (s.id === stayId ? closedStay : s)));
+
+  // Update room
+  const nextStatus = options?.roomNextStatus === 'free' ? 'free' : 'cleaning';
+  if (room) {
+    updateGuestRoom(room.id, {
+      status: nextStatus,
+      currentStayId: undefined,
+    });
+  }
+
+  return { stay: closedStay, sale, pricing };
 }

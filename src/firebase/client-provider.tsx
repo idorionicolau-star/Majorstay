@@ -6,6 +6,7 @@ import { FirebaseProvider } from '@/firebase/provider';
 import { InventoryProvider } from '@/context/inventory-context';
 import { CRMProvider } from '@/context/crm-context';
 import { FinanceProvider } from '@/context/finance-context';
+import { RoomsProvider } from '@/context/rooms-context';
 import { ClientLayout } from '@/components/layout/client-layout';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
@@ -16,8 +17,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <InventoryProvider>
           <CRMProvider>
             <FinanceProvider>
+              <RoomsProvider>
               <FirebaseErrorListener />
               <ClientLayout>{children}</ClientLayout>
+            </RoomsProvider>
             </FinanceProvider>
           </CRMProvider>
         </InventoryProvider>

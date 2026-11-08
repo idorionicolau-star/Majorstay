@@ -5,7 +5,8 @@ function getCredential() {
     const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (serviceAccountKey) {
         try {
-            const parsed = JSON.parse(serviceAccountKey);
+            let parsed = JSON.parse(serviceAccountKey);
+            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
             return admin.credential.cert(parsed);
         } catch (e) {
             console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e);
