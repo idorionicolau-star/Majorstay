@@ -1,5 +1,7 @@
-
 'use client';
+
+import { BRAND } from '@/lib/brand';
+
 
 import { haul } from '@/lib/haul';
 import { useState, useContext } from 'react';
@@ -138,10 +140,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Image src="/logo.svg" alt="MajorStockX Logo" width={48} height={48} />
+            <Image src="/logo.svg" alt={`${BRAND.name} Logo`} width={48} height={48} />
           </div>
           <CardTitle className="text-2xl font-bold">Bem-vindo de volta!</CardTitle>
-          <CardDescription>Faça login para aceder ao MajorStockX.</CardDescription>
+          <CardDescription>Faça login para aceder ao {BRAND.name}.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -265,11 +267,11 @@ export default function LoginPage() {
           </p>
           <p className="text-xs text-muted-foreground">
             Problemas a entrar?{" "}
-            <a href={whatsappLink("Olá, estou com problemas a entrar na MajorStockX.")} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+            <a href={whatsappLink(`Olá, estou com problemas a entrar no ${BRAND.name}.`)} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
               WhatsApp {SUPPORT.whatsappDisplay}
             </a>
             {" "}ou{" "}
-            <a href={emailLink("Problemas a entrar na MajorStockX")} className="font-medium text-primary hover:underline">email</a>
+            <a href={emailLink(`Problemas a entrar no ${BRAND.name}`)} className="font-medium text-primary hover:underline">email</a>
           </p>
           <p className="text-[11px] text-muted-foreground">
             <Link href="/termos" className="hover:underline">Termos de Uso</Link> · <Link href="/privacidade" className="hover:underline">Privacidade</Link>

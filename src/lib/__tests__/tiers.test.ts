@@ -24,6 +24,7 @@ describe('planos: o que cada empresa tem', () => {
     it('Básico: sem produção, sem encomendas, 1 utilizador', () => {
         expect(companyHas(basico, 'production')).toBe(false);
         expect(companyHas(basico, 'orders')).toBe(false);
+        expect(companyHas(basico, 'rooms')).toBe(true);
         expect(companyHas(basico, 'tapSell')).toBe(true); // vender por toque em todos os planos
         expect(companyMaxUsers(basico)).toBe(1);
     });

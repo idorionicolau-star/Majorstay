@@ -1,5 +1,7 @@
-
 'use client';
+
+import { BRAND } from '@/lib/brand';
+
 
 import Link from "next/link";
 import Image from "next/image";
@@ -44,14 +46,14 @@ export function MobileNav({ onLinkClick }: MobileNavProps) {
                         <div className="relative w-8 h-8">
                             <Image
                                 src="/logo.svg"
-                                alt="MajorStockX Logo"
+                                alt={`${BRAND.name} Logo`}
                                 fill
                                 className="object-contain"
                                 priority
                             />
                         </div>
                     </div>
-                    <span className="ml-3 text-xl font-headline font-bold text-slate-800 dark:text-white">MajorStockX</span>
+                    <span className="ml-3 text-xl font-headline font-bold text-slate-800 dark:text-white">{BRAND.name}</span>
                 </Link>
             </div>
             <nav className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">

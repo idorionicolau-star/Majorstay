@@ -1,5 +1,7 @@
+'use client';
 
-"use client";
+import { BRAND } from '@/lib/brand';
+
 
 import Link from "next/link";
 import Image from "next/image";
@@ -38,13 +40,13 @@ export function Sidebar() {
                     <div className="relative w-10 h-10 shrink-0">
                         <Image
                             src="/logo.svg"
-                            alt="MajorStockX Logo"
+                            alt={`${BRAND.name} Logo`}
                             fill
                             className="object-contain"
                             priority
                         />
                     </div>
-                    <span className="font-headline font-bold text-xl tracking-tight text-primary">MajorStockX</span>
+                    <span className="font-headline font-bold text-xl tracking-tight text-primary">{BRAND.name}</span>
                 </Link>
             </div>
 

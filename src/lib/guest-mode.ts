@@ -243,7 +243,7 @@ export function exitGuestMode(): void {
 
 export const GUEST_COMPANY: Company = {
   id: GUEST_COMPANY_ID,
-  name: "Ferragens & Construção Central (Convidado)",
+  name: "Pousada & Bar Central (Convidado)",
   businessType: "manufacturer",
   phone: "+258 84 300 1234",
   address: "Av. de Moçambique, Km 7, Maputo",
@@ -279,6 +279,7 @@ export const GUEST_USER: Employee = {
   permissions: {
     dashboard: "write",
     diagnostico: "write",
+    rooms: "write",
     inventory: "write",
     sales: "write",
     customers: "write",

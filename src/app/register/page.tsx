@@ -1,5 +1,7 @@
-
 'use client';
+
+import { BRAND } from '@/lib/brand';
+
 
 import { haul } from '@/lib/haul';
 import { useState, useContext, useEffect } from 'react';
@@ -150,10 +152,10 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Image src="/logo.svg" alt="MajorStockX Logo" width={48} height={48} />
+            <Image src="/logo.svg" alt={`${BRAND.name} Logo`} width={48} height={48} />
           </div>
           <CardTitle className="text-2xl font-bold">{googleOnly ? 'Falta só a empresa' : 'Crie a sua Conta'}</CardTitle>
-          <CardDescription>{googleOnly ? 'Escreva o nome da sua empresa e continue com o Google.' : 'Registe a sua empresa para começar a usar o MajorStockX.'}</CardDescription>
+          <CardDescription>{googleOnly ? 'Escreva o nome da sua empresa e continue com o Google.' : `Registe a sua empresa para começar a usar o ${BRAND.name}.`}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

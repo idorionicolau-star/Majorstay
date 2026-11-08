@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 
 import './globals.css';
 import { AppProviders } from '@/firebase/client-provider';
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   // iPhone: abre como app (sem a barra do Safari) e com o nome certo no ecrã principal
-  appleWebApp: { capable: true, title: 'MajorStockX', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: 'black-translucent' },
   formatDetection: { telephone: false },
 };
 

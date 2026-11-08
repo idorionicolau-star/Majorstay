@@ -10,6 +10,7 @@ export type TierId = 'basico' | 'pro' | 'business';
 export type PayTier = TierId | 'atual';
 
 export type Feature =
+    | 'rooms'       // Quartos e estadias em tempo real
     | 'tapSell'     // Vender por toque
     | 'variants'    // variações no catálogo
     | 'documents'   // proformas e documentos com a marca
@@ -32,7 +33,7 @@ export type Tier = {
 };
 
 // Vender por toque está em todos: é o que mais depressa convence uma loja pequena (abrir, tocar, vender)
-const BASIC_FEATURES: Feature[] = ['tapSell'];
+const BASIC_FEATURES: Feature[] = ['rooms', 'tapSell'];
 const PRO_FEATURES: Feature[] = [...BASIC_FEATURES, 'variants', 'documents', 'orders', 'reports'];
 
 export const TIERS: Tier[] = [
@@ -51,6 +52,7 @@ export const TIERS: Tier[] = [
 ];
 
 export const FEATURE_LABEL: Record<Feature, string> = {
+    rooms: 'Quadro de Quartos e Estadias',
     tapSell: 'Vender por toque',
     variants: 'Variações de produtos',
     documents: 'Proformas e documentos',

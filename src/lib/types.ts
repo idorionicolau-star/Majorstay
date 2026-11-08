@@ -4,6 +4,7 @@ export type PermissionLevel = 'none' | 'read' | 'write';
 export type ModulePermission =
   | 'dashboard'
   | 'diagnostico'
+  | 'rooms'
   | 'inventory'
   | 'sales'
   | 'customers'
@@ -354,7 +355,7 @@ export type NavItem = {
   locked?: boolean;
 };
 
-export type NavGroup = 'inicio' | 'vender' | 'stock' | 'pessoas' | 'dinheiro' | 'ajustes';
+export type NavGroup = 'inicio' | 'quartos' | 'vender' | 'stock' | 'pessoas' | 'dinheiro' | 'ajustes';
 
 export type InitialCatalog = {
   [category: string]: {

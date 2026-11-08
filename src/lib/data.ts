@@ -53,6 +53,7 @@ export const NAV_GROUPS: { id: NavGroup; label: string }[] = [
 export const allPermissions: Readonly<{ id: ModulePermission; label: string; adminOnly: boolean; }[]> = [
   { id: "dashboard", label: "Dashboard", adminOnly: false },
   { id: "diagnostico", label: "Diagnóstico", adminOnly: false },
+  { id: "rooms", label: "Quartos e Estadias", adminOnly: false },
   { id: "inventory", label: "Inventário", adminOnly: false },
   { id: "sales", label: "Vendas", adminOnly: false },
   { id: "production", label: "Produção", adminOnly: false },
