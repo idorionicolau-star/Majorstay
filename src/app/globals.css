@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    /* Slate 50 */
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 217 91% 60%;
+    /* Blue (Optimized Stock) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 60%;
+
+    /* Sales Chart - Neon Green */
+    --sales-stroke: #10b981;
+    /* Emerald 500 */
+    --sales-gradient-start: #34d399;
+    /* Emerald 400 */
+    --sales-gradient-end: #059669;
+    /* Emerald 600 */
+
+    /* Chart Colors - Light Mode */
+    --chart-1: 151 55% 42%;
+    /* Emerald */
+    --chart-2: 217 91% 60%;
+    /* Blue */
+    --chart-3: 258 75% 65%;
+    /* Violet */
+    --chart-4: 0 84% 60%;
+    --chart-5: 258 75% 65%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    /* Slate 900 */
+    --foreground: 210 40% 98%;
+
+    --card: 215 28% 17%;
+    /* Slate 800 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    /* Blue (Optimized Stock) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    /* Mais claro que o fundo dos cartões (215 28% 17%): com o mesmo tom, o contorno dos campos ficava invisível no modo escuro. */
+    --input: 215 20% 32%;
+    --ring: 217 91% 60%;
+
+    /* Sales Chart - Neon Green (Dark Mode) */
+    --sales-stroke: #4ade80;
+    /* Green 400 (Brighter for Dark Mode) */
+    --sales-gradient-start: #4ade80;
+    --sales-gradient-end: #10b981;
+
+    /* Chart Colors - Dark Mode */
+    --chart-1: 151 55% 42%;
+    /* Emerald */
+    --chart-2: 217 91% 60%;
+    --chart-3: 258 75% 65%;
+    /* Violet */
+    --chart-4: 0 84% 60%;
+    --chart-5: 258 75% 65%;
+  }
+}
+
+@layer base {
+  html {
+    @apply text-[95%];
+    font-family: 'Outfit', sans-serif;
+    caret-color: transparent;
+  }
+
+  input,
+  textarea,
+  [contenteditable="true"] {
+    caret-color: currentColor;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground text-sm antialiased min-h-screen selection:bg-primary selection:text-white cursor-default;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold tracking-tight font-sans;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+
+  /* Reference .glass utility */
+  /* Reference .glass utility - Simplified for Performance */
+  .glass {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .glass {
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Legacy glass utilities updated for compatibility - Removed Blur */
+  .glass-card {
+    @apply bg-card border border-border shadow-sm;
+  }
+
+  .dark .glass-card {
+    box-shadow: none;
+  }
+
+  .glass-panel {
+    @apply bg-background/95 border border-border shadow-sm;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+
+  .kpi-card--purple {
+    --card-color: hsl(var(--chart-3));
+    border-color: hsl(var(--chart-3) / 0.5);
+  }
+
+  .dark .kpi-card--purple {
+    border-color: hsl(var(--chart-3) / 0.5);
+  }
+
+  .kpi-card--blue {
+    --card-color: hsl(var(--chart-2));
+    border-color: hsl(var(--chart-2) / 0.5);
+  }
+
+  .dark .kpi-card--blue {
+    border-color: hsl(var(--chart-2) / 0.5);
+  }
+
+  .kpi-card--green {
+    --card-color: hsl(var(--chart-1));
+    border-color: hsl(var(--chart-1) / 0.5);
+  }
+
+  .dark .kpi-card--green {
+    border-color: hsl(var(--chart-1) / 0.5);
+  }
+
+  /* Improved Dialog/Drawer Mobile UX */
+  @media (max-width: 768px) {
+    .dialog-content {
+      max-height: 85dvh;
+      overflow-y: auto;
+      padding-bottom: 2rem;
+    }
+  }
+}
+/* Animação de entrada: escondida quando já foi vista; e nunca fica presa no ecrã se o JavaScript falhar */
+html[data-intro='skip'] .msx-intro { display: none; }
+/* recarregar com a sessão aberta: sem ecrã cheio, o menu e o cabeçalho ficam e só o conteúdo espera (ver lib/nav-hint.ts) */
+html[data-reload] .msx-boot-cover:not(.msx-boot-cover-always) { display: none; }
+html:not([data-reload]) .msx-reload-content { visibility: hidden; }
+/* avatar do cabeçalho enquanto a app arranca: as iniciais ou a foto da última vez (variáveis do RELOAD_GATE) */
+html[data-reload] .msx-avatar-hint { animation: none; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); background-image: var(--msx-avatar-photo, none); background-size: cover; background-position: center; }
+html[data-reload] .msx-avatar-hint::after { content: var(--msx-initials, ""); }
+.msx-intro { animation: msx-intro-failsafe 0.4s ease 16s forwards; }
+@keyframes msx-intro-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }

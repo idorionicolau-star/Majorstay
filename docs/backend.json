@@ -1,0 +1,346 @@
+
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "type": "object",
+      "description": "Top-level user object for quick companyId lookup.",
+      "properties": {
+        "companyId": { "type": "string" }
+      },
+      "required": ["companyId"]
+    },
+    "NotificationSettings": {
+      "title": "NotificationSettings",
+      "type": "object",
+      "description": "Configurações de notificação por e-mail.",
+      "properties": {
+        "email": {
+            "type": "string",
+            "format": "email"
+        },
+        "onSale": {
+            "type": "boolean"
+        },
+        "onCriticalStock": {
+            "type": "boolean"
+        }
+      },
+      "required": ["email", "onSale", "onCriticalStock"]
+    },
+    "Company": {
+      "title": "Company",
+      "type": "object",
+      "description": "Represents a company using the application.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the company."
+        },
+        "businessType": {
+          "type": "string",
+          "enum": ["manufacturer", "reseller"],
+          "description": "The type of business operation: manufacturer or reseller."
+        },
+        "notificationSettings": {
+           "$ref": "#/entities/NotificationSettings"
+        },
+        "ownerId": {
+            "type": "string",
+            "description": "The ID of the user who created the company."
+        },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "taxId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "isMultiLocation": { "type": "boolean" },
+        "locations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                }
+            }
+        },
+        "saleCounter": {
+            "type": "number",
+            "description": "A counter for generating sequential sale numbers."
+        }
+      },
+      "required": ["name", "businessType"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "type": "object",
+      "description": "Represents an internal employee with username/password auth.",
+      "properties": {
+        "username": { "type": "string" },
+        "password": { "type": "string", "description": "This should be a hashed password in a real application." },
+        "role": { "type": "string", "enum": ["Admin", "Employee", "Dono"] },
+        "companyId": { "type": "string" }
+      },
+      "required": ["username", "password", "role", "companyId"]
+    },
+    "CatalogProduct": {
+      "title": "CatalogProduct",
+      "type": "object",
+      "description": "Represents a base product in the company's catalog.",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "lowStockThreshold": { "type": "number" },
+        "criticalStockThreshold": { "type": "number" },
+        "unit": { "type": "string", "enum": ["un", "m²", "m", "cj", "outro"] }
+      },
+      "required": ["name", "category", "price"]
+    },
+    "CatalogCategory": {
+      "title": "CatalogCategory",
+      "type": "object",
+      "description": "Represents a product category in the company's catalog.",
+      "properties": {
+        "name": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Product": {
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a specific product instance in the inventory.",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "stock": { "type": "number" },
+        "reservedStock": { "type": "number" },
+        "price": { "type": "number" },
+        "lowStockThreshold": { "type": "number" },
+        "criticalStockThreshold": { "type": "number" },
+        "lastUpdated": { "type": "string", "format": "date" },
+        "location": { "type": "string" },
+        "unit": { "type": "string", "enum": ["un", "m²", "m", "cj", "outro"] }
+      },
+      "required": ["name", "category", "stock", "price", "lastUpdated"]
+    },
+    "RawMaterial": {
+      "title": "Raw Material",
+      "type": "object",
+      "description": "Represents a raw material used in production.",
+      "properties": {
+        "name": { "type": "string" },
+        "stock": { "type": "number" },
+        "unit": { "type": "string", "enum": ["kg", "m³", "un", "L", "saco"] },
+        "lowStockThreshold": { "type": "number" },
+        "cost": { "type": "number", "description": "Cost per unit of the raw material." }
+      },
+      "required": ["name", "stock", "unit", "lowStockThreshold"]
+    },
+    "Recipe": {
+      "title": "Recipe",
+      "type": "object",
+      "description": "Defines the ingredients for producing a catalog product.",
+      "properties": {
+        "productName": { "type": "string" },
+        "ingredients": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rawMaterialId": { "type": "string" },
+              "rawMaterialName": { "type": "string" },
+              "quantity": { "type": "number" }
+            },
+            "required": ["rawMaterialId", "rawMaterialName", "quantity"]
+          }
+        }
+      },
+      "required": ["productName", "ingredients"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "type": "object",
+      "description": "Represents a sale transaction or related document like an invoice or quote.",
+      "properties": {
+        "orderId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "clientName": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string", "enum": ["un", "m²", "m", "cj", "outro"] },
+        "unitPrice": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "vat": { "type": "number" },
+        "totalValue": { "type": "number" },
+        "amountPaid": { "type": "number", "description": "The amount paid by the client." },
+        "soldBy": { "type": "string" },
+        "guideNumber": { "type": "string" },
+        "location": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pago", "Levantado"] },
+        "documentType": { "type": "string", "enum": ["Guia de Remessa", "Factura", "Factura Proforma", "Recibo", "Encomenda"] },
+        "notes": { "type": "string" }
+      },
+      "required": ["date", "productId", "productName", "quantity", "unitPrice", "subtotal", "totalValue", "soldBy", "guideNumber", "status", "documentType"]
+    },
+    "Production": {
+      "title": "Production",
+      "type": "object",
+      "description": "Represents a production record.",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "productName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string", "enum": ["un", "m²", "m", "cj", "outro"] },
+        "registeredBy": { "type": "string" },
+        "location": { "type": "string" },
+        "status": { "type": "string", "enum": ["Concluído", "Transferido"] }
+      },
+      "required": ["date", "productName", "quantity", "registeredBy", "status"]
+    },
+    "Order": {
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a production order.",
+      "properties": {
+        "productName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string", "enum": ["un", "m²", "m", "cj", "outro"] },
+        "unitPrice": { "type": "number" },
+        "totalValue": { "type": "number" },
+        "clientName": { "type": "string" },
+        "deliveryDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Pendente", "Em produção", "Concluída"] },
+        "productionStartDate": { "type": "string", "format": "date-time" },
+        "quantityProduced": { "type": "number" },
+        "productionLogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": { "type": "string", "format": "date-time" },
+              "quantity": { "type": "number" },
+              "notes": { "type": "string" },
+              "registeredBy": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["productName", "quantity", "unit", "status", "quantityProduced"]
+    },
+    "StockMovement": {
+      "title": "Stock Movement",
+      "type": "object",
+      "description": "Represents a single, immutable movement of stock in the inventory ledger.",
+      "properties": {
+        "productId": { "type": "string", "description": "Reference to the product." },
+        "productName": { "type": "string", "description": "Denormalized product name for quick log reading." },
+        "type": { "type": "string", "enum": ["IN", "OUT", "TRANSFER", "ADJUSTMENT"], "description": "The type of movement." },
+        "quantity": { "type": "number", "description": "The amount of stock moved. Can be positive or negative." },
+        "fromLocationId": { "type": "string", "description": "The ID of the source location (used in TRANSFER and OUT)." },
+        "toLocationId": { "type": "string", "description": "The ID of the destination location (used in TRANSFER and IN)." },
+        "reason": { "type": "string", "description": "Context for the movement, e.g., 'Venda #123', 'Quebra na prateleira', 'Auditoria Mensal'." },
+        "userId": { "type": "string", "description": "The ID of the user who initiated the movement." },
+        "userName": { "type": "string", "description": "Denormalized user name for quick log reading." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Server timestamp of when the movement occurred." },
+        "isAudit": { "type": "boolean", "description": "Flag to identify audit adjustments." },
+        "systemCountBefore": { "type": "number", "description": "The stock count in the system before the audit adjustment." },
+        "physicalCount": { "type": "number", "description": "The physical stock count during the audit." }
+      },
+      "required": ["productId", "productName", "type", "quantity", "reason", "userId", "userName", "timestamp"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "structure": [
+       {
+        "path": "/users/{userId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/User" },
+          "description": "Stores a mapping from user ID to company ID for fast lookups."
+        }
+      },
+      {
+        "path": "/companies/{companyId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Company" },
+          "description": "Stores company information."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/employees/{employeeId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Employee" },
+          "description": "Stores internal employee user accounts for a company."
+        }
+      },
+       {
+        "path": "/companies/{companyId}/catalogProducts/{productId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/CatalogProduct" },
+          "description": "Stores the base product catalog for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/catalogCategories/{categoryId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/CatalogCategory" },
+          "description": "Stores the product categories for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/products/{productId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Product" },
+          "description": "Stores inventory items for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/rawMaterials/{rawMaterialId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/RawMaterial" },
+          "description": "Stores raw materials for a company's inventory."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/recipes/{recipeId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Recipe" },
+          "description": "Stores production recipes for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/sales/{saleId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Sale" },
+          "description": "Stores sales records for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/productions/{productionId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Production" },
+          "description": "Stores production records for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/orders/{orderId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Order" },
+          "description": "Stores production orders for a company."
+        }
+      },
+      {
+        "path": "/companies/{companyId}/stockMovements/{movementId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/StockMovement" },
+          "description": "Stores the immutable ledger of all stock movements for complete auditability."
+        }
+      }
+    ]
+  }
+}

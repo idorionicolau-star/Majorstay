@@ -1,0 +1,160 @@
+
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Funções de Ajuda ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      // O Super Admin tem acesso total, UID codificado para controlo máximo.
+      // SUBSTITUA "COLOQUE_O_SEU_UID_AQUI" PELO ID DO SEU UTILIZADOR ADMIN.
+      return request.auth.uid == "COLOQUE_O_SEU_UID_AQUI";
+    }
+    
+    function getUserMapData(userId) {
+      // Busca o mapeamento do utilizador na coleção de topo.
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function getUserCompanyId(userId) {
+      // Retorna o companyId do mapa de utilizadores.
+      return getUserMapData(userId).companyId;
+    }
+    
+    function getUserEmployeeData(userId) {
+      // Busca os dados detalhados do funcionário a partir da subcoleção da sua empresa.
+      let companyId = getUserCompanyId(userId);
+      return get(/databases/$(database)/documents/companies/$(companyId)/employees/$(userId)).data;
+    }
+
+    function isEmployeeOf(companyId) {
+      // O utilizador pertence à empresa se o companyId no seu mapa corresponder ou se for Super Admin.
+      return isSignedIn() && (getUserCompanyId(request.auth.uid) == companyId || isSuperAdmin());
+    }
+    
+    function isAdminOf(companyId) {
+      // É admin da empresa se pertencer a ela e a sua role for 'Admin' ou se for Super Admin.
+      return isEmployeeOf(companyId) && (getUserEmployeeData(request.auth.uid).role == 'Admin' || isSuperAdmin());
+    }
+    
+    function can(module, level) {
+      // O Super Admin tem acesso total a tudo.
+      if (isSuperAdmin()) {
+        return true;
+      }
+      
+      // Se não for Super Admin, precisa de ter um mapeamento de utilizador.
+      if (!exists(/databases/$(database)/documents/users/$(request.auth.uid))) {
+        return false;
+      }
+      
+      let userCompanyId = getUserCompanyId(request.auth.uid);
+      let userRole = getUserEmployeeData(request.auth.uid).role;
+      
+      // O Admin da empresa tem acesso de escrita a todos os módulos da sua empresa.
+      if (userRole == 'Admin') {
+        // Apenas Super Admin pode listar/ver todas as empresas.
+        if (module == 'companies') return false;
+        return true;
+      }
+
+      // O Dono tem acesso de leitura a todos os módulos.
+      if (userRole == 'Dono') {
+        return level == 'read';
+      }
+      
+      // Para funcionários normais, verifica as permissões granulares no objeto 'permissions'.
+      let userPermissions = getUserEmployeeData(request.auth.uid).permissions;
+      let permissionLevel = userPermissions[module];
+
+      if (level == 'write') {
+        // Acesso de escrita SÓ é permitido se a permissão for explicitamente 'write'.
+        return permissionLevel == 'write';
+      }
+      if (level == 'read') {
+        // Acesso de leitura é permitido se a permissão for 'read' OU 'write'.
+        return permissionLevel == 'read' || permissionLevel == 'write';
+      }
+      
+      return false;
+    }
+
+    // --- Regras por Coleção ---
+
+    // Coleção de mapeamento de utilizadores
+    match /users/{userId} {
+      // Um utilizador só pode ler o seu próprio mapa. Admins não podem ler mapas de outros.
+      allow read: if request.auth.uid == userId || isSuperAdmin();
+      // A criação (onboarding) e atualização só podem ser feitas pelo próprio utilizador.
+      allow write: if request.auth.uid == userId;
+    }
+
+
+    // A coleção 'companies' só pode ser listada pelo Super Admin.
+    // Admins de empresa podem ler os dados da sua própria empresa.
+    match /companies/{companyId} {
+      allow create: if isSignedIn(); // Qualquer pessoa autenticada pode registar uma nova empresa.
+      allow get: if isEmployeeOf(companyId);
+      allow list: if isSuperAdmin();
+      allow update, delete: if isAdminOf(companyId);
+
+      // Regras para as subcoleções de cada empresa.
+      // O acesso é sempre verificado pela função can(módulo, nível).
+      match /employees/{employeeId} {
+        // Um funcionário pode ler os seus próprios dados.
+        allow get: if request.auth.uid == employeeId || can('users', 'read');
+        allow list: if can('users', 'read');
+        allow create, update, delete: if can('users', 'write');
+      }
+      
+      match /catalogProducts/{productId} {
+          allow get, list: if can('settings', 'read');
+          allow create, update, delete: if can('settings', 'write');
+      }
+      
+      match /catalogCategories/{categoryId} {
+          allow get, list: if can('settings', 'read');
+          allow create, update, delete: if can('settings', 'write');
+      }
+      
+      match /products/{productId} {
+        allow get, list: if can('inventory', 'read');
+        allow create, update, delete: if can('inventory', 'write');
+      }
+
+      match /stockMovements/{movementId} {
+        allow get, list: if can('inventory', 'read');
+        allow create: if can('inventory', 'write');
+        // Nenhum update/delete em movimentos de stock para garantir imutabilidade
+        allow update, delete: if false; 
+      }
+      
+      match /sales/{saleId} {
+        allow get, list: if can('sales', 'read');
+        allow create, update, delete: if can('sales', 'write');
+      }
+      
+      match /productions/{productionId} {
+        allow get, list: if can('production', 'read');
+        allow create, update, delete: if can('production', 'write');
+      }
+      
+      match /orders/{orderId} {
+        allow get, list: if can('orders', 'read');
+        allow create, update, delete: if can('orders', 'write');
+      }
+      
+      match /reports/{reportId} {
+        // Relatórios são tipicamente apenas de leitura para a maioria dos papéis.
+        allow get, list: if can('reports', 'read');
+        allow create, update, delete: if can('reports', 'write');
+      }
+    }
+  }
+}

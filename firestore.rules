@@ -1,0 +1,382 @@
+
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Funções de Ajuda ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      // O Super Admin tem acesso total. 
+      // Verifica o campo 'superAdmin' na coleção de mapeamento de utilizadores.
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getUserMapData(request.auth.uid).get('superAdmin', false) == true;
+    }
+
+    // Igual à app (useSubscriptionState): só bloqueia empresas suspensas/inactivas ou trial expirado.
+    // Antes: empresa SEM campo 'status' (criada antes das subscrições) era recusada em tudo,
+    // e 'trialEndsAt' (texto ISO) passado a timestamp.value() dava erro → trial também recusado.
+    function isCompanySubscriptionActive(companyId) {
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      let status = company.get('status', 'active');
+      let ends = company.get('trialEndsAt', null);
+      // paidUntilMs: fim da subscrição paga (+ dias de tolerância), gravado só pelo servidor (PaySuite).
+      let paid = company.get('paidUntilMs', null);
+      return !(status in ['suspended', 'inactive']) && (
+        status != 'trial' ||
+        ends == null ||
+        // 'trialEndsAt' é texto ISO ("2026-10-17T07:50:12.123Z"). string(request.time) NÃO existe nas regras (dava erro e recusava
+        // tudo), por isso lê-se a data do texto e compara-se como timestamp (UTC).
+        (ends is string && ends.size() >= 19 && request.time < (
+          timestamp.date(int(ends[0:4]), int(ends[5:7]), int(ends[8:10]))
+          + duration.time(int(ends[11:13]), int(ends[14:16]), int(ends[17:19]), 0))) ||
+        (ends is int && request.time < timestamp.value(ends)) ||
+        (ends is timestamp && request.time < ends)
+      ) && (
+        status != 'active' || paid == null || !(paid is int) || request.time < timestamp.value(paid)
+      );
+    }
+    
+    // Texto ISO ("2026-10-17T07:50:12.123Z") → timestamp (UTC). Só os primeiros 19 caracteres contam.
+    function isoTime(s) {
+      return timestamp.date(int(s[0:4]), int(s[5:7]), int(s[8:10])) + duration.time(int(s[11:13]), int(s[14:16]), int(s[17:19]), 0);
+    }
+
+    // Plano da empresa (ver lib/tiers.ts): em teste, ou sem nível (plano antigo), tudo é permitido.
+    // 'production' = Business; 'orders' = Pro ou Business.
+    function planAllows(companyId, feature) {
+      let c = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      let tier = c.get('tier', '');
+      return isSuperAdmin() || c.get('status', '') == 'trial' || !(tier in ['basico', 'pro', 'business']) || tier == 'business'
+        || (tier == 'pro' && feature == 'orders');
+    }
+
+    function getUserMapData(userId) {
+      // Busca o mapeamento do utilizador na coleção de topo.
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function getUserCompanyId(userId) {
+      return getUserMapData(userId).get('companyId', '');
+    }
+
+    function getUserEmployeeData(companyId, userId) {
+      return get(/databases/$(database)/documents/companies/$(companyId)/employees/$(userId)).data;
+    }
+
+    // isSuperAdmin() primeiro: o super-administrador pode não ser funcionário da empresa.
+    function isEmployeeOf(companyId) {
+      return isSignedIn() && (
+        isSuperAdmin() || (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          getUserCompanyId(request.auth.uid) == companyId
+        )
+      );
+    }
+
+    function isAdminOf(companyId) {
+      return isSignedIn() && (
+        isSuperAdmin() || (
+          isEmployeeOf(companyId) &&
+          exists(/databases/$(database)/documents/companies/$(companyId)/employees/$(request.auth.uid)) &&
+          getUserEmployeeData(companyId, request.auth.uid).get('role', '') == 'Admin'
+        )
+      );
+    }
+
+    // Gestor da empresa (Admin ou Dono) — quem pode corrigir/apagar registos já feitos.
+    function isManagerOf(companyId) {
+      return isSignedIn() && (
+        isSuperAdmin() || (
+          isEmployeeOf(companyId) &&
+          exists(/databases/$(database)/documents/companies/$(companyId)/employees/$(request.auth.uid)) &&
+          getUserEmployeeData(companyId, request.auth.uid).get('role', '') in ['Admin', 'Dono']
+        )
+      );
+    }
+
+    // Permissão num módulo DESTA empresa. Antes não comparava a empresa do caminho com a da pessoa: um funcionário
+    // (ou o Admin de uma conta qualquer) da Empresa A passava nas regras da Empresa B.
+    // Admin: tudo; Dono: vê tudo mas não altera (como na app, canEdit); os outros: as permissões que lhes deram.
+    function can(companyId, module, level) {
+      let isSameCompany = isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getUserCompanyId(request.auth.uid) == companyId;
+      let hasEmployee = isSameCompany
+        && exists(/databases/$(database)/documents/companies/$(companyId)/employees/$(request.auth.uid));
+      let employeeData = hasEmployee
+        ? get(/databases/$(database)/documents/companies/$(companyId)/employees/$(request.auth.uid)).data
+        : {};
+      let role = employeeData.get('role', '');
+      let permissions = employeeData.get('permissions', {});
+      let perm = permissions.get(module, '');
+      return isSuperAdmin() || (
+        hasEmployee && (
+          (role == 'Admin' && module != 'companies') ||
+          (role == 'Dono' && level == 'read') ||
+          (level == 'write' && perm == 'write') ||
+          (level == 'read' && (perm == 'read' || perm == 'write'))
+        )
+      );
+    }
+
+    // Quem vende sem acesso ao Inventário (Vendas: escrever) só mexe no stock através de uma venda: o stock só desce,
+    // a reserva sobe (venda por levantar) ou desce no máximo o que o stock desceu (levantamento), e o preço só se o
+    // produto ainda não tinha (aprende com a primeira venda). Nunca aumenta stock nem toca noutros campos.
+    function isSaleStockUpdate(companyId) {
+      let before = resource.data;
+      let after = request.resource.data;
+      let stockBefore = before.get('stock', 0);
+      let stockAfter = after.get('stock', 0);
+      let reservedBefore = before.get('reservedStock', 0);
+      let reservedAfter = after.get('reservedStock', 0);
+      let changed = after.diff(before).affectedKeys();
+      return can(companyId, 'sales', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
+        && changed.hasOnly(['stock', 'reservedStock', 'lastUpdated', 'price'])
+        && stockAfter is number && reservedAfter is number
+        && stockAfter <= stockBefore
+        && reservedAfter >= 0
+        && (reservedAfter >= reservedBefore || stockBefore - stockAfter >= reservedBefore - reservedAfter)
+        && (!changed.hasAny(['price']) || before.get('price', 0) <= 0);
+    }
+
+    // --- Regras por Coleção ---
+
+    // Registo das conversas com o assistente (só escrita pelo próprio; leitura só Super Admin)
+    match /assistant_logs/{logId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow get, list: if isSuperAdmin();
+    }
+
+    // Referências de pagamento PaySuite → empresa. Só o servidor (Admin SDK) acede.
+    match /billingRefs/{ref} {
+      allow read, write: if false;
+    }
+
+    // Coleção de mapeamento de utilizadores
+    match /users/{userId} {
+      // Um utilizador só pode ler o seu próprio mapa. Admins não podem ler mapas de outros.
+      allow read: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+      // A criação (onboarding) só pode ser feita pelo próprio utilizador, só com a empresa, e só a empresa que ele próprio
+      // está a criar no mesmo registo (dono). Antes aceitava qualquer campo — incluindo superAdmin — e qualquer empresa.
+      // Os funcionários criados pelo Admin passam pelo servidor (/api/employees), que não está sujeito a estas regras.
+      allow create: if request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['companyId'])
+        && request.resource.data.companyId is string
+        && getAfter(/databases/$(database)/documents/companies/$(request.resource.data.companyId)).data.get('ownerId', '') == request.auth.uid;
+      // Atualização: CRÍTICO - Prevenir mudança de companyId ou superAdmin (privilege escalation)
+      // Nunca muda a empresa nem o superAdmin.
+      allow update: if isSignedIn() && request.auth.uid == userId
+        && request.resource.data.companyId == resource.data.companyId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['superAdmin', 'companyId']);
+      allow delete: if false; // Nunca permitir eliminação de user maps
+    }
+
+
+    // A coleção 'companies' só pode ser listada pelo Super Admin.
+    // Admins de empresa podem ler os dados da sua própria empresa.
+    match /companies/{companyId} {
+      // Registar uma empresa nova: a própria pessoa é a dona, começa em teste (no máximo 16 dias) e sem nada de pagamento,
+      // plano, código ou afiliado (isso é só o servidor que grava). Antes podia nascer já "activa" e paga.
+      allow create: if isSignedIn()
+        && request.resource.data.get('ownerId', '') == request.auth.uid
+        && request.resource.data.get('status', '') == 'trial'
+        && !request.resource.data.keys().hasAny(['paidUntilMs', 'subscriptionEndsAt', 'plan', 'tier', 'coupon', 'affiliate', 'source', 'superAdmin'])
+        && request.resource.data.get('trialEndsAt', null) is string
+        && request.resource.data.trialEndsAt.size() >= 19
+        && isoTime(request.resource.data.trialEndsAt) <= request.time + duration.value(16, 'd');
+      allow get: if isEmployeeOf(companyId);
+      allow list: if isSuperAdmin();
+      allow update: if isSuperAdmin() || (isAdminOf(companyId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerId', 'status', 'trialEndsAt', 'subscriptionEndsAt', 'paidUntilMs', 'plan', 'tier', 'affiliate', 'coupon', 'source']))
+        // Quem vende (não só o Admin) precisa de avançar a numeração dos documentos: só esses dois campos, e o contador nunca recua.
+        || (can(companyId, 'sales', 'write') && isCompanySubscriptionActive(companyId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['saleCounter', 'documentNumbering'])
+            && request.resource.data.get('saleCounter', 0) >= resource.data.get('saleCounter', 0));
+
+      // Pagamentos da subscrição (PaySuite): só o servidor escreve; o admin vê o histórico.
+      match /payments/{paymentId} {
+        allow get, list: if isAdminOf(companyId);
+        allow write: if false;
+      }
+      allow delete: if isSuperAdmin();
+
+      // Regras para as subcoleções de cada empresa.
+      // O acesso é sempre verificado pela função can(módulo, nível).
+      match /employees/{employeeId} {
+        // Um funcionário pode ler os seus próprios dados.
+        allow get: if (isSignedIn() && request.auth.uid == employeeId && isEmployeeOf(companyId)) || can(companyId, 'users', 'read');
+        allow list: if can(companyId, 'users', 'read');
+        // A criação é permitida se o utilizador tiver permissão de escrita OU se for o fundador a registar a empresa (onboarding).
+        // Pelo cliente: só quem gere a empresa dá o papel de Admin (antes um funcionário com permissão "utilizadores" podia).
+        allow create: if (can(companyId, 'users', 'write') && request.resource.data.get('companyId', '') == companyId
+            && (request.resource.data.get('role', '') != 'Admin' || isManagerOf(companyId))) || (
+          request.auth.uid == employeeId && 
+          request.resource.data.role == 'Admin' &&
+          getAfter(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid
+        );
+        // A empresa nunca muda; a função só a muda um gestor, e nunca a sua própria (sem auto-promoção).
+        allow update: if can(companyId, 'users', 'write')
+          && request.resource.data.companyId == resource.data.companyId
+          && (request.resource.data.role == resource.data.role || (isManagerOf(companyId) && employeeId != request.auth.uid));
+        allow delete: if can(companyId, 'users', 'write') && employeeId != request.auth.uid;
+      }
+      
+      match /catalogProducts/{productId} {
+          allow get, list: if can(companyId, 'settings', 'read') || can(companyId, 'inventory', 'read') || can(companyId, 'sales', 'read');
+          // Quem cria um produto novo (Stock Rápido, Inventário) acrescenta-o ao catálogo; alterar/apagar fica para as Definições.
+          allow create: if (can(companyId, 'settings', 'write') || can(companyId, 'inventory', 'write')) && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+          allow update, delete: if can(companyId, 'settings', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+      }
+      
+      match /catalogCategories/{categoryId} {
+          allow get, list: if can(companyId, 'settings', 'read') || can(companyId, 'inventory', 'read') || can(companyId, 'sales', 'read');
+          // Quem cria um produto novo (Stock Rápido, Inventário) acrescenta-o ao catálogo; alterar/apagar fica para as Definições.
+          allow create: if (can(companyId, 'settings', 'write') || can(companyId, 'inventory', 'write')) && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+          allow update, delete: if can(companyId, 'settings', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+      }
+      
+      match /products/{productId} {
+        // quem vende precisa de ver os produtos e o stock disponível, mesmo sem acesso ao Inventário
+        allow get, list: if can(companyId, 'inventory', 'read') || can(companyId, 'sales', 'write');
+        allow create, update, delete: if can(companyId, 'inventory', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+        allow update: if isSaleStockUpdate(companyId);
+      }
+
+      // Envios com confirmação de receção: quem mexe no stock envia, recebe ou cancela; nunca se apagam
+      match /shipments/{shipmentId} {
+        allow get, list: if can(companyId, 'inventory', 'read');
+        allow create, update: if can(companyId, 'inventory', 'write');
+        allow delete: if false;
+      }
+
+      match /stockMovements/{movementId} {
+        allow get, list: if can(companyId, 'inventory', 'read');
+        allow create: if can(companyId, 'inventory', 'write')
+          // a saída de stock de uma venda ou levantamento, registada em nome de quem vendeu
+          || (can(companyId, 'sales', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
+              && request.resource.data.type == 'OUT'
+              && request.resource.data.quantity is number && request.resource.data.quantity < 0
+              && request.resource.data.userId == request.auth.uid);
+        // Nenhum update/delete em movimentos de stock para garantir imutabilidade
+        allow update, delete: if false; 
+      }
+      
+      // Vendas: depois de feitas, só o gestor as corrige ou apaga. O vendedor só pode avançar o
+      // fluxo normal (marcar como pago, levantar) e mexer em notas/cliente — nunca em produto,
+      // quantidade, preço, totais, data, autor ou apagar — e nunca baixar o valor já pago.
+      match /sales/{saleId} {
+        allow get, list: if can(companyId, 'sales', 'read');
+        allow create: if can(companyId, 'sales', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+        allow update: if can(companyId, 'sales', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin()) && (
+          isManagerOf(companyId) || (
+            // Venda feita sem internet: ao sincronizar recebe o número oficial (e só isso muda).
+            resource.data.get('offlinePending', false) == true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guideNumber', 'provisionalNumber', 'offlinePending'])
+            && request.resource.data.get('offlinePending', false) == false
+          ) || (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+              'productId', 'productName', 'quantity', 'unit', 'unitPrice', 'unitCost', 'subtotal', 'discount', 'vat',
+              'totalValue', 'date', 'soldBy', 'guideNumber', 'location', 'documentType', 'orderId', 'transactionId',
+              'deletedAt', 'deletedBy', 'timestamp'
+            ]) &&
+            request.resource.data.get('amountPaid', 0) >= resource.data.get('amountPaid', 0)
+          )
+        );
+        allow delete: if isManagerOf(companyId) && can(companyId, 'sales', 'write');
+
+        // Registo de cada correcção (quem, quando, antes e depois). Imutável.
+        match /history/{historyId} {
+          allow get, list: if isManagerOf(companyId);
+          allow create: if can(companyId, 'sales', 'write') && request.resource.data.userId == request.auth.uid;
+          allow update, delete: if false;
+        }
+      }
+      
+      // Documentos (cotações, facturas, recibos, guias…). Rascunhos: qualquer pessoa com permissão de vendas edita e apaga.
+      // Emitidos: só o gestor corrige (e fica registado em /history), e nunca se apagam — anulam-se.
+      match /documents/{docId} {
+        allow get, list: if can(companyId, 'sales', 'read');
+        allow create: if can(companyId, 'sales', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+        allow update: if can(companyId, 'sales', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
+          && (resource.data.status == 'draft' || isManagerOf(companyId));
+        allow delete: if can(companyId, 'sales', 'write') && resource.data.status == 'draft';
+
+        // Registo de cada correcção a um documento emitido (quem, quando, antes e depois). Imutável.
+        match /history/{historyId} {
+          allow get, list: if isManagerOf(companyId);
+          allow create: if isManagerOf(companyId) && request.resource.data.userId == request.auth.uid;
+          allow update, delete: if false;
+        }
+      }
+
+      match /productions/{productionId} {
+        allow get, list: if can(companyId, 'production', 'read');
+        allow create, update, delete: if can(companyId, 'production', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin()) && planAllows(companyId, 'production');
+      }
+      
+      match /rawMaterials/{materialId} {
+        allow get, list: if can(companyId, 'raw-materials', 'read');
+        allow create, update, delete: if can(companyId, 'raw-materials', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin()) && planAllows(companyId, 'production');
+      }
+      
+      match /recipes/{recipeId} {
+        allow get, list: if can(companyId, 'raw-materials', 'read');
+        allow create, update, delete: if can(companyId, 'raw-materials', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin()) && planAllows(companyId, 'production');
+      }
+      
+      match /orders/{orderId} {
+        allow get, list: if can(companyId, 'orders', 'read');
+        allow create, update, delete: if can(companyId, 'orders', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin()) && planAllows(companyId, 'orders');
+      }
+      
+      // Clientes: usados em Clientes, Vendas, Encomendas e no Dashboard.
+      match /customers/{customerId} {
+        allow get, list: if can(companyId, 'customers', 'read') || can(companyId, 'sales', 'read') || can(companyId, 'orders', 'read') || can(companyId, 'dashboard', 'read');
+        allow create, update: if (can(companyId, 'customers', 'write') || can(companyId, 'sales', 'write') || can(companyId, 'orders', 'write')) && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+        allow delete: if can(companyId, 'customers', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+      }
+
+      // Aparelhos que recebem notificações push (o ID do documento é o token FCM).
+      // Cada utilizador só grava/apaga o seu; só o servidor (Admin SDK) lê para enviar.
+      match /pushTokens/{token} {
+        allow create, update: if isEmployeeOf(companyId) && request.resource.data.userId == request.auth.uid;
+        allow delete: if isEmployeeOf(companyId) && resource.data.userId == request.auth.uid;
+        allow read: if false;
+      }
+
+      // Central de notificações (estilo Facebook): todos os funcionários vêem; cada um só marca como lida.
+      match /notifications/{notificationId} {
+        allow get, list: if isEmployeeOf(companyId);
+        allow create: if isEmployeeOf(companyId) && request.resource.data.actorId == request.auth.uid;
+        allow update: if isEmployeeOf(companyId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+        allow delete: if false;
+      }
+
+      // Preços de venda diferentes do habitual, à espera da decisão do gestor.
+      // O vendedor cria-os ao vender; só o gestor (Admin) lê e decide.
+      match /priceReviews/{reviewId} {
+        allow create: if can(companyId, 'sales', 'write');
+        allow get, list, update: if isAdminOf(companyId);
+        allow delete: if false;
+      }
+
+      // Despesas (módulo Financeiro).
+      match /expenses/{expenseId} {
+        allow get, list: if can(companyId, 'finance', 'read');
+        allow create, update, delete: if can(companyId, 'finance', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+      }
+
+      match /reports/{reportId} {
+        // Relatórios são tipicamente apenas de leitura para a maioria dos papéis.
+        allow get, list: if can(companyId, 'reports', 'read');
+        allow create, update, delete: if can(companyId, 'reports', 'write');
+      }
+    }
+  }
+}

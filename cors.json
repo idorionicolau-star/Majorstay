@@ -1,0 +1,23 @@
+[
+    {
+        "origin": [
+            "https://stock.majorgroup.app",
+            "http://localhost:9002",
+            "http://localhost:3000"
+        ],
+        "method": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "HEAD"
+        ],
+        "maxAgeSeconds": 3600,
+        "responseHeader": [
+            "Content-Type",
+            "Access-Control-Allow-Origin",
+            "x-goog-resumable",
+            "x-goog-meta-firebaseStorageDownloadTokens"
+        ]
+    }
+]
