@@ -1,8 +1,6 @@
 'use client';
 
 import { BRAND } from '@/lib/brand';
-
-
 import Link from "next/link";
 import Image from "next/image";
 import { useContext } from "react";
@@ -14,6 +12,7 @@ import { openTour } from "@/components/onboarding/app-tour";
 import { MenuModeToggle } from "./menu-mode-toggle";
 import { isSuperAdminEmail } from "@/lib/super-admin";
 import { openSupport, SupportNavButton } from "@/components/support/support-dialog";
+import { MajorStayLogo } from "@/components/brand-logo";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -39,28 +38,17 @@ export function MobileNav({ onLinkClick }: MobileNavProps) {
     const { groups, isActive, simple, hiddenCount, setSimple } = useNavGroups();
 
     return (
-        <aside className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-            <div className="flex h-24 items-center justify-center border-b border-slate-100 dark:border-slate-800/50">
+        <aside className="flex flex-col h-full bg-[#FFFDF9] dark:bg-[#1E1714] border-r border-[#E5DFD6] dark:border-[#382D26]">
+            <div className="flex h-20 items-center justify-center border-b border-[#E5DFD6]/60 dark:border-[#382D26]/60 px-4">
                 <Link href="/dashboard" className="flex items-center justify-center" onClick={handleLinkClick}>
-                    <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-neon">
-                        <div className="relative w-8 h-8">
-                            <Image
-                                src="/logo.svg"
-                                alt={`${BRAND.name} Logo`}
-                                fill
-                                className="object-contain"
-                                priority
-                            />
-                        </div>
-                    </div>
-                    <span className="ml-3 text-xl font-headline font-bold text-slate-800 dark:text-white">{BRAND.name}</span>
+                    <MajorStayLogo size="md" showTagline />
                 </Link>
             </div>
             <nav className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">
                 {groups.map(group => (
                     <div key={group.id} className="flex flex-col gap-1">
                         {group.id !== 'inicio' && (
-                            <p className="px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">{group.label}</p>
+                            <p className="px-4 text-[11px] font-bold uppercase tracking-wider text-[#8B7E74] dark:text-[#A69B93]">{group.label}</p>
                         )}
                         {group.items.map(item => {
                             const active = isActive(item);
@@ -74,14 +62,14 @@ export function MobileNav({ onLinkClick }: MobileNavProps) {
                                         "flex items-center gap-4 rounded-xl transition-all font-medium",
                                         item.isSubItem ? "pl-14 pr-4 py-2 text-sm" : "px-4 py-3 text-base",
                                         active
-                                            ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-sm"
-                                            : "text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                            ? "bg-[#F4EDE0] dark:bg-[#2A221E] text-primary shadow-sm font-bold"
+                                            : "text-stone-600 dark:text-stone-300 hover:text-primary hover:bg-[#F4EDE0]/60 dark:hover:bg-[#2A221E]/60"
                                     )}
                                 >
-                                    {!item.isSubItem && <item.icon className={cn("h-6 w-6", active ? "text-primary" : "text-slate-400")} />}
+                                    {!item.isSubItem && <item.icon className={cn("h-6 w-6", active ? "text-primary" : "text-stone-400")} />}
                                     <span className="flex-1">{item.title}</span>
-                                    {item.locked && <Lock className="h-4 w-4 text-slate-400" aria-label="Não incluído no seu plano" />}
-                                    {active && <div className="h-2 w-2 rounded-full bg-primary shadow-neon-emerald" />}
+                                    {item.locked && <Lock className="h-4 w-4 text-stone-400" aria-label="Não incluído no seu plano" />}
+                                    {active && <div className="h-2 w-2 rounded-full bg-primary" />}
                                 </Link>
                             );
                         })}
@@ -92,26 +80,26 @@ export function MobileNav({ onLinkClick }: MobileNavProps) {
             </nav>
 
             {/* User Section */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-4 border-t border-[#E5DFD6] dark:border-[#382D26]">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group outline-none">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px] shrink-0">
-                                <div className="rounded-full w-full h-full bg-white dark:bg-slate-900 p-[1px] overflow-hidden">
+                        <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E] cursor-pointer transition-colors group outline-none">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#BA5A1A] to-[#DF9E42] p-[2px] shrink-0">
+                                <div className="rounded-full w-full h-full bg-[#FFFDF9] dark:bg-[#1E1714] p-[1px] overflow-hidden">
                                     {user?.profilePictureUrl ? (
                                         <Image src={user.profilePictureUrl} alt="User" width={40} height={40} className="w-full h-full object-cover rounded-full" />
                                     ) : (
-                                        <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500">
+                                        <div className="w-full h-full bg-[#EFEBE4] dark:bg-[#2A221E] flex items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300">
                                             {user?.username?.charAt(0) || 'U'}
                                         </div>
                                     )}
                                 </div>
                             </div>
                             <div className="flex flex-col overflow-hidden text-left">
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-primary transition-colors">
+                                <span className="text-sm font-bold text-stone-800 dark:text-stone-100 truncate group-hover:text-primary transition-colors">
                                     {user?.username || 'Utilizador'}
                                 </span>
-                                <span className="text-xs text-slate-400 truncate">
+                                <span className="text-xs text-stone-400 truncate">
                                     {firebaseUser?.email || user?.email || ''}
                                 </span>
                             </div>

@@ -35,7 +35,7 @@ export function BottomNav({ onMenuClick }: BottomNavProps) {
   if (keyboardOpen) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 md:hidden pb-safe touch-none select-none">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-[#FFFDF9] dark:bg-[#1E1714] border-t border-[#E5DFD6] dark:border-[#382D26] md:hidden pb-safe touch-none select-none">
       <div className="grid h-full grid-flow-col auto-cols-fr">
         {items.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) || !!item.also?.some((p) => pathname.startsWith(p));
@@ -49,8 +49,8 @@ export function BottomNav({ onMenuClick }: BottomNavProps) {
               className={cn(
                 "flex flex-col items-center justify-center gap-1 transition-colors relative touch-manipulation",
                 isActive
-                  ? "text-primary dark:text-primary"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  ? "text-primary dark:text-primary font-bold"
+                  : "text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100"
               )}
             >
               <div className={cn(
@@ -61,7 +61,7 @@ export function BottomNav({ onMenuClick }: BottomNavProps) {
               </div>
               <span className="text-[10px] font-medium leading-none">{item.title}</span>
               {isActive && (
-                <span className="absolute top-0 inset-x-0 h-0.5 bg-primary shadow-[0_0_10px_theme(colors.primary.DEFAULT)]" />
+                <span className="absolute top-0 inset-x-0 h-0.5 bg-primary" />
               )}
             </Link>
           );
@@ -71,7 +71,7 @@ export function BottomNav({ onMenuClick }: BottomNavProps) {
         <button
           data-tour="nav-more"
           onClick={onMenuClick}
-          className="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors touch-manipulation"
+          className="flex flex-col items-center justify-center gap-1 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors touch-manipulation"
         >
           <div className="p-1">
             <Menu className="h-5 w-5" />

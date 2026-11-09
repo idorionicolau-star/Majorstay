@@ -1,6 +1,7 @@
 'use client';
 
 import { BRAND } from '@/lib/brand';
+import { MajorStayLogo } from '@/components/brand-logo';
 
 
 import { haul } from '@/lib/haul';
@@ -136,14 +137,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Image src="/logo.svg" alt={`${BRAND.name} Logo`} width={48} height={48} />
+    <div className="flex min-h-screen items-center justify-center bg-[#FAF7F2] dark:bg-[#150F0C] px-4 py-8">
+      <Card className="w-full max-w-sm bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26] shadow-xl rounded-2xl">
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-2">
+            <MajorStayLogo size="lg" horizontal={false} showTagline />
           </div>
-          <CardTitle className="text-2xl font-bold">Bem-vindo de volta!</CardTitle>
-          <CardDescription>Faça login para aceder ao {BRAND.name}.</CardDescription>
+          <CardTitle className="text-xl font-bold tracking-tight text-stone-800 dark:text-stone-100">Bem-vindo de volta!</CardTitle>
+          <CardDescription className="text-xs text-stone-500 dark:text-stone-400">Inicie sessão para gerir quartos, consumos e caixa.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

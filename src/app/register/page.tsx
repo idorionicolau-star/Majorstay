@@ -1,6 +1,7 @@
 'use client';
 
 import { BRAND } from '@/lib/brand';
+import { MajorStayLogo } from '@/components/brand-logo';
 
 
 import { haul } from '@/lib/haul';
@@ -148,12 +149,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 py-8">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAF7F2] dark:bg-[#150F0C] px-4 py-8">
+      <Card className="w-full max-w-sm bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26] shadow-xl rounded-2xl">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Image src="/logo.svg" alt={`${BRAND.name} Logo`} width={48} height={48} />
-          </div>
+          <div className="flex justify-center mb-3"><MajorStayLogo size="lg" horizontal={false} showTagline /></div>
           <CardTitle className="text-2xl font-bold">{googleOnly ? 'Falta só a empresa' : 'Crie a sua Conta'}</CardTitle>
           <CardDescription>{googleOnly ? 'Escreva o nome da sua empresa e continue com o Google.' : `Registe a sua empresa para começar a usar o ${BRAND.name}.`}</CardDescription>
         </CardHeader>

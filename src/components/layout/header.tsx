@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -49,7 +48,7 @@ export function Header({ onSearchClick }: { onSearchClick: () => void }) {
   const pageTitle = getPageTitle();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 dark:bg-slate-950 sm:px-6 border-slate-200/60 dark:border-slate-800/60">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/95 backdrop-blur px-4 dark:bg-[#1E1714]/95 sm:px-6 border-[#E5DFD6] dark:border-[#382D26]">
 
       {/* Theme Toggle for mobile (Left side) */}
       <div className="flex items-center gap-1 md:hidden">
@@ -87,12 +86,12 @@ export function Header({ onSearchClick }: { onSearchClick: () => void }) {
         <BackButton />
         <Button
           variant="outline"
-          className="relative w-full min-w-0 max-w-sm overflow-hidden px-4 py-2 h-11 justify-start items-center text-left font-normal bg-slate-100 text-slate-500 hover:bg-slate-200 border-slate-300/70 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:border-slate-700"
+          className="relative w-full min-w-0 max-w-sm overflow-hidden px-4 py-2 h-11 justify-start items-center text-left font-normal bg-[#F1EDE5] text-stone-600 hover:bg-[#EAE4D9] border-[#E5DFD6] dark:bg-[#2A221E] dark:text-stone-300 dark:hover:bg-[#342A25] dark:border-[#382D26]"
           onClick={onSearchClick}
         >
           <Search className="mr-2 h-4 w-4" />
           <span className="flex-1 truncate">Pesquisa Rápida</span>
-          <kbd className="pointer-events-none hidden h-6 shrink-0 select-none items-center gap-1 rounded border bg-slate-200 border-slate-300 px-1.5 font-mono text-[10px] font-medium text-slate-500 dark:bg-slate-700/80 dark:border-slate-600 dark:text-slate-300 lg:flex">
+          <kbd className="pointer-events-none hidden h-6 shrink-0 select-none items-center gap-1 rounded border bg-[#E5DFD6] border-[#D8D0C5] px-1.5 font-mono text-[10px] font-medium text-stone-600 dark:bg-[#382D26] dark:border-[#4A3C33] dark:text-stone-300 lg:flex">
             Ctrl+K
           </kbd>
         </Button>

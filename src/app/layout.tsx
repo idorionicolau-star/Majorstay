@@ -27,8 +27,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'MajorStockX',
-  description: 'Sistema de gestão de estoque e produção para materiais de construção.',
+  title: BRAND.fullName,
+  description: BRAND.description,
   manifest: '/manifest.json',
   icons: {
     icon: [{ url: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { url: '/logo.svg', type: 'image/svg+xml' }],
@@ -45,8 +45,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0d1117' },
+    { media: '(prefers-color-scheme: light)', color: '#FAF7F2' },
+    { media: '(prefers-color-scheme: dark)', color: '#1E1714' },
   ],
 };
 

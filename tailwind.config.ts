@@ -18,10 +18,14 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
-        "background-light": "#f1f5f9", // Slate 100
-        "background-dark": "#0f172a", // Slate 900
-        "surface-light": "#ffffff",
-        "surface-dark": "#1e293b", // Slate 800
+        "background-light": "#FAF7F2", // Linho Nobre
+        "background-dark": "#1E1714", // Ébano Amadeirado
+        "surface-light": "#FFFDF9", // Marfim Nobre
+        "surface-dark": "#2A221E", // Nogueira Escura
+        "hotel-terracotta": "#BA5A1A",
+        "hotel-gold": "#DF9E42",
+        "hotel-sand": "#F1EDE5",
+        "hotel-espresso": "#251D18",
         "accent-purple": "#8b5cf6",
         "accent-blue": "#0ea5e9",
         "accent-green": "#10b981",

@@ -6,102 +6,117 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    /* Slate 50 */
-    --foreground: 222 47% 11%;
+    /* Paleta Nude / Hotelaria Boutique (Light Mode) */
+    --background: 38 33% 97%;
+    /* #FAF7F2 - Linho Nobre / Warm Alabaster */
+    --foreground: 24 25% 15%;
+    /* #251D18 - Espresso Profundo / Carvão Quente */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 40 40% 99%;
+    /* #FFFDF9 - Marfim Suave / Pure Linen */
+    --card-foreground: 24 25% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 40 40% 99%;
+    --popover-foreground: 24 25% 15%;
 
-    --primary: 217 91% 60%;
-    /* Blue (Optimized Stock) */
-    --primary-foreground: 0 0% 100%;
+    --primary: 26 72% 43%;
+    /* #BA5A1A - Terracota Hotelaria Nobre */
+    --primary-foreground: 40 40% 99%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 36 28% 93%;
+    /* #F1EDE5 - Areia Suave / Nude Claro */
+    --secondary-foreground: 24 25% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 36 24% 92%;
+    /* #EFEBE4 - Taupe Muted */
+    --muted-foreground: 28 12% 48%;
+    /* #7A726C - Taupe Quente Suave */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 38 45% 91%;
+    /* #F4EDE0 - Champagne Suave */
+    --accent-foreground: 26 72% 38%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    /* Rosa Carmim / Alerta Nobre */
+    --destructive-foreground: 40 40% 99%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --border: 34 20% 88%;
+    /* #E5DFD6 - Borda Nude Discreta */
+    --input: 34 20% 88%;
+    --ring: 26 72% 43%;
 
-    /* Sales Chart - Neon Green */
-    --sales-stroke: #10b981;
-    /* Emerald 500 */
-    --sales-gradient-start: #34d399;
-    /* Emerald 400 */
-    --sales-gradient-end: #059669;
-    /* Emerald 600 */
+    /* Gráfico de Vendas e Faturação */
+    --sales-stroke: #BA5A1A;
+    --sales-gradient-start: #DF9E42;
+    --sales-gradient-end: #BA5A1A;
 
-    /* Chart Colors - Light Mode */
-    --chart-1: 151 55% 42%;
-    /* Emerald */
-    --chart-2: 217 91% 60%;
-    /* Blue */
-    --chart-3: 258 75% 65%;
-    /* Violet */
-    --chart-4: 0 84% 60%;
-    --chart-5: 258 75% 65%;
+    /* Chart Colors - Hotelaria (Light Mode) */
+    --chart-1: 152 48% 38%;
+    /* Quartos Livres: Verde Sálvia Nobre */
+    --chart-2: 26 72% 43%;
+    /* Quartos Ocupados: Terracota Hotelaria */
+    --chart-3: 38 75% 52%;
+    /* Faturação / Caixa: Ouro Champagne */
+    --chart-4: 0 72% 51%;
+    /* Tempo Excedido: Carmim Suave */
+    --chart-5: 32 55% 50%;
+    /* Limpeza / Manutenção: Âmbar Areia */
   }
 
   .dark {
-    --background: 222 47% 11%;
-    /* Slate 900 */
-    --foreground: 210 40% 98%;
+    /* Paleta Nude / Hotelaria Boutique (Dark Mode) */
+    --background: 24 20% 10%;
+    /* #1E1714 - Ébano Amadeirado / Dark Walnut */
+    --foreground: 38 30% 94%;
+    /* #F5EFEB - Linho Claro */
 
-    --card: 215 28% 17%;
-    /* Slate 800 */
-    --card-foreground: 210 40% 98%;
+    --card: 24 16% 14%;
+    /* #2A221E - Nogueira Escura */
+    --card-foreground: 38 30% 94%;
 
-    --popover: 215 28% 17%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 24 16% 14%;
+    --popover-foreground: 38 30% 94%;
 
-    --primary: 217 91% 60%;
-    /* Blue (Optimized Stock) */
-    --primary-foreground: 0 0% 100%;
+    --primary: 30 75% 53%;
+    /* #E0852E - Ouro Âmbar / Terracota Luminoso */
+    --primary-foreground: 24 20% 10%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 24 14% 19%;
+    /* #382D27 */
+    --secondary-foreground: 38 30% 94%;
 
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 24 14% 19%;
+    --muted-foreground: 30 12% 64%;
+    /* #A69B93 */
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 30 75% 53%;
+    --accent-foreground: 24 20% 10%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 40%;
+    --destructive-foreground: 38 30% 94%;
 
-    --border: 217 33% 17%;
-    /* Mais claro que o fundo dos cartões (215 28% 17%): com o mesmo tom, o contorno dos campos ficava invisível no modo escuro. */
-    --input: 215 20% 32%;
-    --ring: 217 91% 60%;
+    --border: 24 14% 22%;
+    /* #423630 - Borda Discreta Escura */
+    --input: 24 14% 28%;
+    /* #52443C */
+    --ring: 30 75% 53%;
 
-    /* Sales Chart - Neon Green (Dark Mode) */
-    --sales-stroke: #4ade80;
-    /* Green 400 (Brighter for Dark Mode) */
-    --sales-gradient-start: #4ade80;
-    --sales-gradient-end: #10b981;
+    /* Gráfico de Vendas e Faturação (Dark Mode) */
+    --sales-stroke: #DF9E42;
+    --sales-gradient-start: #F5D59A;
+    --sales-gradient-end: #BA5A1A;
 
-    /* Chart Colors - Dark Mode */
-    --chart-1: 151 55% 42%;
-    /* Emerald */
-    --chart-2: 217 91% 60%;
-    --chart-3: 258 75% 65%;
-    /* Violet */
-    --chart-4: 0 84% 60%;
-    --chart-5: 258 75% 65%;
+    /* Chart Colors - Hotelaria (Dark Mode) */
+    --chart-1: 152 48% 45%;
+    /* Verde Sálvia */
+    --chart-2: 30 75% 53%;
+    /* Terracota Ouro */
+    --chart-3: 38 75% 56%;
+    /* Ouro Champagne */
+    --chart-4: 0 72% 58%;
+    /* Carmim */
+    --chart-5: 32 60% 55%;
+    /* Âmbar */
   }
 }
 
@@ -147,20 +162,17 @@
 }
 
 @layer components {
-
-  /* Reference .glass utility */
-  /* Reference .glass utility - Simplified for Performance */
+  /* Utilitários de Superfície Glassmorphism Hotelaria */
   .glass {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 253, 249, 0.95);
+    border: 1px solid rgba(186, 90, 26, 0.08);
   }
 
   .dark .glass {
-    background: rgba(30, 41, 59, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(42, 34, 30, 0.95);
+    border: 1px solid rgba(223, 158, 66, 0.12);
   }
 
-  /* Legacy glass utilities updated for compatibility - Removed Blur */
   .glass-card {
     @apply bg-card border border-border shadow-sm;
   }
@@ -179,7 +191,7 @@
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 7px;
   }
 
   ::-webkit-scrollbar-track {
@@ -187,12 +199,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: hsl(var(--muted-foreground) / 0.4);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    background: hsl(var(--primary) / 0.6);
   }
 
   .kpi-card--purple {
@@ -231,6 +243,7 @@
     }
   }
 }
+
 /* Animação de entrada: escondida quando já foi vista; e nunca fica presa no ecrã se o JavaScript falhar */
 html[data-intro='skip'] .msx-intro { display: none; }
 /* recarregar com a sessão aberta: sem ecrã cheio, o menu e o cabeçalho ficam e só o conteúdo espera (ver lib/nav-hint.ts) */

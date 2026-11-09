@@ -1,15 +1,15 @@
 {
-  "name": "MajorStockX",
-  "short_name": "MajorStockX",
-  "description": "Sistema de gestão de estoque e produção para materiais de construção.",
+  "name": "MajorStay — Gestão de Quartos e Hotelaria",
+  "short_name": "MajorStay",
+  "description": "Sistema especializado em hotelaria, lodges e guest houses: controlo de quartos em tempo real, cobrança por hora ou pernoita, bar e fecho de caixa sem desvios.",
   "id": "/dashboard",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "lang": "pt",
-  "background_color": "#0d1117",
-  "theme_color": "#0d1117",
+  "background_color": "#1E1714",
+  "theme_color": "#1E1714",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -42,9 +42,22 @@
   "prefer_related_applications": false,
   "shortcuts": [
     {
-      "name": "Venda Rápida",
-      "short_name": "Vender",
-      "description": "Abrir a Venda Rápida",
+      "name": "Quartos & Estadias",
+      "short_name": "Quartos",
+      "description": "Abrir o painel de controlo de quartos",
+      "url": "/rooms",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Bar & Restaurante",
+      "short_name": "Bar",
+      "description": "Vendas de bar e consumos",
       "url": "/pos",
       "icons": [
         {
@@ -55,23 +68,10 @@
       ]
     },
     {
-      "name": "Stock Rápido",
-      "short_name": "Stock",
-      "description": "Entradas, saídas e contagens",
-      "url": "/inventory/quick",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Histórico de Vendas",
-      "short_name": "Vendas",
-      "description": "Ver as vendas",
-      "url": "/sales",
+      "name": "Controlo de Caixa",
+      "short_name": "Caixa",
+      "description": "Sessões e fecho de turno",
+      "url": "/cashier",
       "icons": [
         {
           "src": "/icon-192.png",
