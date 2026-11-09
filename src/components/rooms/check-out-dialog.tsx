@@ -106,109 +106,111 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26] shadow-xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-slate-100">
-            <LogOut className="h-6 w-6 text-rose-600" />
+          <DialogTitle className="flex items-center gap-2.5 text-xl font-headline font-bold text-stone-900 dark:text-stone-100">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <LogOut className="h-5 w-5" />
+            </div>
             Check-out & Fecho de Conta
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Cabeçalho do Quarto */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="p-3.5 bg-[#FAF7F2] dark:bg-[#261D19] rounded-2xl border border-[#EBE3D5] dark:border-[#382B24] flex items-center justify-between">
             <div>
-              <p className="font-bold text-slate-800 dark:text-slate-100">
+              <p className="font-headline font-bold text-base text-stone-900 dark:text-stone-100">
                 {stay.roomName || room?.name || 'Quarto'}
               </p>
-              <p className="text-xs text-slate-500">
-                Hóspede: <strong>{stay.clientName || 'Particular'}</strong>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                Hóspede: <strong className="text-stone-800 dark:text-stone-200">{stay.clientName || 'Particular'}</strong>
                 {stay.clientPhone ? ` (${stay.clientPhone})` : ''}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-slate-500 block">Tarifa Aplicada</span>
-              <span className="font-semibold text-sm">{formatCurrency(ratePerHour)}/h</span>
+              <span className="text-[10px] uppercase font-semibold text-stone-400 block tracking-wider">Tarifa Aplicada</span>
+              <span className="font-bold text-sm text-[#BA5A1A] dark:text-[#E0852E]">{formatCurrency(ratePerHour)}/h</span>
             </div>
           </div>
 
-          {/* Resumo da Permanência e Regra Anti-Roubo */}
-          <div className="p-4 bg-slate-100/80 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+          {/* Resumo da Permanência */}
+          <div className="p-4 bg-[#FAF7F2] dark:bg-[#261D19] rounded-2xl border border-[#EBE3D5] dark:border-[#382B24] space-y-3">
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-slate-500 block">Hora de Entrada (Check-in):</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                <span className="text-stone-400 font-semibold block text-[10px] uppercase tracking-wider">Check-in:</span>
+                <span className="font-bold text-stone-900 dark:text-stone-100 text-sm">
                   {checkInDate.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 block">Hora de Saída (Agora):</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                <span className="text-stone-400 font-semibold block text-[10px] uppercase tracking-wider">Saída (Agora):</span>
+                <span className="font-bold text-stone-900 dark:text-stone-100 text-sm">
                   {now.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-3 text-xs">
+            <div className="pt-2 border-t border-[#EBE3D5] dark:border-[#382B24] grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-slate-500 block">Tempo Decorrido:</span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <span className="text-stone-400 font-medium block">Tempo Decorrido:</span>
+                <span className="font-semibold text-stone-800 dark:text-stone-200">
                   {formatStayDuration(pricing.durationMinutes)}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 block">Horas Contratadas:</span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <span className="text-stone-400 font-medium block">Horas Contratadas:</span>
+                <span className="font-semibold text-stone-800 dark:text-stone-200">
                   {contractedHours} {contractedHours === 1 ? 'hora' : 'horas'}
                 </span>
               </div>
             </div>
 
-            {/* Alerta de Tempo Excedido e Regra de Faturação */}
+            {/* Alerta de Tempo Excedido */}
             {pricing.isOvertime ? (
-              <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-xl bg-[#FDF0EE] dark:bg-[#381616] border border-[#FBD5D0] dark:border-[#5C2323] text-xs text-[#C53030] dark:text-[#FEB2B2] flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-[#C53030] shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold">Tempo Excedido (+{pricing.overtimeHours}h adicional)</p>
-                  <p className="text-[11px] text-rose-700 dark:text-rose-400">
-                    Regra oficial: Hora começada conta como hora inteira. Serão faturadas <strong>{pricing.billedHours} horas</strong>.
+                  <p className="text-[11px] text-[#C53030]/80 mt-0.5">
+                    Regra oficial: Hora iniciada conta como hora inteira. Serão faturadas <strong>{pricing.billedHours} horas</strong>.
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <div className="p-2.5 rounded-xl bg-[#EDF6F0] dark:bg-[#1C3023] border border-[#CDE5D5] dark:border-[#284934] text-xs text-[#245D3B] dark:text-[#8CD9A9] flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-[#488C64] shrink-0" />
                 <span>Estadia dentro da tolerância acordada ({pricing.billedHours}h faturada).</span>
               </div>
             )}
           </div>
 
           {/* Bloco de Valor Final (Estadia + Consumos de Bar) */}
-          <div className="p-4 bg-emerald-500/10 dark:bg-emerald-500/20 border-2 border-emerald-500/40 rounded-xl space-y-2">
+          <div className="p-4 bg-[#FAF0E6]/70 dark:bg-[#341F14]/60 border-2 border-[#BA5A1A]/30 rounded-2xl space-y-2">
             {pricing.consumptionsAmountDue > 0 ? (
-              <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 border-b border-emerald-500/20 pb-2">
+              <div className="space-y-1.5 text-xs text-stone-700 dark:text-stone-300 border-b border-[#BA5A1A]/20 pb-2">
                 <div className="flex justify-between">
                   <span>Horas de Quarto ({pricing.billedHours}h × {formatCurrency(ratePerHour)}):</span>
                   <span className="font-semibold">{formatCurrency(pricing.stayAmountDue)}</span>
                 </div>
-                <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                <div className="flex justify-between text-[#DF9E42] font-semibold">
                   <span>Bar & Consumos ({(stay.consumptions || []).length} itens):</span>
-                  <span className="font-semibold">+{formatCurrency(pricing.consumptionsAmountDue)}</span>
+                  <span>+{formatCurrency(pricing.consumptionsAmountDue)}</span>
                 </div>
               </div>
             ) : null}
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              <span className="text-sm font-bold text-stone-800 dark:text-stone-200">
                 Total Oficial a Cobrar:
               </span>
-              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
+              <span className="text-2xl font-headline font-black text-[#BA5A1A] dark:text-[#E0852E]">
                 {formatCurrency(pricing.totalAmountDue)}
               </span>
             </div>
 
             {previousPaid > 0 && (
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-emerald-500/20">
+              <div className="flex items-center justify-between text-xs text-stone-500 pt-1 border-t border-[#BA5A1A]/10">
                 <span>Adiantado no Check-in:</span>
                 <span className="font-semibold">{formatCurrency(previousPaid)}</span>
               </div>
@@ -224,15 +226,15 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
           {/* Método de Pagamento */}
           <div className="space-y-1.5">
-            <Label htmlFor="checkoutPaymentMethod" className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-              <CreditCard className="h-3.5 w-3.5 text-slate-400" />
+            <Label htmlFor="checkoutPaymentMethod" className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1">
+              <CreditCard className="h-3.5 w-3.5 text-stone-400" />
               Forma de Pagamento Recebida *
             </Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger id="checkoutPaymentMethod" className="h-10">
+              <SelectTrigger id="checkoutPaymentMethod" className="h-10 rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26]">
                 {PAYMENT_METHODS.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.label}
@@ -244,7 +246,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
           {/* Próximo Estado do Quarto */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
               Próximo Estado do Quarto após Check-out:
             </Label>
             <RadioGroup
@@ -254,24 +256,24 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
             >
               <div className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-colors ${
                 roomNextStatus === 'cleaning'
-                  ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30'
-                  : 'border-slate-200 dark:border-slate-800'
+                  ? 'border-[#DF9E42] bg-[#FAF4E6] dark:bg-[#322510]'
+                  : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915]'
               }`}>
                 <RadioGroupItem value="cleaning" id="cleaning" />
-                <Label htmlFor="cleaning" className="cursor-pointer text-xs font-medium flex items-center gap-1">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                <Label htmlFor="cleaning" className="cursor-pointer text-xs font-medium flex items-center gap-1.5 text-stone-800 dark:text-stone-200">
+                  <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
                   Em Limpeza (Recomendado)
                 </Label>
               </div>
 
               <div className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer transition-colors ${
                 roomNextStatus === 'free'
-                  ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30'
-                  : 'border-slate-200 dark:border-slate-800'
+                  ? 'border-[#488C64] bg-[#EDF6F0] dark:bg-[#1C3023]'
+                  : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915]'
               }`}>
                 <RadioGroupItem value="free" id="free" />
-                <Label htmlFor="free" className="cursor-pointer text-xs font-medium flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <Label htmlFor="free" className="cursor-pointer text-xs font-medium flex items-center gap-1.5 text-stone-800 dark:text-stone-200">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[#488C64]" />
                   Livre Imediatamente
                 </Label>
               </div>
@@ -280,7 +282,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
           {/* Notas */}
           <div className="space-y-1">
-            <Label htmlFor="checkoutNotes" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+            <Label htmlFor="checkoutNotes" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
               Notas do Fecho (opcional)
             </Label>
             <Textarea
@@ -289,7 +291,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Chave entregue sem danos; frigobar conferido..."
               rows={2}
-              className="resize-none text-xs"
+              className="resize-none text-xs rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]"
             />
           </div>
 
@@ -299,12 +301,13 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="rounded-xl border-[#E5DFD6] dark:border-[#382D26] hover:bg-[#F4EDE0]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+              className="bg-[#BA5A1A] hover:bg-[#9C4811] text-white font-bold rounded-xl shadow-sm transition-all"
               disabled={loading}
             >
               {loading ? 'A Concluir...' : `Concluir Check-out (${formatCurrency(pricing.totalAmountDue)})`}

@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BedDouble, Sparkles, Clock, DollarSign } from 'lucide-react';
+import { BedDouble, Sparkles, Clock, Coins } from 'lucide-react';
 import type { Room, RoomType } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
@@ -116,18 +116,27 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-            <BedDouble className="h-6 w-6 text-primary" />
-            {roomToEdit ? 'Editar Quarto' : 'Novo Quarto no Alojamento'}
-          </DialogTitle>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+              <BedDouble className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg font-bold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">
+                {roomToEdit ? 'Editar Quarto' : 'Novo Quarto no Alojamento'}
+              </DialogTitle>
+              <p className="text-xs text-[#827568] dark:text-[#B0A294]">
+                Configure o nome, categoria e tarifa horária do alojamento
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Nome / Número */}
-          <div className="space-y-1">
-            <Label htmlFor="roomName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="space-y-1.5">
+            <Label htmlFor="roomName" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
               Nome ou Número do Quarto *
             </Label>
             <Input
@@ -135,23 +144,23 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Quarto 101 ou Suíte Presidencial"
-              className="h-10"
+              className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
               required
             />
           </div>
 
           {/* Tipo de Quarto */}
-          <div className="space-y-1">
-            <Label htmlFor="roomType" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="space-y-1.5">
+            <Label htmlFor="roomType" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
               Categoria / Tipo
             </Label>
             <Select value={type} onValueChange={(val: RoomType) => setType(val)}>
-              <SelectTrigger id="roomType" className="h-10">
+              <SelectTrigger id="roomType" className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714]">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915]">
                 {ROOM_TYPES.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
+                  <SelectItem key={t.id} value={t.id} className="text-xs font-medium focus:bg-[#FAF0E6] focus:text-[#BA5A1A]">
                     {t.label}
                   </SelectItem>
                 ))}
@@ -161,25 +170,28 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
 
           {/* Tarifa por Hora (MT) e Mínimo de Horas */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="ratePerHour" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <div className="space-y-1.5">
+              <Label htmlFor="ratePerHour" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
                 Tarifa Horária (MT) *
               </Label>
-              <Input
-                id="ratePerHour"
-                type="number"
-                min="1"
-                step="50"
-                value={ratePerHour}
-                onChange={(e) => setRatePerHour(Number(e.target.value))}
-                placeholder="300"
-                className="h-10"
-                required
-              />
+              <div className="relative">
+                <Coins className="absolute left-3 top-2.5 h-4 w-4 text-[#827568]" />
+                <Input
+                  id="ratePerHour"
+                  type="number"
+                  min="1"
+                  step="50"
+                  value={ratePerHour}
+                  onChange={(e) => setRatePerHour(Number(e.target.value))}
+                  placeholder="300"
+                  className="pl-9 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="minHours" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <div className="space-y-1.5">
+              <Label htmlFor="minHours" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
                 Mínimo de Horas
               </Label>
               <Input
@@ -189,31 +201,34 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 max="24"
                 value={minimumHours}
                 onChange={(e) => setMinimumHours(Number(e.target.value))}
-                className="h-10"
+                className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
               />
             </div>
           </div>
 
           {/* Tempo de Limpeza Estimado */}
-          <div className="space-y-1">
-            <Label htmlFor="cleaningMin" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="space-y-1.5">
+            <Label htmlFor="cleaningMin" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
               Tempo Estimado de Limpeza (minutos)
             </Label>
-            <Input
-              id="cleaningMin"
-              type="number"
-              min="5"
-              step="5"
-              value={cleaningDurationMinutes}
-              onChange={(e) => setCleaningDurationMinutes(Number(e.target.value))}
-              placeholder="15"
-              className="h-10"
-            />
+            <div className="relative">
+              <Clock className="absolute left-3 top-2.5 h-4 w-4 text-[#827568]" />
+              <Input
+                id="cleaningMin"
+                type="number"
+                min="5"
+                step="5"
+                value={cleaningDurationMinutes}
+                onChange={(e) => setCleaningDurationMinutes(Number(e.target.value))}
+                placeholder="15"
+                className="pl-9 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+              />
+            </div>
           </div>
 
           {/* Notas */}
-          <div className="space-y-1">
-            <Label htmlFor="roomNotes" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+          <div className="space-y-1.5">
+            <Label htmlFor="roomNotes" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
               Observações / Comodidades (opcional)
             </Label>
             <Textarea
@@ -222,22 +237,23 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Ar condicionado, frigobar, vista para o jardim..."
               rows={2}
-              className="resize-none text-xs"
+              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
             />
           </div>
 
-          <DialogFooter className="pt-2 gap-2 sm:gap-0">
+          <DialogFooter className="pt-2 gap-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="h-11 rounded-xl border-[#E5DFD6] dark:border-[#382D26] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="font-semibold"
+              className="h-11 rounded-xl font-bold bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-md shadow-[#BA5A1A]/20 transition-all"
               disabled={loading}
             >
               {loading ? 'A Guardar...' : roomToEdit ? 'Salvar Alterações' : 'Criar Quarto'}

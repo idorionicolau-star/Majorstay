@@ -117,7 +117,6 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
         notes: notes.trim(),
       });
       onOpenChange(false);
-      // Reset form
       setClientName('Hóspede Particular');
       setClientPhone('');
       setClientDoc('');
@@ -137,10 +136,12 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26] shadow-xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-            <BedDouble className="h-6 w-6 text-emerald-600" />
+          <DialogTitle className="flex items-center gap-2.5 text-xl font-headline font-bold text-stone-900 dark:text-stone-100">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <BedDouble className="h-5 w-5" />
+            </div>
             Novo Check-in de Quarto
           </DialogTitle>
         </DialogHeader>
@@ -148,19 +149,19 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Seleção do Quarto */}
           <div className="space-y-1.5">
-            <Label htmlFor="roomSelect" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="roomSelect" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
               Quarto a Ocupar *
             </Label>
             <Select value={roomId} onValueChange={handleRoomChange}>
-              <SelectTrigger id="roomSelect" className="h-11">
+              <SelectTrigger id="roomSelect" className="h-11 rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]">
                 <SelectValue placeholder="Selecione um quarto..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26]">
                 {freeRooms.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     <div className="flex items-center justify-between w-full gap-4">
-                      <span className="font-medium">{r.name}</span>
-                      <span className="text-xs text-slate-500 font-normal">
+                      <span className="font-semibold text-stone-900 dark:text-stone-100">{r.name}</span>
+                      <span className="text-xs text-stone-500 font-normal">
                         {formatCurrency(r.ratePerHour)}/hora (mín. {r.minimumHours || 1}h)
                       </span>
                     </div>
@@ -169,26 +170,26 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
               </SelectContent>
             </Select>
             {selectedRoom && (
-              <p className="text-xs text-slate-500 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-amber-500" />
-                Tarifa base deste quarto: <strong>{formatCurrency(ratePerHour)}/hora</strong>
+              <p className="text-xs text-stone-500 dark:text-stone-400 flex items-center gap-1.5 pt-0.5">
+                <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
+                Tarifa base deste quarto: <strong className="text-stone-800 dark:text-stone-200">{formatCurrency(ratePerHour)}/hora</strong>
               </p>
             )}
           </div>
 
           {/* Duração Contratada (Horas) */}
-          <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="space-y-2.5 p-3.5 bg-[#FAF7F2] dark:bg-[#261D19] rounded-2xl border border-[#EBE3D5] dark:border-[#382B24]">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-primary" />
-                Horas Contratadas Inicialmente *
+                Duração da Estadia *
               </Label>
-              <span className="text-sm font-bold text-primary">
+              <span className="text-sm font-headline font-bold text-primary">
                 {contractedHours} {contractedHours === 1 ? 'hora' : 'horas'}
               </span>
             </div>
 
-            {/* Botoes rapidos */}
+            {/* Botões rápidos */}
             <div className="grid grid-cols-4 gap-1.5">
               {PRESET_HOURS.slice(0, 4).map((p) => (
                 <Button
@@ -196,7 +197,11 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
                   type="button"
                   size="sm"
                   variant={contractedHours === p.hours ? 'default' : 'outline'}
-                  className="h-8 text-xs font-medium"
+                  className={`h-8 text-xs font-semibold rounded-xl transition-all ${
+                    contractedHours === p.hours
+                      ? 'bg-[#BA5A1A] hover:bg-[#9C4811] text-white shadow-sm'
+                      : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#1E1714] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0]'
+                  }`}
                   onClick={() => setContractedHours(p.hours)}
                 >
                   {p.label}
@@ -210,7 +215,11 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
                   type="button"
                   size="sm"
                   variant={contractedHours === p.hours ? 'default' : 'outline'}
-                  className="h-8 text-xs font-medium"
+                  className={`h-8 text-xs font-semibold rounded-xl transition-all ${
+                    contractedHours === p.hours
+                      ? 'bg-[#BA5A1A] hover:bg-[#9C4811] text-white shadow-sm'
+                      : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#1E1714] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0]'
+                  }`}
                   onClick={() => setContractedHours(p.hours)}
                 >
                   {p.label}
@@ -219,9 +228,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
             </div>
 
             {/* Resumo de valor */}
-            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs text-slate-500">Valor Inicial a Cobrar:</span>
-              <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">
+            <div className="mt-2 pt-2.5 border-t border-[#EBE3D5] dark:border-[#382B24] flex items-center justify-between">
+              <span className="text-xs text-stone-500 font-medium">Valor Inicial a Cobrar:</span>
+              <span className="text-lg font-headline font-black text-[#BA5A1A] dark:text-[#E0852E]">
                 {formatCurrency(totalAmount)}
               </span>
             </div>
@@ -230,8 +239,8 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
           {/* Dados do Hóspede */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="clientName" className="text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300">
-                <User className="h-3.5 w-3.5 text-slate-400" />
+              <Label htmlFor="clientName" className="text-xs font-semibold flex items-center gap-1 text-stone-700 dark:text-stone-300">
+                <User className="h-3.5 w-3.5 text-stone-400" />
                 Nome do Hóspede
               </Label>
               <Input
@@ -239,13 +248,13 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Ex: Carlos Mondlane"
-                className="h-10"
+                className="h-10 rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]"
               />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="clientPhone" className="text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300">
-                <Phone className="h-3.5 w-3.5 text-slate-400" />
+              <Label htmlFor="clientPhone" className="text-xs font-semibold flex items-center gap-1 text-stone-700 dark:text-stone-300">
+                <Phone className="h-3.5 w-3.5 text-stone-400" />
                 Contacto Telefónico (opcional)
               </Label>
               <Input
@@ -253,22 +262,22 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
                 placeholder="84 / 82 / 87..."
-                className="h-10"
+                className="h-10 rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]"
               />
             </div>
           </div>
 
           {/* Método de Pagamento */}
           <div className="space-y-1.5">
-            <Label htmlFor="paymentMethod" className="text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300">
-              <CreditCard className="h-3.5 w-3.5 text-slate-400" />
+            <Label htmlFor="paymentMethod" className="text-xs font-semibold flex items-center gap-1 text-stone-700 dark:text-stone-300">
+              <CreditCard className="h-3.5 w-3.5 text-stone-400" />
               Método de Pagamento Inicial
             </Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger id="paymentMethod" className="h-10">
+              <SelectTrigger id="paymentMethod" className="h-10 rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]">
                 <SelectValue placeholder="Selecione o método..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#FFFDF9] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26]">
                 {PAYMENT_METHODS.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.label}
@@ -280,7 +289,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
 
           {/* Observações / Notas */}
           <div className="space-y-1">
-            <Label htmlFor="notes" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+            <Label htmlFor="notes" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
               Observações (opcional)
             </Label>
             <Textarea
@@ -289,7 +298,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Pagamento adiantado; cliente solicitou toalhas adicionais..."
               rows={2}
-              className="resize-none text-xs"
+              className="resize-none text-xs rounded-xl bg-[#FAF7F2] dark:bg-[#251D18] border-[#E5DFD6] dark:border-[#382D26]"
             />
           </div>
 
@@ -299,12 +308,13 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="rounded-xl border-[#E5DFD6] dark:border-[#382D26] hover:bg-[#F4EDE0]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              className="bg-[#BA5A1A] hover:bg-[#9C4811] text-white font-bold rounded-xl shadow-sm transition-all"
               disabled={loading || !roomId}
             >
               {loading ? 'A Registar...' : `Confirmar Check-in (${formatCurrency(totalAmount)})`}

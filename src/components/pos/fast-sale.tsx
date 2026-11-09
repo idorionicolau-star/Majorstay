@@ -826,7 +826,7 @@ export function FastSale() {
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <BedDouble className="h-5 w-5 text-indigo-600" />
+                            <BedDouble className="h-5 w-5 text-[#BA5A1A]" />
                             Lançar na Comanda do Quarto
                         </DialogTitle>
                         <DialogDescription>
@@ -858,7 +858,7 @@ export function FastSale() {
                         </div>
                         <div className="flex justify-between items-center text-base font-bold pt-1">
                             <span>Total a Lançar</span>
-                            <span className="text-indigo-600 dark:text-indigo-400">{formatCurrency(total)}</span>
+                            <span className="text-[#BA5A1A] dark:text-[#E88C4A]">{formatCurrency(total)}</span>
                         </div>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
@@ -887,7 +887,7 @@ export function FastSale() {
                                 }
                             }}
                             disabled={savingRoom || !selectedRoomStayId || lines.length === 0}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            className="bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-md shadow-[#BA5A1A]/20"
                         >
                             {savingRoom ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BedDouble className="mr-2 h-4 w-4" />}
                             Confirmar no Quarto ({formatCurrency(total)})
@@ -916,7 +916,7 @@ export function FastSale() {
                                     setRoomDialogOpen(true);
                                 }}
                                 disabled={saving || savingRoom || lines.length === 0}
-                                className="h-12 shrink-0 rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/40 px-3.5 text-sm font-semibold"
+                                className="h-12 shrink-0 rounded-xl border-indigo-200 text-[#BA5A1A] hover:bg-indigo-50 dark:border-indigo-800 dark:text-[#E88C4A] dark:hover:bg-indigo-950/40 px-3.5 text-sm font-semibold"
                             >
                                 <BedDouble className="mr-1.5 h-4 w-4" />
                                 No Quarto ({openStays.length})

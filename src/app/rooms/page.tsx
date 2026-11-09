@@ -127,17 +127,17 @@ export default function RoomsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto">
-      {/* Cabeçalho da Página */}
+      {/* Cabeçalho da Página em Estilo Hotel Boutique */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <BedDouble className="h-7 w-7" />
+          <h1 className="text-2xl sm:text-3xl font-headline font-extrabold tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+              <BedDouble className="h-6 w-6" />
             </div>
-            Quadro de Quartos
+            Quadro de Quartos & Suítes
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gestão de ocupação por hora, faturação e controlo anti-desvios em tempo real.
+          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1 font-medium">
+            Gestão de estadias em tempo real, cobrança por hora ou pernoita e controlo de caixa.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export default function RoomsPage() {
             size="sm"
             onClick={refreshRealtimeStatuses}
             title="Atualizar status dos quartos"
-            className="h-10 text-xs gap-1.5"
+            className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0]"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Atualizar
@@ -158,9 +158,9 @@ export default function RoomsPage() {
               variant="outline"
               size="sm"
               onClick={handleOpenNewRoom}
-              className="h-10 text-xs gap-1.5 border-slate-300 dark:border-slate-700 font-semibold"
+              className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0] font-semibold"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5 text-primary" />
               Novo Quarto
             </Button>
           )}
@@ -168,7 +168,7 @@ export default function RoomsPage() {
           <Button
             size="sm"
             onClick={() => handleOpenCheckIn()}
-            className="h-10 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+            className="h-10 text-xs gap-1.5 bg-[#BA5A1A] hover:bg-[#9C4811] text-white font-bold rounded-xl shadow-sm transition-all"
           >
             <Plus className="h-4 w-4" />
             Novo Check-in
@@ -176,24 +176,24 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Cartões de Indicadores (KPIs do topo) */}
+      {/* Cartões de Indicadores (KPIs do topo) em Estilo Hotelaria Nobre */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
         {/* Livres */}
         <div
           onClick={() => setActiveTab('free')}
-          className={`p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-sm ${
             activeTab === 'free'
-              ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-950/30'
-              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-300'
+              ? 'border-[#488C64] ring-2 ring-[#488C64]/20 bg-[#EDF6F0] dark:bg-[#1C3023]'
+              : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#488C64]/50'
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600">
+            <div className="p-2.5 rounded-xl bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3023] dark:text-[#8CD9A9]">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Livres</p>
-              <p className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400">
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider">Livres</p>
+              <p className="text-2xl font-headline font-black text-[#245D3B] dark:text-[#8CD9A9]">
                 {stats.free}
               </p>
             </div>
@@ -203,19 +203,19 @@ export default function RoomsPage() {
         {/* Ocupados */}
         <div
           onClick={() => setActiveTab('occupied')}
-          className={`p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-sm ${
             activeTab === 'occupied'
-              ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/60 dark:bg-blue-950/30'
-              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300'
+              ? 'border-[#BA5A1A] ring-2 ring-[#BA5A1A]/20 bg-[#FAF0E6] dark:bg-[#341F14]'
+              : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#BA5A1A]/50'
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600">
+            <div className="p-2.5 rounded-xl bg-[#FAF0E6] text-[#BA5A1A] dark:bg-[#341F14] dark:text-[#F3B080]">
               <BedDouble className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Ocupados</p>
-              <p className="text-2xl font-extrabold text-blue-700 dark:text-blue-400">
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider">Ocupados</p>
+              <p className="text-2xl font-headline font-black text-[#BA5A1A] dark:text-[#F3B080]">
                 {stats.occupied}
               </p>
             </div>
@@ -225,21 +225,19 @@ export default function RoomsPage() {
         {/* Tempo Excedido */}
         <div
           onClick={() => setActiveTab('overtime')}
-          className={`p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${
-            stats.overtime > 0 ? 'animate-pulse' : ''
-          } ${
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-sm ${
             activeTab === 'overtime'
-              ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/60 dark:bg-rose-950/30'
-              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-rose-300'
-          }`}
+              ? 'border-[#C53030] ring-2 ring-[#C53030]/20 bg-[#FDF0EE] dark:bg-[#381616]'
+              : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#C53030]/50'
+          } ${stats.overtime > 0 ? 'animate-pulse' : ''}`}
         >
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${stats.overtime > 0 ? 'bg-rose-200 dark:bg-rose-900 text-rose-700' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-600'}`}>
+            <div className={`p-2.5 rounded-xl ${stats.overtime > 0 ? 'bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2]' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'}`}>
               <AlertTriangle className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Excedidos</p>
-              <p className={`text-2xl font-extrabold ${stats.overtime > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-700 dark:text-slate-300'}`}>
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider">Excedidos</p>
+              <p className={`text-2xl font-headline font-black ${stats.overtime > 0 ? 'text-[#C53030] dark:text-[#FEB2B2]' : 'text-stone-700 dark:text-stone-300'}`}>
                 {stats.overtime}
               </p>
             </div>
@@ -249,34 +247,34 @@ export default function RoomsPage() {
         {/* Em Limpeza */}
         <div
           onClick={() => setActiveTab('cleaning')}
-          className={`p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${
+          className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-sm ${
             activeTab === 'cleaning'
-              ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/60 dark:bg-amber-950/30'
-              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-amber-300'
+              ? 'border-[#DF9E42] ring-2 ring-[#DF9E42]/20 bg-[#FAF4E6] dark:bg-[#322510]'
+              : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#DF9E42]/50'
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600">
+            <div className="p-2.5 rounded-xl bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B]">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Em Limpeza</p>
-              <p className="text-2xl font-extrabold text-amber-700 dark:text-amber-400">
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider">Limpeza</p>
+              <p className="text-2xl font-headline font-black text-[#975A16] dark:text-[#ECC94B]">
                 {stats.cleaning}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Receita das Estadias de Hoje */}
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm col-span-2 md:col-span-1">
+        {/* Faturado Hoje */}
+        <div className="p-4 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] shadow-sm col-span-2 md:col-span-1">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600">
+            <div className="p-2.5 rounded-xl bg-[#FFFBF0] text-[#BA5A1A] dark:bg-[#2A2012] dark:text-[#DF9E42]">
               <DollarSign className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Faturado Hoje</p>
-              <p className="text-lg font-black text-slate-900 dark:text-white truncate">
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider">Faturado Hoje</p>
+              <p className="text-xl font-headline font-black text-stone-900 dark:text-stone-100 truncate">
                 {formatCurrency(stats.revenueToday)}
               </p>
             </div>
@@ -284,14 +282,18 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Barra de Filtros e Pesquisa */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      {/* Barra de Filtros e Pesquisa Harmonizada */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-[#FFFDF9] dark:bg-[#201915] p-2.5 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] shadow-sm">
         {/* Abas Rápidas */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           <Button
             size="sm"
-            variant={activeTab === 'all' ? 'default' : 'ghost'}
-            className="text-xs font-semibold h-9 rounded-lg"
+            variant="ghost"
+            className={`text-xs font-semibold h-9 rounded-xl transition-all ${
+              activeTab === 'all'
+                ? 'bg-[#BA5A1A] text-white hover:bg-[#BA5A1A] shadow-sm font-bold'
+                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
+            }`}
             onClick={() => setActiveTab('all')}
           >
             Todos ({rooms.length})
@@ -299,57 +301,69 @@ export default function RoomsPage() {
 
           <Button
             size="sm"
-            variant={activeTab === 'free' ? 'default' : 'ghost'}
-            className="text-xs font-semibold h-9 rounded-lg gap-1.5 text-emerald-600 hover:text-emerald-700"
+            variant="ghost"
+            className={`text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+              activeTab === 'free'
+                ? 'bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3023] dark:text-[#8CD9A9] font-bold border border-[#CDE5D5]'
+                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
+            }`}
             onClick={() => setActiveTab('free')}
           >
-            <CheckCircle2 className="h-3.5 w-3.5" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-[#488C64]" />
             Livres ({stats.free})
           </Button>
 
           <Button
             size="sm"
-            variant={activeTab === 'occupied' ? 'default' : 'ghost'}
-            className="text-xs font-semibold h-9 rounded-lg gap-1.5 text-blue-600 hover:text-blue-700"
+            variant="ghost"
+            className={`text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+              activeTab === 'occupied'
+                ? 'bg-[#FAF0E6] text-[#BA5A1A] dark:bg-[#341F14] dark:text-[#F3B080] font-bold border border-[#F0D5C0]'
+                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
+            }`}
             onClick={() => setActiveTab('occupied')}
           >
-            <BedDouble className="h-3.5 w-3.5" />
+            <BedDouble className="h-3.5 w-3.5 text-[#BA5A1A]" />
             Ocupados ({stats.occupied})
           </Button>
 
           <Button
             size="sm"
-            variant={activeTab === 'overtime' ? 'default' : 'ghost'}
-            className={`text-xs font-semibold h-9 rounded-lg gap-1.5 ${
-              stats.overtime > 0
-                ? 'text-rose-600 hover:text-rose-700 font-bold'
-                : 'text-slate-600'
+            variant="ghost"
+            className={`text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+              activeTab === 'overtime'
+                ? 'bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2] font-bold border border-[#FBD5D0]'
+                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
             }`}
             onClick={() => setActiveTab('overtime')}
           >
-            <AlertTriangle className="h-3.5 w-3.5" />
+            <AlertTriangle className="h-3.5 w-3.5 text-[#C53030]" />
             Excedidos ({stats.overtime})
           </Button>
 
           <Button
             size="sm"
-            variant={activeTab === 'cleaning' ? 'default' : 'ghost'}
-            className="text-xs font-semibold h-9 rounded-lg gap-1.5 text-amber-600 hover:text-amber-700"
+            variant="ghost"
+            className={`text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+              activeTab === 'cleaning'
+                ? 'bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B] font-bold border border-[#F6E0B5]'
+                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
+            }`}
             onClick={() => setActiveTab('cleaning')}
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
             Limpeza ({stats.cleaning})
           </Button>
         </div>
 
-        {/* Caixa de Pesquisa */}
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+        {/* Campo de Pesquisa */}
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
           <Input
             placeholder="Pesquisar quarto ou hóspede..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-9 text-xs"
+            className="pl-9 h-9 text-xs rounded-xl bg-[#FAF7F2] dark:bg-[#1E1714] border-[#E5DFD6] dark:border-[#382D26] text-stone-900 dark:text-stone-100 placeholder:text-stone-400"
           />
         </div>
       </div>
@@ -357,56 +371,51 @@ export default function RoomsPage() {
       {/* Grelha de Quartos */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="h-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 animate-pulse"
-            />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-64 rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#261D19] animate-pulse border border-[#E5DFD6]/60 dark:border-[#382D26]/60" />
           ))}
         </div>
       ) : filteredRooms.length === 0 ? (
-        <div className="text-center py-12 px-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 space-y-3">
-          <div className="inline-flex p-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
-            <BedDouble className="h-8 w-8" />
-          </div>
-          <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">
+        <div className="text-center py-16 bg-[#FFFDF9] dark:bg-[#201915] rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] shadow-sm">
+          <BedDouble className="h-12 w-12 text-stone-300 dark:text-stone-600 mx-auto mb-3" />
+          <h3 className="font-headline font-bold text-lg text-stone-800 dark:text-stone-200">
             Nenhum quarto encontrado
           </h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
+          <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 max-w-sm mx-auto">
             {searchTerm
-              ? 'Nenhum quarto corresponde à pesquisa efetuada.'
+              ? `Não foram encontrados quartos para a pesquisa "${searchTerm}".`
               : activeTab !== 'all'
-              ? 'Não existem quartos no estado selecionado neste momento.'
-              : 'Ainda não cadastrou quartos no seu alojamento.'}
+              ? 'Não existem quartos com o filtro selecionado no momento.'
+              : 'Ainda não cadastrou quartos no sistema.'}
           </p>
-          {isManager && activeTab === 'all' && !searchTerm && (
-            <Button onClick={handleOpenNewRoom} className="mt-2 text-xs font-semibold gap-1.5">
-              <Plus className="h-4 w-4" />
-              Adicionar Primeiro Quarto
+          {isManager && rooms.length === 0 && (
+            <Button
+              onClick={handleOpenNewRoom}
+              className="mt-4 bg-[#BA5A1A] hover:bg-[#9C4811] text-white font-bold rounded-xl text-xs h-9"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Cadastrar Primeiro Quarto
             </Button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredRooms.map((room) => {
-            const stay = staysByRoomId.get(room.id);
-            return (
-              <RoomCard
-                key={room.id}
-                room={room}
-                stay={stay}
-                onCheckIn={(r) => handleOpenCheckIn(r)}
-                onExtend={(r, s) => handleOpenExtend(r, s)}
-                onCheckOut={(r, s) => handleOpenCheckOut(r, s)}
-                onConsumption={(r, s) => handleOpenConsumption(r, s)}
-                onEditRoom={(r) => handleOpenEditRoom(r)}
-              />
-            );
-          })}
+          {filteredRooms.map((room) => (
+            <RoomCard
+              key={room.id}
+              room={room}
+              stay={staysByRoomId.get(room.id)}
+              onCheckIn={handleOpenCheckIn}
+              onExtend={handleOpenExtend}
+              onCheckOut={handleOpenCheckOut}
+              onConsumption={handleOpenConsumption}
+              onEditRoom={handleOpenEditRoom}
+            />
+          ))}
         </div>
       )}
 
-      {/* Diálogos / Modais */}
+      {/* Modais de Operação de Hotelaria */}
       <CheckInDialog
         open={checkInOpen}
         onOpenChange={setCheckInOpen}

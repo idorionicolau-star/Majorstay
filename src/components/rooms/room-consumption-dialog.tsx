@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -20,9 +19,8 @@ import {
   Minus,
   Trash2,
   Receipt,
-  ShoppingCart,
   Sparkles,
-  Check,
+  ShoppingBag,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
@@ -191,31 +189,46 @@ export function RoomConsumptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-slate-100 dark:border-slate-800">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
+        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#382D26] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-              <Wine className="h-6 w-6 text-primary" />
-              Bar & Consumos — {stay.roomName || room?.name}
-            </DialogTitle>
-            <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+                <Wine className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-bold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">
+                  Bar & Consumos
+                </DialogTitle>
+                <p className="text-xs text-[#827568] dark:text-[#B0A294]">
+                  {stay.roomName || room?.name} • Bebidas, petiscos e serviços adicionais
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FAF0E6] dark:bg-[#34241B] text-[#BA5A1A] border border-[#F0D5C0] dark:border-[#523A2C]">
               {stay.clientName || 'Hóspede Particular'}
-            </Badge>
+            </span>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 pt-2">
+        <div className="flex-1 overflow-y-auto p-5 pt-3">
           <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="add" className="text-xs font-semibold gap-1.5">
+            <TabsList className="grid grid-cols-2 mb-4 bg-[#F2ECE1] dark:bg-[#2A211B] p-1 rounded-xl h-11">
+              <TabsTrigger
+                value="add"
+                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#BA5A1A] data-[state=active]:shadow-sm"
+              >
                 <Plus className="h-3.5 w-3.5" />
                 Lançar do Bar / Stock
               </TabsTrigger>
-              <TabsTrigger value="tab" className="text-xs font-semibold gap-1.5">
+              <TabsTrigger
+                value="tab"
+                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#BA5A1A] data-[state=active]:shadow-sm"
+              >
                 <Receipt className="h-3.5 w-3.5" />
-                Comanda do Quarto ({consumptions.length})
+                Comanda ({consumptions.length})
                 {consumptionsTotal > 0 && (
-                  <span className="ml-1 text-emerald-600 font-bold">
+                  <span className="ml-1 text-[#245D3B] dark:text-[#64C28D] font-extrabold">
                     ({formatCurrency(consumptionsTotal)})
                   </span>
                 )}
@@ -223,32 +236,37 @@ export function RoomConsumptionDialog({
             </TabsList>
 
             {/* ABA 1: ADICIONAR PRODUTOS */}
-            <TabsContent value="add" className="space-y-4 m-0">
+            <TabsContent value="add" className="space-y-3.5 m-0">
               {/* Barra de pesquisa */}
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#827568]" />
                 <Input
                   placeholder="Pesquisar bebidas, petiscos, água..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 h-9 text-xs"
+                  className="pl-9 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
                 />
               </div>
 
               {/* Categorias */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                {categories.map((cat) => (
-                  <Button
-                    key={cat}
-                    type="button"
-                    size="sm"
-                    variant={selectedCategory === cat ? 'default' : 'outline'}
-                    className="h-7 text-xs px-2.5 rounded-full shrink-0 font-medium"
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat === 'all' ? 'Todos' : cat}
-                  </Button>
-                ))}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                {categories.map((cat) => {
+                  const active = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`h-7 text-xs px-3 rounded-full shrink-0 font-medium transition-all ${
+                        active
+                          ? 'bg-[#BA5A1A] text-white shadow-sm'
+                          : 'border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
+                      }`}
+                    >
+                      {cat === 'all' ? 'Todos' : cat}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Lista de Produtos do Bar */}
@@ -259,21 +277,21 @@ export function RoomConsumptionDialog({
                   return (
                     <div
                       key={item.id || item.name}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors"
+                      className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] flex items-center justify-between gap-3 hover:border-[#BA5A1A]/40 transition-colors shadow-sm"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
+                          <p className="font-bold text-xs text-[#251D18] dark:text-[#F5EFEB] truncate">
                             {item.name}
                           </p>
-                          <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F2ECE1] dark:bg-[#2A211B] text-[#5C5346] dark:text-[#D4C8B8] font-medium shrink-0">
                             {item.category}
-                          </Badge>
+                          </span>
                         </div>
-                        <p className="text-xs font-bold text-primary mt-0.5">
+                        <p className="text-xs font-extrabold text-[#BA5A1A] dark:text-[#E88C4A] mt-0.5">
                           {formatCurrency(item.price)}
                           {item.stock !== null && (
-                            <span className="text-[10px] font-normal text-slate-400 ml-1.5">
+                            <span className="text-[10px] font-normal text-[#827568] dark:text-[#B0A294] ml-1.5">
                               (disp: {item.stock})
                             </span>
                           )}
@@ -282,21 +300,21 @@ export function RoomConsumptionDialog({
 
                       {/* Seletor de Quantidade e Botão Adicionar */}
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800">
+                        <div className="flex items-center border border-[#E5DFD6] dark:border-[#382D26] rounded-xl overflow-hidden bg-[#FAF7F2] dark:bg-[#261E1A]">
                           <button
                             type="button"
-                            className="p-1 px-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                            className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
                             onClick={() => setQuantity(item.id || item.name, qty - 1)}
                             disabled={qty <= 1}
                           >
                             <Minus className="h-3 w-3" />
                           </button>
-                          <span className="text-xs font-bold px-2 text-slate-800 dark:text-slate-200">
+                          <span className="text-xs font-bold px-2.5 text-[#251D18] dark:text-[#F5EFEB]">
                             {qty}
                           </span>
                           <button
                             type="button"
-                            className="p-1 px-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                            className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
                             onClick={() => setQuantity(item.id || item.name, qty + 1)}
                           >
                             <Plus className="h-3 w-3" />
@@ -305,7 +323,7 @@ export function RoomConsumptionDialog({
 
                         <Button
                           size="sm"
-                          className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-1"
+                          className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-sm gap-1"
                           onClick={() => handleAddConsumption(item)}
                           disabled={loading}
                         >
@@ -319,17 +337,17 @@ export function RoomConsumptionDialog({
               </div>
 
               {/* Lançamento Rápido Personalizado */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  Outro Item / Lançamento Manual:
+              <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#261E1A] rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] space-y-2">
+                <p className="text-xs font-bold text-[#251D18] dark:text-[#F5EFEB] flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
+                  Outro Item / Lançamento Manual na Conta
                 </p>
                 <form onSubmit={handleAddCustom} className="grid grid-cols-12 gap-2">
                   <Input
                     placeholder="Descrição (ex: Porção Batata, Gelo...)"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    className="col-span-5 h-8 text-xs"
+                    className="col-span-5 h-9 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
                   />
                   <Input
                     type="number"
@@ -337,7 +355,7 @@ export function RoomConsumptionDialog({
                     placeholder="Qtd"
                     value={customQuantity}
                     onChange={(e) => setCustomQuantity(Number(e.target.value))}
-                    className="col-span-2 h-8 text-xs text-center"
+                    className="col-span-2 h-9 text-xs text-center rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
                   />
                   <Input
                     type="number"
@@ -346,12 +364,12 @@ export function RoomConsumptionDialog({
                     placeholder="Valor MT"
                     value={customPrice}
                     onChange={(e) => setCustomPrice(Number(e.target.value))}
-                    className="col-span-3 h-8 text-xs"
+                    className="col-span-3 h-9 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
                   />
                   <Button
                     type="submit"
                     size="sm"
-                    className="col-span-2 h-8 text-xs font-semibold"
+                    className="col-span-2 h-9 text-xs font-bold rounded-xl bg-[#251D18] dark:bg-[#F5EFEB] text-white dark:text-[#251D18] hover:bg-[#3D2E25]"
                     disabled={loading || !customName.trim()}
                   >
                     Adicionar
@@ -363,40 +381,40 @@ export function RoomConsumptionDialog({
             {/* ABA 2: COMANDA DO QUARTO */}
             <TabsContent value="tab" className="space-y-3 m-0">
               {consumptions.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-xs">
-                  <Receipt className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  Nenhum consumo ou produto lançado nesta estadia ainda.
+                <div className="text-center py-10 text-[#827568] dark:text-[#B0A294] text-xs">
+                  <Receipt className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#BA5A1A]" />
+                  <p className="font-semibold">Nenhum consumo ou produto lançado nesta estadia ainda.</p>
+                  <p className="text-[11px] mt-1 text-[#A69B93]">Use a aba "Lançar do Bar" para adicionar itens à conta do hóspede.</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                   {consumptions.map((c) => (
                     <div
                       key={c.id}
-                      className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between text-xs"
+                      className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] flex items-center justify-between text-xs shadow-sm"
                     >
                       <div>
-                        <p className="font-bold text-slate-800 dark:text-slate-100">
+                        <p className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
                           {c.quantity}× {c.productName}
                         </p>
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-[#827568] dark:text-[#B0A294] mt-0.5">
                           {formatCurrency(c.unitPrice)} cada • Lançado por {c.addedByName || 'Recepção'}
                         </p>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                        <span className="font-extrabold text-sm text-[#BA5A1A] dark:text-[#E88C4A]">
                           {formatCurrency(c.totalPrice)}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                        <button
+                          type="button"
+                          className="h-8 w-8 rounded-lg flex items-center justify-center text-[#C53030] hover:bg-[#FDF0EE] dark:hover:bg-[#3A1E1E] transition-colors"
                           onClick={() => handleRemove(c.id)}
                           disabled={loading}
-                          title="Remover item"
+                          title="Remover item da comanda"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -404,14 +422,14 @@ export function RoomConsumptionDialog({
               )}
 
               {/* Totalizador da Comanda */}
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
-                <div className="flex justify-between items-center text-xs text-slate-600 dark:text-slate-400">
-                  <span>Subtotal Consumos do Bar ({consumptions.length} itens):</span>
-                  <span className="font-bold text-sm text-slate-900 dark:text-white">
+              <div className="p-4 bg-[#FAF0E6]/80 dark:bg-[#2A201A] rounded-2xl border border-[#F0D5C0] dark:border-[#4A382C] space-y-1">
+                <div className="flex justify-between items-center text-xs text-[#827568] dark:text-[#B0A294]">
+                  <span>Subtotal Consumos do Bar ({consumptions.length} {consumptions.length === 1 ? 'item' : 'itens'}):</span>
+                  <span className="font-extrabold text-base text-[#BA5A1A] dark:text-[#E88C4A]">
                     {formatCurrency(consumptionsTotal)}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#827568] dark:text-[#B0A294]">
                   Este valor será somado automaticamente ao tempo da estadia no momento do Check-out.
                 </p>
               </div>
@@ -419,13 +437,13 @@ export function RoomConsumptionDialog({
           </Tabs>
         </div>
 
-        <DialogFooter className="p-4 border-t border-slate-100 dark:border-slate-800">
+        <DialogFooter className="p-4 border-t border-[#E5DFD6] dark:border-[#382D26] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
           <Button
             type="button"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto h-10 rounded-xl font-bold bg-[#251D18] dark:bg-[#F5EFEB] text-white dark:text-[#251D18] hover:bg-[#3D2E25]"
             onClick={() => onOpenChange(false)}
           >
-            Concluir
+            Concluir Lançamentos
           </Button>
         </DialogFooter>
       </DialogContent>

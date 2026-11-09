@@ -11,12 +11,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Clock, PlusCircle, ArrowRight } from 'lucide-react';
+import { Clock, PlusCircle, ArrowRight, UserCheck, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
-import { calculateExpectedCheckOut, normalizeDate } from '@/lib/hospitality-calc';
+import { calculateExpectedCheckOut } from '@/lib/hospitality-calc';
 
 interface ExtendStayDialogProps {
   open: boolean;
@@ -67,81 +67,98 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-            <PlusCircle className="h-6 w-6 text-blue-600" />
-            Prorrogar Estadia / Horas Extras
-          </DialogTitle>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg font-bold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">
+                Prorrogar Estadia
+              </DialogTitle>
+              <p className="text-xs text-[#827568] dark:text-[#B0A294]">
+                Adicione mais horas de permanência ao hóspede
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Identificação do Quarto e Hóspede */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-sm space-y-1">
+          <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#261E1A] rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] text-sm space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-slate-800 dark:text-slate-100">
+              <span className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
                 {stay.roomName || room?.name || 'Quarto'}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FAF0E6] dark:bg-[#34241B] text-[#BA5A1A] border border-[#F0D5C0] dark:border-[#523A2C] font-semibold flex items-center gap-1">
+                <UserCheck className="w-3 h-3" />
                 {stay.clientName || 'Hóspede Particular'}
               </span>
             </div>
-            <p className="text-xs text-slate-500">
-              Tarifa aplicada: <strong>{formatCurrency(ratePerHour)}/hora</strong>
-            </p>
+            <div className="flex items-center justify-between text-xs text-[#827568] dark:text-[#B0A294] pt-1 border-t border-[#EAE3D6] dark:border-[#332720]">
+              <span>Tarifa horária acordada:</span>
+              <strong className="text-[#251D18] dark:text-[#F5EFEB]">{formatCurrency(ratePerHour)}/hora</strong>
+            </div>
           </div>
 
           {/* Seleção de Horas Extras */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
               Adicionar Horas de Permanência *
             </Label>
             <div className="grid grid-cols-5 gap-2">
-              {EXTENSION_OPTIONS.map((h) => (
-                <Button
-                  key={h}
-                  type="button"
-                  variant={hours === h ? 'default' : 'outline'}
-                  size="sm"
-                  className="font-bold text-sm h-10"
-                  onClick={() => setHours(h)}
-                >
-                  +{h}h
-                </Button>
-              ))}
+              {EXTENSION_OPTIONS.map((h) => {
+                const active = hours === h;
+                return (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setHours(h)}
+                    className={`h-11 rounded-xl font-bold text-sm transition-all flex flex-col items-center justify-center ${
+                      active
+                        ? 'bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] text-white shadow-md shadow-[#BA5A1A]/25 border-transparent'
+                        : 'border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
+                    }`}
+                  >
+                    <span>+{h}h</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Comparativo de Horários e Valor Adicional */}
-          <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200/80 dark:border-blue-900 space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+          <div className="p-4 bg-[#FAF0E6]/70 dark:bg-[#2A201A] rounded-2xl border border-[#F0D5C0] dark:border-[#4A382C] space-y-2.5">
+            <div className="flex items-center justify-between text-xs text-[#827568] dark:text-[#B0A294]">
               <span>Saída Prevista Anterior:</span>
-              <span className="font-medium">
+              <span className="font-semibold text-[#251D18] dark:text-[#F5EFEB]">
                 {currentExpected.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
 
-            <div className="flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
-              <span className="flex items-center gap-1">
+            <div className="flex items-center justify-between text-xs font-bold text-[#BA5A1A] dark:text-[#E88C4A]">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
                 Nova Saída Prevista:
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
-              <span className="text-sm">
+              <span className="text-sm font-extrabold px-2 py-0.5 rounded-lg bg-white/70 dark:bg-[#1E1714]/70 border border-[#F0D5C0] dark:border-[#523A2C]">
                 {newExpected.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-blue-200 dark:border-blue-900 flex items-center justify-between">
-              <span className="text-xs text-slate-600 dark:text-slate-400">Valor Adicional a Cobrar:</span>
-              <span className="text-base font-extrabold text-blue-700 dark:text-blue-400">
+            <div className="pt-2 border-t border-[#F0D5C0] dark:border-[#4A382C] flex items-center justify-between">
+              <span className="text-xs text-[#827568] dark:text-[#B0A294]">Valor Adicional a Cobrar:</span>
+              <span className="text-base font-extrabold text-[#BA5A1A] dark:text-[#E88C4A]">
                 +{formatCurrency(extraAmount)}
               </span>
             </div>
           </div>
 
           {/* Notas */}
-          <div className="space-y-1">
-            <Label htmlFor="extNotes" className="text-xs font-medium text-slate-700 dark:text-slate-300">
+          <div className="space-y-1.5">
+            <Label htmlFor="extNotes" className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
               Motivo / Observações (opcional)
             </Label>
             <Textarea
@@ -150,24 +167,26 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Hóspede solicitou mais tempo na receção..."
               rows={2}
-              className="resize-none text-xs"
+              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
             />
           </div>
 
-          <DialogFooter className="pt-2 gap-2 sm:gap-0">
+          <DialogFooter className="pt-2 gap-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="h-11 rounded-xl border-[#E5DFD6] dark:border-[#382D26] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              className="h-11 rounded-xl font-bold bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-md shadow-[#BA5A1A]/20 transition-all flex items-center gap-1.5"
               disabled={loading}
             >
+              <PlusCircle className="w-4 h-4" />
               {loading ? 'A Prorrogar...' : `Adicionar +${hours}h (${formatCurrency(extraAmount)})`}
             </Button>
           </DialogFooter>
