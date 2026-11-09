@@ -5,16 +5,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
+  BedDouble,
   Package,
   Zap,
-  Factory,
-  Menu,
-  ShoppingCart
+  Menu
 } from "lucide-react";
-import { useContext } from "react";
-import { useNavHint } from "@/hooks/use-nav-hint";
-import { InventoryContext } from "@/context/inventory-context";
-import type { ModulePermission } from "@/lib/types";
 import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
 
 interface BottomNavProps {
@@ -23,37 +18,12 @@ interface BottomNavProps {
 
 /** Os separadores da barra de baixo (a ordem é a mesma do swipe entre páginas). */
 export function useNavTabs() {
-  const { canView, companyData, user } = useContext(InventoryContext) || {
-    canView: () => false,
-    companyData: null,
-    user: null
-  };
-  // a recarregar, antes de se saber quem é: o mesmo separador da última vez
-  const hint = useNavHint();
-  const fromHint = !user && !!hint;
-
-  // Logic to determine the 4th item (Production vs Orders)
-  let fourthItem: { title: string; href: string; icon: any; id: string; also?: string[] } | null = null;
-
-  const showProduction = fromHint ? hint.items.some((i) => i.id === 'production') : canView('production' as ModulePermission) &&
-    companyData?.businessType !== 'reseller';
-
-  const showOrders = fromHint ? hint.items.some((i) => i.id === 'orders') : canView('orders' as ModulePermission) &&
-    companyData?.businessType !== 'reseller';
-
-  if (showProduction) {
-    fourthItem = { title: "Produção", href: "/production", icon: Factory, id: "production" };
-  } else if (showOrders) {
-    fourthItem = { title: "Encomendas", href: "/orders", icon: ShoppingCart, id: "orders" };
-  }
-
-  const items = [
+  return [
     { title: "Início", href: "/dashboard", icon: LayoutDashboard, id: "dashboard" },
-    { title: "Produtos", href: "/inventory", icon: Package, id: "inventory", also: ["/catalog"] },
-    { title: "Venda Rápida", href: "/pos", icon: Zap, id: "pos" },
+    { title: "Quartos", href: "/rooms", icon: BedDouble, id: "rooms" },
+    { title: "Lounge", href: "/pos", icon: Zap, id: "pos" },
+    { title: "Bar", href: "/inventory", icon: Package, id: "inventory", also: ["/catalog"] },
   ];
-  if (fourthItem) items.push(fourthItem);
-  return items;
 }
 
 export function BottomNav({ onMenuClick }: BottomNavProps) {
