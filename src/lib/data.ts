@@ -2,16 +2,13 @@
 import type { NavItem, NavGroup, Order, Sale, Production, AppNotification, Product, InitialCatalog, ModulePermission } from './types';
 import {
   LayoutDashboard,
+  BedDouble,
   Box,
   ShoppingCart,
-  Hammer,
   Settings,
-  ClipboardList,
   Users,
   FileText,
-  Layers, // Using Layers for raw materials
   Zap,
-  Truck,
   CreditCard,
 } from 'lucide-react';
 
@@ -19,17 +16,15 @@ export const mainNavItems: NavItem[] = [
   // Início
   // o Diagnóstico (a análise completa) abre-se do Painel
   { title: 'Dashboard', href: '/dashboard', id: 'dashboard', icon: LayoutDashboard, group: 'inicio', also: ['/diagnostico'] },
-  // Vender
+  // Quartos: o quadro de quartos e estadias (fica no grupo Início, que não mostra título)
+  { title: 'Quartos', href: '/rooms', id: 'rooms', icon: BedDouble, group: 'inicio' },
+  // Lounge (as vendas do bar)
   { title: 'Venda Rápida', href: '/pos', id: 'sales', icon: Zap, group: 'vender' },
   { title: 'Histórico de Vendas', href: '/sales', id: 'sales', icon: ShoppingCart, group: 'vender' },
-  { title: 'Lista de Carga', href: '/sales/carga', id: 'sales', isSubItem: true, icon: Truck, group: 'vender' },
   { title: 'Documentos', href: '/documents', id: 'sales', icon: FileText, group: 'vender' },
-  { title: 'Encomendas', href: '/orders', id: 'orders', icon: ClipboardList, group: 'vender' },
-  // Stock
-  // Produtos: o stock (Inventário), o Catálogo (preços), os Movimentos e as Perdas são abas da mesma secção
-  { title: 'Produtos', href: '/inventory', id: 'inventory', icon: Box, group: 'stock', also: ['/catalog'], fallback: { id: 'settings', href: '/catalog' } },
-  { title: 'Produção', href: '/production', id: 'production', icon: Hammer, group: 'stock' },
-  { title: 'Matéria-Prima', href: '/raw-materials', id: 'raw-materials', icon: Layers, group: 'stock' },
+  // Bar
+  // Produtos do Bar: o stock (Inventário), o Catálogo (preços), os Movimentos e as Perdas são abas da mesma secção
+  { title: 'Produtos do Bar', href: '/inventory', id: 'inventory', icon: Box, group: 'stock', also: ['/catalog'], fallback: { id: 'settings', href: '/catalog' } },
   // Pessoas
   { title: 'Clientes', href: '/customers', id: 'customers', icon: Users, group: 'pessoas' },
   { title: 'Funcionários', href: '/users', id: 'users', icon: Users, adminOnly: true, group: 'pessoas' },
@@ -43,8 +38,8 @@ export const mainNavItems: NavItem[] = [
 
 export const NAV_GROUPS: { id: NavGroup; label: string }[] = [
   { id: 'inicio', label: 'Início' },
-  { id: 'vender', label: 'Vender' },
-  { id: 'stock', label: 'Stock' },
+  { id: 'vender', label: 'Lounge' },
+  { id: 'stock', label: 'Bar' },
   { id: 'pessoas', label: 'Pessoas' },
   { id: 'dinheiro', label: 'Dinheiro' },
   { id: 'ajustes', label: 'Ajustes' },
