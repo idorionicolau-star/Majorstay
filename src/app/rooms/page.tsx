@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   BedDouble,
   Clock,
@@ -35,6 +36,7 @@ import type { Room, Stay, Booking } from '@/lib/types';
 type FilterTab = 'all' | 'free' | 'occupied' | 'overtime' | 'cleaning';
 
 export default function RoomsPage() {
+  const router = useRouter();
   const {
     rooms,
     openStays,
@@ -122,27 +124,24 @@ export default function RoomsPage() {
     });
   }, [rooms, activeTab, searchTerm, staysByRoomId]);
 
-  // Ações dos modais
+  // Ações dos modais e navegação
   const handleOpenCheckIn = (room?: Room) => {
-    setSelectedRoomForCheckIn(room || null);
-    setPrefillGuestName('');
-    setPrefillGuestPhone('');
-    setPrefillHours(1);
-    setCheckInOpen(true);
+    if (room?.id) {
+      router.push(`/rooms/checkin?roomId=${room.id}`);
+    } else {
+      router.push('/rooms/checkin');
+    }
   };
 
   const handleCheckInFromBooking = async (booking: Booking) => {
-    const targetRoom = booking.roomId ? rooms.find((r) => r.id === booking.roomId) : null;
-    setSelectedRoomForCheckIn(targetRoom || null);
-    setPrefillGuestName(booking.clientName);
-    setPrefillGuestPhone(booking.clientPhone);
-    setPrefillHours(booking.durationHours || 2);
     setBookingsListOpen(false);
-    setCheckInOpen(true);
-    // Atualizar status da reserva
-    if (updateBookingStatus) {
-      await updateBookingStatus(booking.id, 'checked_in');
-    }
+    const params = new URLSearchParams();
+    if (booking.roomId) params.set('roomId', booking.roomId);
+    if (booking.id) params.set('bookingId', booking.id);
+    if (booking.clientName) params.set('name', booking.clientName);
+    if (booking.clientPhone) params.set('phone', booking.clientPhone);
+    if (booking.durationHours) params.set('hours', String(booking.durationHours));
+    router.push(`/rooms/checkin?${params.toString()}`);
   };
 
   const handleOpenExtend = (room: Room, stay: Stay) => {

@@ -13,6 +13,7 @@ import {
   Clock,
   ArrowRight,
   Wine,
+  Key,
 } from "lucide-react";
 import { useRooms } from "@/context/rooms-context";
 import { useInventory } from "@/context/inventory-context";
@@ -192,9 +193,18 @@ export function HospitalityDashboard() {
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full px-2 sm:px-0">
       {/* 1. Quartos agora */}
       <section className="flex flex-col gap-3" data-tour="hotel-rooms">
-        <SectionTitle subtitle="Disponibilidade e ocupação em tempo real">
-          Quartos & Ocupação Agora
-        </SectionTitle>
+        <div className="flex items-center justify-between gap-3">
+          <SectionTitle subtitle="Disponibilidade e ocupação em tempo real">
+            Quartos & Ocupação Agora
+          </SectionTitle>
+          <Link
+            href="/rooms/checkin"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#BA5A1A] hover:bg-[#9C4811] text-white text-xs font-bold shadow-xs transition-all shrink-0"
+          >
+            <Key className="w-3.5 h-3.5" />
+            Novo Check-in
+          </Link>
+        </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Tile label="Livres" value={stats.free} icon={CheckCircle2} tone="free" />
           <Tile label="Ocupados" value={stats.occupied} icon={BedDouble} tone="occupied" />
