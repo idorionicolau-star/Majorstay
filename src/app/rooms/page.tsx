@@ -292,7 +292,7 @@ export default function RoomsPage() {
             activeTab === 'overtime'
               ? 'border-[#C53030] ring-2 ring-[#C53030]/20 bg-[#FDF0EE] dark:bg-[#381616]'
               : 'border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#C53030]/50'
-          } ${stats.overtime > 0 ? 'animate-pulse' : ''}`}
+          } `}
         >
           <div className="flex items-center gap-2.5 sm:gap-3">
             <div className={`p-2 sm:p-2.5 rounded-xl shrink-0 ${stats.overtime > 0 ? 'bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2]' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'}`}>

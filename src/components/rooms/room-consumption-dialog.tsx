@@ -359,8 +359,8 @@ export function RoomConsumptionDialog({
                   />
                   <Input
                     type="number"
-                    min="1"
-                    step="10"
+                    min="0"
+                    step="any"
                     placeholder="Valor MT"
                     value={customPrice}
                     onChange={(e) => setCustomPrice(Number(e.target.value))}

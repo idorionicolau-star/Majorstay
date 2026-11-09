@@ -269,7 +269,7 @@ export function BookingDialog({
                 <Input
                   type="number"
                   min="0"
-                  step="50"
+                  step="any"
                   value={depositAmount || ''}
                   onChange={(e) => setDepositAmount(Number(e.target.value) || 0)}
                   placeholder="0 (sem sinal)"

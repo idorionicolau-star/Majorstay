@@ -58,7 +58,7 @@ export function ConnectionStatus() {
   const statusInfo = {
     online: {
       tooltip: 'Online e sincronizado.',
-      className: 'bg-emerald-500 animate-pulse-green'
+      className: 'bg-emerald-500'
     },
     offline: {
       tooltip: 'A trabalhar offline. As suas alterações estão a ser guardadas localmente.',
@@ -66,7 +66,7 @@ export function ConnectionStatus() {
     },
     syncing: {
       tooltip: 'A sincronizar dados pendentes...',
-      className: 'bg-blue-500 animate-pulse-blue'
+      className: 'bg-blue-500'
     }
   };
 

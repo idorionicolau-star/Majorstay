@@ -72,6 +72,8 @@ export function RoomCard({
   const isFree = room.status === 'free';
   const isMaintenance = room.status === 'maintenance';
 
+  const isGrace = Boolean(realtime?.isGracePeriod);
+
   // Configuração semântica de hotelaria para cada estado
   const statusTheme = isOvertime
     ? {
@@ -81,6 +83,15 @@ export function RoomCard({
         badgeText: 'Tempo Excedido',
         Icon: AlertTriangle,
         progressClass: '[&>div]:bg-[#C53030]',
+      }
+    : isGrace
+    ? {
+        cardBorder: 'border-[#F6E0B5] dark:border-[#4E3917] shadow-[0_4px_16px_rgba(223,158,66,0.06)]',
+        topAccent: 'bg-[#DF9E42]',
+        badgeClass: 'bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B] border border-[#F6E0B5] dark:border-[#4E3917]',
+        badgeText: 'Compensação (10 min)',
+        Icon: Clock,
+        progressClass: '[&>div]:bg-[#DF9E42]',
       }
     : isOccupied
     ? {
@@ -130,7 +141,7 @@ export function RoomCard({
   return (
     <Card className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[#FFFDF9] dark:bg-[#201915] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${statusTheme.cardBorder}`}>
       {/* Faixa superior nobre com a cor do estado */}
-      <div className={`h-1.5 w-full ${statusTheme.topAccent} ${isOvertime ? 'animate-pulse' : ''}`} />
+      <div className={`h-1.5 w-full ${statusTheme.topAccent}`} />
 
       <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-3">
         {/* Cabeçalho do Cartão: Quarto, Tipo e Badge */}
@@ -331,7 +342,7 @@ export function RoomCard({
               <Button
                 size="sm"
                 className={`h-9 text-[11px] font-bold text-white shadow-sm rounded-xl flex items-center justify-center gap-1 px-1 ${
-                  isOvertime ? 'bg-rose-600 hover:bg-rose-700 animate-pulse' : 'bg-[#251D18] hover:bg-[#18120F] dark:bg-[#382D26] dark:hover:bg-[#4A3C33]'
+                  isOvertime ? 'bg-rose-600 hover:bg-rose-700' : 'bg-[#251D18] hover:bg-[#18120F] dark:bg-[#382D26] dark:hover:bg-[#4A3C33]'
                 }`}
                 onClick={() => onCheckOut(room, stay)}
               >

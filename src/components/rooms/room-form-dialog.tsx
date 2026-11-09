@@ -74,8 +74,8 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
       toast({ variant: 'destructive', title: 'Nome do quarto é obrigatório' });
       return;
     }
-    if (ratePerHour <= 0) {
-      toast({ variant: 'destructive', title: 'Tarifa inválida', description: 'O valor por hora deve ser superior a zero.' });
+    if (ratePerHour < 0 || isNaN(ratePerHour)) {
+      toast({ variant: 'destructive', title: 'Tarifa inválida', description: 'O valor por hora não pode ser negativo.' });
       return;
     }
 
@@ -179,8 +179,8 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 <Input
                   id="ratePerHour"
                   type="number"
-                  min="1"
-                  step="50"
+                  min="0"
+                  step="any"
                   value={ratePerHour}
                   onChange={(e) => setRatePerHour(Number(e.target.value))}
                   placeholder="300"
@@ -216,8 +216,8 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               <Input
                 id="cleaningMin"
                 type="number"
-                min="5"
-                step="5"
+                min="1"
+                step="any"
                 value={cleaningDurationMinutes}
                 onChange={(e) => setCleaningDurationMinutes(Number(e.target.value))}
                 placeholder="15"

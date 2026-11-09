@@ -71,45 +71,52 @@ describe('hospitality-calc', () => {
       expect(calculateBilledHours(baseIn, checkOut, 1, 2)).toBe(1);
     });
 
-    it('tolerates small grace period of 2 minutes after 1 hour', () => {
-      // 1 hora e 1 minuto com 2 min de tolerância -> Continua a ser 1 hora
-      const checkOut = new Date(baseIn.getTime() + 61 * 60 * 1000);
-      expect(calculateBilledHours(baseIn, checkOut, 1, 2)).toBe(1);
+    it('tolerates compensation period of 10 minutes after 1 hour', () => {
+      // 1 hora e 9 minutos com 10 min de compensação -> Continua a ser 1 hora
+      const checkOut = new Date(baseIn.getTime() + 69 * 60 * 1000);
+      expect(calculateBilledHours(baseIn, checkOut, 1)).toBe(1);
+
+      // Exatamente 1 hora e 10 minutos (70 min) -> Ainda dentro da compensação de 10 min -> 1 hora
+      const checkOutExact = new Date(baseIn.getTime() + 70 * 60 * 1000);
+      expect(calculateBilledHours(baseIn, checkOutExact, 1)).toBe(1);
     });
 
-    it('bills second hour when guest stays beyond grace period (Regra hora começada)', () => {
-      // 1 hora e 3 minutos (63 minutos) -> 2º hora começada -> Cobra 2 horas!
-      const checkOut = new Date(baseIn.getTime() + 63 * 60 * 1000);
-      expect(calculateBilledHours(baseIn, checkOut, 1, 2)).toBe(2);
+    it('bills second hour when guest stays beyond 10 minutes compensation', () => {
+      // 1 hora e 11 minutos (71 minutos) -> 2º hora começada -> Cobra 2 horas!
+      const checkOut = new Date(baseIn.getTime() + 71 * 60 * 1000);
+      expect(calculateBilledHours(baseIn, checkOut, 1)).toBe(2);
     });
 
-    it('bills third hour when stay exceeds 2 hours and grace period', () => {
-      // Contratou 2 horas. Saiu aos 125 minutos (2h 05 min) -> Cobra 3 horas
-      const checkOut = new Date(baseIn.getTime() + 125 * 60 * 1000);
-      expect(calculateBilledHours(baseIn, checkOut, 2, 2)).toBe(3);
+    it('bills third hour when stay exceeds 2 hours and 10 minutes compensation', () => {
+      // Contratou 2 horas. Saiu aos 130 minutos (2h 10 min) -> Ainda 2 horas
+      const checkOutGrace = new Date(baseIn.getTime() + 130 * 60 * 1000);
+      expect(calculateBilledHours(baseIn, checkOutGrace, 2)).toBe(2);
+
+      // Saiu aos 131 minutos (2h 11 min) -> 3ª hora começada -> Cobra 3 horas
+      const checkOut = new Date(baseIn.getTime() + 131 * 60 * 1000);
+      expect(calculateBilledHours(baseIn, checkOut, 2)).toBe(3);
     });
 
-    it('bills 4 hours for 3h 10min stay with 1h contracted', () => {
-      // Contratou 1 hora. Ficou 190 min (3h 10 min) -> Cobra 4 horas
-      const checkOut = new Date(baseIn.getTime() + 190 * 60 * 1000);
-      expect(calculateBilledHours(baseIn, checkOut, 1, 2)).toBe(4);
+    it('bills 4 hours for 3h 11min stay with 1h contracted', () => {
+      // Contratou 1 hora. Ficou 191 min (3h 11 min) -> Cobra 4 horas
+      const checkOut = new Date(baseIn.getTime() + 191 * 60 * 1000);
+      expect(calculateBilledHours(baseIn, checkOut, 1)).toBe(4);
     });
   });
 
   describe('calculateStayPricing', () => {
     it('calculates total correctly based on hourly rate in Meticais', () => {
       const baseIn = new Date('2026-11-08T14:00:00Z');
-      // 2h 10m de permanência (130 min) com tarifa de 400 MT/h
-      const checkOut = new Date(baseIn.getTime() + 130 * 60 * 1000);
+      // 2h 15m de permanência (135 min) com tarifa de 400 MT/h
+      const checkOut = new Date(baseIn.getTime() + 135 * 60 * 1000);
       const pricing = calculateStayPricing({
         checkInAt: baseIn,
         checkOutAt: checkOut,
         contractedHours: 1,
         ratePerHour: 400,
-        graceMinutes: 2,
       });
 
-      expect(pricing.durationMinutes).toBe(130);
+      expect(pricing.durationMinutes).toBe(135);
       expect(pricing.billedHours).toBe(3);
       expect(pricing.contractedHours).toBe(1);
       expect(pricing.overtimeHours).toBe(2);
@@ -231,7 +238,8 @@ describe('hospitality-calc', () => {
     it('formats remaining or overdue time', () => {
       expect(formatTimeRemaining(45)).toBe('Restam 45 min');
       expect(formatTimeRemaining(75)).toBe('Restam 1h 15 min');
-      expect(formatTimeRemaining(0)).toBe('Tempo terminado agora');
+      expect(formatTimeRemaining(0)).toBe('Compensação: restam 10 min');
+      expect(formatTimeRemaining(-4)).toBe('Compensação: restam 6 min');
       expect(formatTimeRemaining(-20)).toBe('Excedido há 20 min');
       expect(formatTimeRemaining(-80)).toBe('Excedido há 1h 20 min');
     });

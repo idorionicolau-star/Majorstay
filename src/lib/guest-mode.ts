@@ -1050,7 +1050,7 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
     checkOutAt: now,
     contractedHours: stay.contractedHours,
     ratePerHour: stay.ratePerHourApplied || room?.ratePerHour || 300,
-    graceMinutes: 2,
+    graceMinutes: 10,
     consumptions: stay.consumptions || [],
   });
 

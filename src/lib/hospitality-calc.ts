@@ -43,7 +43,7 @@ export function calculateBilledHours(
   checkInAt: any,
   checkOutAt: any = new Date(),
   contractedHours: number = 1,
-  graceMinutes: number = 2
+  graceMinutes: number = 10
 ): number {
   const minContracted = Math.max(1, Math.floor(contractedHours || 1));
   const durationMin = calculateDurationMinutes(checkInAt, checkOutAt);
@@ -84,7 +84,7 @@ export function calculateStayPricing(params: {
   graceMinutes?: number;
   consumptions?: StayConsumptionItem[];
 }): StayPricingResult {
-  const { checkInAt, checkOutAt, contractedHours, ratePerHour, graceMinutes = 2, consumptions = [] } = params;
+  const { checkInAt, checkOutAt, contractedHours, ratePerHour, graceMinutes = 10, consumptions = [] } = params;
   const durationMinutes = calculateDurationMinutes(checkInAt, checkOutAt);
   const billedHours = calculateBilledHours(checkInAt, checkOutAt, contractedHours, graceMinutes);
   const normalizedContracted = Math.max(1, Math.floor(contractedHours || 1));
@@ -126,6 +126,7 @@ export function calculateExpectedCheckOut(
 
 export type StayRealtimeStatus = {
   isOvertime: boolean;
+  isGracePeriod: boolean;
   minutesRemainingOrOverdue: number;
   expectedCheckOut: Date;
   durationMinutes: number;
@@ -140,8 +141,9 @@ export function computeStayRealtimeStatus(params: {
   contractedHours: number;
   extensions?: StayExtension[];
   now?: any;
+  graceMinutes?: number;
 }): StayRealtimeStatus {
-  const { status, checkInAt, contractedHours, extensions, now } = params;
+  const { status, checkInAt, contractedHours, extensions, now, graceMinutes = 10 } = params;
   const nowDate = normalizeDate(now);
   const expectedCheckOut = calculateExpectedCheckOut(checkInAt, contractedHours, extensions);
   const durationMinutes = calculateDurationMinutes(checkInAt, nowDate);
@@ -149,6 +151,7 @@ export function computeStayRealtimeStatus(params: {
   if (status === 'closed' || status === 'cancelled') {
     return {
       isOvertime: false,
+      isGracePeriod: false,
       minutesRemainingOrOverdue: 0,
       expectedCheckOut,
       durationMinutes,
@@ -158,8 +161,13 @@ export function computeStayRealtimeStatus(params: {
   const diffMs = expectedCheckOut.getTime() - nowDate.getTime();
   const minutesDiff = Math.round(diffMs / 60000);
 
+  // Compensação de 10 min de cortesia antes de acionar alarme e cobrança de hora extra
+  const isGracePeriod = minutesDiff <= 0 && minutesDiff >= -graceMinutes;
+  const isOvertime = minutesDiff < -graceMinutes;
+
   return {
-    isOvertime: minutesDiff < 0,
+    isOvertime,
+    isGracePeriod,
     minutesRemainingOrOverdue: minutesDiff,
     expectedCheckOut,
     durationMinutes,
@@ -181,12 +189,16 @@ export function formatStayDuration(minutes: number): string {
 /**
  * Mensagem amigável de tempo restante ou excedido.
  */
-export function formatTimeRemaining(minutesDiff: number): string {
+export function formatTimeRemaining(minutesDiff: number, graceMinutes: number = 10): string {
   if (minutesDiff > 0) {
     return `Restam ${formatStayDuration(minutesDiff)}`;
   }
   if (minutesDiff === 0) {
-    return 'Tempo terminado agora';
+    return `Compensação: restam ${graceMinutes} min`;
+  }
+  if (minutesDiff < 0 && minutesDiff >= -graceMinutes) {
+    const graceLeft = graceMinutes + minutesDiff;
+    return `Compensação: restam ${graceLeft} min`;
   }
   return `Excedido há ${formatStayDuration(Math.abs(minutesDiff))}`;
 }

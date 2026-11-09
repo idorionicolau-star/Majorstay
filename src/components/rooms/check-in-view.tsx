@@ -364,7 +364,7 @@ export function CheckInView() {
           <div className="flex items-center gap-3 self-start md:self-auto">
             {/* Badge Status de Turno */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#201915] border border-[#EEECE6] dark:border-[#382D26] rounded-full shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                 Turno Atual <span className="text-neutral-300 dark:text-neutral-600">•</span> Caixa Operacional
               </span>

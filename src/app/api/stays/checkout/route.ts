@@ -103,7 +103,7 @@ export async function POST(req: Request) {
         checkOutAt: serverNow,
         contractedHours,
         ratePerHour,
-        graceMinutes: 2,
+        graceMinutes: 10,
         consumptions: stayData.consumptions || [],
       });
 

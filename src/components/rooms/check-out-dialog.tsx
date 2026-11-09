@@ -74,7 +74,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     checkOutAt: now,
     contractedHours,
     ratePerHour,
-    graceMinutes: 2,
+    graceMinutes: 10,
     consumptions: stay.consumptions || [],
   });
 
@@ -196,7 +196,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
             ) : (
               <div className="p-2.5 rounded-xl bg-[#EDF6F0] dark:bg-[#1C3023] border border-[#CDE5D5] dark:border-[#284934] text-xs text-[#245D3B] dark:text-[#8CD9A9] flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[#488C64] shrink-0" />
-                <span>Estadia dentro da tolerância acordada ({pricing.billedHours}h faturada).</span>
+                <span>Estadia dentro da compensação acordada de 10 min ({pricing.billedHours}h faturada).</span>
               </div>
             )}
           </div>
