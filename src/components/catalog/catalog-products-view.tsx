@@ -101,8 +101,8 @@ export function CatalogProductsView({ products, categories, loading, readOnly, t
             {/* pesquisa + filtros */}
             <div className="space-y-2">
                 <div className="relative" data-tour="catalog-search">
-                    <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-                    <Input value={term} onChange={(e) => onTerm(e.target.value)} placeholder="Pesquisar por nome, categoria ou código…" className="h-11 pl-9 pr-9" aria-label="Pesquisar no catálogo" />
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input value={term} onChange={(e) => onTerm(e.target.value)} placeholder="Pesquisar por nome, categoria ou código…" className="h-11 pl-10 pr-9" aria-label="Pesquisar no catálogo" />
                     {term && <button type="button" onClick={() => onTerm("")} aria-label="Limpar pesquisa" className="absolute right-3 top-3.5 text-muted-foreground"><X className="h-4 w-4" /></button>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2" data-tour="catalog-filters">

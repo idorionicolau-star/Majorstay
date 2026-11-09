@@ -104,7 +104,7 @@ function EditorBody({ production, onDone }: { production: Production; onDone: ()
                     <div className="space-y-2 rounded-lg border p-2">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input autoFocus value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Procurar no catálogo…" aria-label="Procurar produto" className="pl-9" />
+                            <Input autoFocus value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Procurar no catálogo…" aria-label="Procurar produto" className="pl-10" />
                         </div>
                         <div className="max-h-56 space-y-1 overflow-y-auto">
                             {choices.map((c) => isFamilyGroup(c) ? (

@@ -175,11 +175,11 @@ export function BulkEditCosts() {
         <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="relative max-w-sm w-full">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground" />
                     <Input
                         type="search"
                         placeholder="Pesquisar produto..."
-                        className="pl-8"
+                        className="pl-10"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />

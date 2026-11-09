@@ -94,8 +94,8 @@ export default function DocumentsPage() {
 
             <div className="grid grid-cols-2 gap-2 sm:flex" data-tour="docs-filters">
                 <div className="relative col-span-2 min-w-[200px] flex-1">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input className="pl-9" placeholder="Procurar por número ou cliente…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-muted-foreground" />
+                    <Input className="pl-10" placeholder="Procurar por número ou cliente…" value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
                 <Select value={type} onValueChange={setType}>
                     <SelectTrigger className="sm:w-[180px]"><SelectValue /></SelectTrigger>

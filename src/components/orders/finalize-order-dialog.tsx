@@ -80,7 +80,7 @@ export function FinalizeOrderDialog({ order, saleAmountPaid, saleTotal }: Finali
                             id="payment"
                             type="number"
                             placeholder="0.00"
-                            className="pl-8"
+                            className="pl-10"
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(e.target.value)}
                         />

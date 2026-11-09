@@ -153,7 +153,7 @@ export function HospitalityDashboard() {
   if (loading) {
     return (
       <div className="flex flex-col gap-4" aria-busy="true">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="h-28 animate-pulse rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#261D19] border border-[#E5DFD6]/60 dark:border-[#382D26]/60" />
           ))}
@@ -250,7 +250,7 @@ export function HospitalityDashboard() {
 
       {/* 3. Estadias Abertas */}
       <section className="flex flex-col gap-3" data-tour="hotel-stays">
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-3">
           <SectionTitle subtitle="Hóspedes atualmente acomodados nos quartos">
             Estadias Abertas
           </SectionTitle>

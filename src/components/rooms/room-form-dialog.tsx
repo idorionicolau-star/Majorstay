@@ -175,7 +175,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 Tarifa Horária (MT) *
               </Label>
               <div className="relative">
-                <Coins className="absolute left-3 top-2.5 h-4 w-4 text-[#827568]" />
+                <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-[#827568]" />
                 <Input
                   id="ratePerHour"
                   type="number"
@@ -184,7 +184,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                   value={ratePerHour}
                   onChange={(e) => setRatePerHour(Number(e.target.value))}
                   placeholder="300"
-                  className="pl-9 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
                   required
                 />
               </div>
@@ -212,7 +212,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               Tempo Estimado de Limpeza (minutos)
             </Label>
             <div className="relative">
-              <Clock className="absolute left-3 top-2.5 h-4 w-4 text-[#827568]" />
+              <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none h-4 w-4 text-[#827568]" />
               <Input
                 id="cleaningMin"
                 type="number"
@@ -221,7 +221,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 value={cleaningDurationMinutes}
                 onChange={(e) => setCleaningDurationMinutes(Number(e.target.value))}
                 placeholder="15"
-                className="pl-9 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
               />
             </div>
           </div>
