@@ -1,4 +1,4 @@
-import type { StayStatus, StayExtension } from './types';
+import type { StayStatus, StayExtension, StayConsumptionItem } from './types';
 
 /**
  * Normaliza qualquer formato de data (Date, ISO string, número ms, Firestore Timestamp) para Date.
@@ -67,12 +67,14 @@ export type StayPricingResult = {
   contractedHours: number;
   overtimeHours: number;
   ratePerHour: number;
+  stayAmountDue: number;
+  consumptionsAmountDue: number;
   totalAmountDue: number;
   isOvertime: boolean;
 };
 
 /**
- * Calcula o resumo financeiro completo de uma estadia.
+ * Calcula o resumo financeiro completo de uma estadia (horas + consumos do bar).
  */
 export function calculateStayPricing(params: {
   checkInAt: any;
@@ -80,14 +82,19 @@ export function calculateStayPricing(params: {
   contractedHours: number;
   ratePerHour: number;
   graceMinutes?: number;
+  consumptions?: StayConsumptionItem[];
 }): StayPricingResult {
-  const { checkInAt, checkOutAt, contractedHours, ratePerHour, graceMinutes = 2 } = params;
+  const { checkInAt, checkOutAt, contractedHours, ratePerHour, graceMinutes = 2, consumptions = [] } = params;
   const durationMinutes = calculateDurationMinutes(checkInAt, checkOutAt);
   const billedHours = calculateBilledHours(checkInAt, checkOutAt, contractedHours, graceMinutes);
   const normalizedContracted = Math.max(1, Math.floor(contractedHours || 1));
   const overtimeHours = Math.max(0, billedHours - normalizedContracted);
   const safeRate = Math.max(0, ratePerHour || 0);
-  const totalAmountDue = billedHours * safeRate;
+  const stayAmountDue = billedHours * safeRate;
+  const consumptionsAmountDue = (consumptions || []).reduce((acc, item) => {
+    return acc + (Number(item.totalPrice) || (Number(item.quantity) * Number(item.unitPrice)) || 0);
+  }, 0);
+  const totalAmountDue = stayAmountDue + consumptionsAmountDue;
   const isOvertime = overtimeHours > 0;
 
   return {
@@ -96,6 +103,8 @@ export function calculateStayPricing(params: {
     contractedHours: normalizedContracted,
     overtimeHours,
     ratePerHour: safeRate,
+    stayAmountDue,
+    consumptionsAmountDue,
     totalAmountDue,
     isOvertime,
   };

@@ -104,6 +104,7 @@ export async function POST(req: Request) {
         contractedHours,
         ratePerHour,
         graceMinutes: 2,
+        consumptions: stayData.consumptions || [],
       });
 
       const totalAmountDue = pricing.totalAmountDue;
@@ -118,12 +119,17 @@ export async function POST(req: Request) {
       const saleRef = db.collection(`companies/${companyId}/sales`).doc();
       const checkInStr = checkInDate.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
       const checkOutStr = serverNow.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
-      const staySummaryNote = `Quarto: ${stayData.roomName || roomData.name}. Entrada: ${checkInStr}. Saída: ${checkOutStr}. Cobrado: ${pricing.billedHours}h (${pricing.contractedHours}h contr. + ${pricing.overtimeHours}h exc.). ${notes}`.trim();
+      const consumptionsCount = (stayData.consumptions || []).length;
+      const consumptionsText = consumptionsCount > 0
+        ? ` | Consumos do Bar (${consumptionsCount} itens, ${pricing.consumptionsAmountDue} MT): ` +
+          stayData.consumptions.map((c: any) => `${c.quantity}x ${c.productName} (${c.totalPrice} MT)`).join(', ')
+        : '';
+      const staySummaryNote = `Quarto: ${stayData.roomName || roomData.name}. Entrada: ${checkInStr}. Saída: ${checkOutStr}. Horas: ${pricing.billedHours}h (${pricing.stayAmountDue} MT)${consumptionsText}. ${notes}`.trim();
 
       const newSale: Omit<Sale, 'id'> = {
         date: serverNow.toISOString().slice(0, 10),
         productId: roomId,
-        productName: `Estadia: ${stayData.roomName || roomData.name || 'Quarto'}`,
+        productName: `Estadia: ${stayData.roomName || roomData.name || 'Quarto'}${consumptionsCount > 0 ? ' + Consumos Bar' : ''}`,
         quantity: pricing.billedHours,
         unit: 'horas',
         unitPrice: pricing.ratePerHour,

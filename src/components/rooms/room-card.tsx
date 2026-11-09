@@ -13,6 +13,7 @@ import {
   Wrench,
   User,
   Phone,
+  Wine,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ interface RoomCardProps {
   onCheckIn: (room: Room) => void;
   onExtend: (room: Room, stay: Stay) => void;
   onCheckOut: (room: Room, stay: Stay) => void;
+  onConsumption: (room: Room, stay: Stay) => void;
   onEditRoom: (room: Room) => void;
 }
 
@@ -46,6 +48,7 @@ export function RoomCard({
   onCheckIn,
   onExtend,
   onCheckOut,
+  onConsumption,
   onEditRoom,
 }: RoomCardProps) {
   const { markRoomCleaned, updateRoom, deleteRoom } = useRooms();
@@ -227,6 +230,19 @@ export function RoomCard({
                 </div>
               </div>
 
+              {/* Resumo de Consumos do Bar se houver */}
+              {(stay.consumptions && stay.consumptions.length > 0) ? (
+                <div className="flex items-center justify-between text-[11px] bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 p-1.5 rounded-md border border-amber-200/60 dark:border-amber-900/40">
+                  <span className="flex items-center gap-1 font-medium">
+                    <Wine className="h-3 w-3 text-amber-600" />
+                    Bar: {stay.consumptions.length} {stay.consumptions.length === 1 ? 'item' : 'itens'}
+                  </span>
+                  <span className="font-bold">
+                    +{formatCurrency(stay.consumptions.reduce((s, c) => s + (Number(c.totalPrice) || 0), 0))}
+                  </span>
+                </div>
+              ) : null}
+
               {/* Barra de Progresso e Alerta de Tempo */}
               <div className="space-y-1 pt-1">
                 <div className="flex justify-between items-center text-[11px]">
@@ -293,23 +309,36 @@ export function RoomCard({
           )}
 
           {(isOccupied || isOvertime) && stay && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <Button
                 variant="outline"
-                className="h-10 text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 flex items-center justify-center gap-1"
-                onClick={() => onExtend(room, stay)}
+                size="sm"
+                className="h-9 text-[11px] font-semibold border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center justify-center gap-1 px-1"
+                onClick={() => onConsumption(room, stay)}
+                title="Lançar consumo do bar/restaurante"
               >
-                <Clock className="h-3.5 w-3.5 text-blue-500" />
-                Prorrogar (+1h)
+                <Wine className="h-3 w-3 text-amber-600" />
+                + Bar
               </Button>
               <Button
-                className={`h-10 text-xs font-bold text-white shadow-sm flex items-center justify-center gap-1 ${
+                variant="outline"
+                size="sm"
+                className="h-9 text-[11px] font-semibold border-slate-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 flex items-center justify-center gap-1 px-1"
+                onClick={() => onExtend(room, stay)}
+                title="Prorrogar tempo da estadia"
+              >
+                <Clock className="h-3 w-3 text-blue-500" />
+                +1h
+              </Button>
+              <Button
+                size="sm"
+                className={`h-9 text-[11px] font-bold text-white shadow-sm flex items-center justify-center gap-1 px-1 ${
                   isOvertime ? 'bg-rose-600 hover:bg-rose-700 animate-pulse' : 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600'
                 }`}
                 onClick={() => onCheckOut(room, stay)}
               >
-                <LogOut className="h-3.5 w-3.5" />
-                Check-out
+                <LogOut className="h-3 w-3" />
+                Saída
               </Button>
             </div>
           )}

@@ -203,9 +203,27 @@ export const columns = (options: ColumnsOptions): ColumnDef<Sale>[] => {
             header: "Cliente",
             cell: ({ row }) => row.original.clientName || <span className="text-muted-foreground italic">N/A</span>
         },
-        {
+                {
             accessorKey: "productName",
-            header: "Produto",
+            header: "Produto / Serviço",
+            cell: ({ row }) => {
+                const name = row.original.productName;
+                const isRoomStay = name?.startsWith("Estadia:");
+                return (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {isRoomStay ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
+                                🛏️ Quarto
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                🍷 Bar/Loja
+                            </span>
+                        )}
+                        <span className="font-medium">{name}</span>
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "totalValue",

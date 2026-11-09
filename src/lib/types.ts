@@ -582,6 +582,18 @@ export type StayExtension = {
   notes?: string;
 };
 
+export type StayConsumptionItem = {
+  id: string;
+  productId?: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  addedAt: string | any;
+  addedBy: string;
+  addedByName?: string;
+};
+
 export type StayStatus = 'open' | 'closed' | 'cancelled';
 
 export type Stay = {
@@ -596,6 +608,7 @@ export type Stay = {
   checkOutAt?: string | any;
   contractedHours: number; // Horas inicialmente contratadas (ex: 1, 2)
   extensions?: StayExtension[]; // Prorrogações efetuadas
+  consumptions?: StayConsumptionItem[]; // Consumos do Bar / Cozinha / Minibar
   billedHours?: number; // Total de horas faturadas (hora começada = hora paga)
   ratePerHourApplied: number; // Tarifa horária aplicada na estadia
   totalAmountDue: number; // Total calculado a cobrar
@@ -614,6 +627,7 @@ export type Stay = {
 export type HospitalityAuditAction =
   | 'create_stay'
   | 'extend_stay'
+  | 'add_consumption'
   | 'close_stay'
   | 'cancel_stay'
   | 'edit_stay'

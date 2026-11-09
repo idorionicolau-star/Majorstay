@@ -22,7 +22,9 @@ import { softFocus } from "@/lib/keyboard";
 import { habitualLocation, recordLocation } from "@/lib/habitual-location";
 import { variantChoice, variantLabel } from "@/lib/variants";
 import { VariantChooser, chooserKey } from "@/components/catalog/variant-chooser";
-import { Check, ChevronDown, ChevronUp, GraduationCap, LayoutGrid, Loader2, MapPin, Minus, Plus, ScanBarcode, Search, ShoppingCart, Trash2, Truck, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, GraduationCap, LayoutGrid, Loader2, MapPin, Minus, Plus, ScanBarcode, Search, ShoppingCart, Trash2, Truck, X, BedDouble } from "lucide-react";
+import { useRooms } from "@/context/rooms-context";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/scan/barcode-scanner";
 import { UNKNOWN_CODE } from "@/lib/scan-gate";
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -78,6 +80,10 @@ function save(key: string, value: unknown) {
 export function FastSale() {
     const { products, catalogProducts, sales, locations, isMultiLocation, companyId, user, addBulkSale, isReadOnly, companyData } = useInventory();
     const { customers, addCustomer } = useCRM();
+    const { openStays, addStayConsumptionsBulk } = useRooms();
+    const [roomDialogOpen, setRoomDialogOpen] = useState(false);
+    const [selectedRoomStayId, setSelectedRoomStayId] = useState("");
+    const [savingRoom, setSavingRoom] = useState(false);
     const { toast } = useToast();
     // Teclado aberto no telemóvel: a barra de confirmar sobe e fica por cima dele.
     const keyboardInset = useKeyboardInset();
@@ -815,6 +821,82 @@ export function FastSale() {
                 </DrawerContent>
             </Drawer>
 
+            {/* Lançar consumo no quarto */}
+            <Dialog open={roomDialogOpen} onOpenChange={setRoomDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <BedDouble className="h-5 w-5 text-indigo-600" />
+                            Lançar na Comanda do Quarto
+                        </DialogTitle>
+                        <DialogDescription>
+                            Selecione o quarto ocupado para associar estes {lines.length} {lines.length === 1 ? 'item' : 'itens'}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-muted-foreground">Quarto Ocupado</label>
+                            <Select value={selectedRoomStayId} onValueChange={setSelectedRoomStayId}>
+                                <SelectTrigger className="h-11"><SelectValue placeholder="Selecione o quarto..." /></SelectTrigger>
+                                <SelectContent>
+                                    {openStays.map((s) => (
+                                        <SelectItem key={s.id} value={s.id}>
+                                            <span className="font-bold">{s.roomName}</span>
+                                            <span className="text-muted-foreground ml-2">· {s.clientName || 'Hóspede'}</span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="rounded-xl bg-muted p-3 space-y-1.5 max-h-40 overflow-y-auto">
+                            {lines.map((l) => (
+                                <div key={l.key} className="flex justify-between text-xs py-0.5 border-b border-border/40 last:border-0">
+                                    <span>{l.qty}× {l.name}</span>
+                                    <span className="font-bold">{formatCurrency(l.qty * l.price)}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between items-center text-base font-bold pt-1">
+                            <span>Total a Lançar</span>
+                            <span className="text-indigo-600 dark:text-indigo-400">{formatCurrency(total)}</span>
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setRoomDialogOpen(false)}>Cancelar</Button>
+                        <Button
+                            onClick={async () => {
+                                if (!selectedRoomStayId) return;
+                                setSavingRoom(true);
+                                try {
+                                    await addStayConsumptionsBulk(
+                                        selectedRoomStayId,
+                                        lines.map((l) => ({
+                                            productId: l.productId,
+                                            productName: l.name,
+                                            quantity: l.qty,
+                                            unitPrice: l.price,
+                                        }))
+                                    );
+                                    setLines([]);
+                                    setRoomDialogOpen(false);
+                                    focusSearch();
+                                } catch (err: any) {
+                                    toast({ variant: 'destructive', title: 'Erro ao lançar consumo', description: err.message || 'Tente novamente.' });
+                                } finally {
+                                    setSavingRoom(false);
+                                }
+                            }}
+                            disabled={savingRoom || !selectedRoomStayId || lines.length === 0}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                            {savingRoom ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BedDouble className="mr-2 h-4 w-4" />}
+                            Confirmar no Quarto ({formatCurrency(total)})
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+
             {/* Sticky confirm */}
             {lines.length > 0 && (
                 <div className={cn("fixed inset-x-0 z-40 border-t bg-background p-3 md:bottom-0 md:left-64", !keyboardInset && "bottom-16")} style={keyboardInset ? { bottom: keyboardInset } : undefined}>
@@ -825,6 +907,21 @@ export function FastSale() {
                             <p className="flex items-center gap-1 text-xl font-bold tabular-nums">{formatCurrency(total)} <ChevronUp className="h-4 w-4 text-muted-foreground" /></p>
                             <p className="text-[11px] font-semibold text-primary">Ver carrinho</p>
                         </button>
+                        {openStays.length > 0 && !demo && !isProforma && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    if (!selectedRoomStayId && openStays[0]) setSelectedRoomStayId(openStays[0].id);
+                                    setRoomDialogOpen(true);
+                                }}
+                                disabled={saving || savingRoom || lines.length === 0}
+                                className="h-12 shrink-0 rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/40 px-3.5 text-sm font-semibold"
+                            >
+                                <BedDouble className="mr-1.5 h-4 w-4" />
+                                No Quarto ({openStays.length})
+                            </Button>
+                        )}
                         <Button type="button" data-tour="pos-confirm" onClick={confirm} disabled={!canConfirm} className="h-12 shrink-0 rounded-xl bg-emerald-600 px-5 text-base text-white hover:bg-emerald-700">
                             {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
                             {isProforma ? "Emitir proforma" : demo ? "Confirmar (demonstração)" : "Confirmar venda"}

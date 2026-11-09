@@ -72,6 +72,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     contractedHours,
     ratePerHour,
     graceMinutes: 2,
+    consumptions: stay.consumptions || [],
   });
 
   const previousPaid = Number(stay.totalAmountPaid) || 0;
@@ -182,28 +183,41 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
             )}
           </div>
 
-          {/* Bloco de Valor Final */}
-          <div className="p-4 bg-emerald-500/10 dark:bg-emerald-500/20 border-2 border-emerald-500/40 rounded-xl space-y-1.5">
+          {/* Bloco de Valor Final (Estadia + Consumos de Bar) */}
+          <div className="p-4 bg-emerald-500/10 dark:bg-emerald-500/20 border-2 border-emerald-500/40 rounded-xl space-y-2">
+            {pricing.consumptionsAmountDue > 0 ? (
+              <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 border-b border-emerald-500/20 pb-2">
+                <div className="flex justify-between">
+                  <span>Horas de Quarto ({pricing.billedHours}h × {formatCurrency(ratePerHour)}):</span>
+                  <span className="font-semibold">{formatCurrency(pricing.stayAmountDue)}</span>
+                </div>
+                <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                  <span>Bar & Consumos ({(stay.consumptions || []).length} itens):</span>
+                  <span className="font-semibold">+{formatCurrency(pricing.consumptionsAmountDue)}</span>
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Total Oficial a Cobrar ({pricing.billedHours}h × {formatCurrency(ratePerHour)}):
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                Total Oficial a Cobrar:
               </span>
-              <span className="text-xl font-extrabold text-emerald-700 dark:text-emerald-400">
+              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
                 {formatCurrency(pricing.totalAmountDue)}
               </span>
             </div>
 
             {previousPaid > 0 && (
               <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-emerald-500/20">
-                <span>Já adiantado na entrada:</span>
+                <span>Adiantado no Check-in:</span>
                 <span className="font-semibold">{formatCurrency(previousPaid)}</span>
               </div>
             )}
 
             {balanceToPay > 0 && previousPaid > 0 && (
               <div className="flex items-center justify-between text-sm font-bold text-rose-600 pt-1">
-                <span>Saldo adicional a receber agora:</span>
-                <span className="text-base">{formatCurrency(balanceToPay)}</span>
+                <span>Saldo a Pagar Agora:</span>
+                <span className="text-base font-extrabold">{formatCurrency(balanceToPay)}</span>
               </div>
             )}
           </div>

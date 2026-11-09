@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
-import type { Room, Stay, StayExtension, RoomStatus } from '@/lib/types';
+import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem } from '@/lib/types';
 import {
   isGuestCompany,
   getGuestRooms,
@@ -32,6 +32,7 @@ import {
 import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { calculateExpectedCheckOut, computeStayRealtimeStatus } from '@/lib/hospitality-calc';
+import { formatCurrency } from '@/lib/utils';
 
 export interface RoomStats {
   total: number;
@@ -76,6 +77,25 @@ interface RoomsContextType {
   ) => Promise<any>;
   markRoomCleaned: (roomId: string) => Promise<void>;
   refreshRealtimeStatuses: () => void;
+  addStayConsumption: (
+    stayId: string,
+    item: {
+      productId?: string;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+    }
+  ) => Promise<void>;
+  addStayConsumptionsBulk: (
+    stayId: string,
+    items: {
+      productId?: string;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+    }[]
+  ) => Promise<void>;
+  removeStayConsumption: (stayId: string, consumptionId: string) => Promise<void>;
 }
 
 const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
@@ -512,6 +532,176 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     toast({ title: 'Quarto limpo e disponível para novo hóspede!' });
   };
 
+  // 8. Lançar Consumo de Bar / Serviços na Comanda do Quarto
+  const addStayConsumption = async (
+    stayId: string,
+    item: {
+      productId?: string;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+    }
+  ): Promise<void> => {
+    const currentStay = stays.find((s) => s.id === stayId);
+    if (!currentStay) throw new Error('Estadia não encontrada.');
+
+    const qty = Math.max(1, item.quantity || 1);
+    const price = Math.max(0, item.unitPrice || 0);
+    const totalPrice = qty * price;
+
+    const newConsumption: StayConsumptionItem = {
+      id: `cons-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      productId: item.productId,
+      productName: item.productName,
+      quantity: qty,
+      unitPrice: price,
+      totalPrice,
+      addedAt: new Date().toISOString(),
+      addedBy: user?.id || 'unknown',
+      addedByName: user?.username || 'Barman / Receção',
+    };
+
+    const updatedConsumptions = [...(currentStay.consumptions || []), newConsumption];
+    const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+    const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+    const newTotalDue = stayHoursTotal + consumptionsTotal;
+
+    if (isGuest) {
+      updateGuestStay(stayId, {
+        consumptions: updatedConsumptions,
+        totalAmountDue: newTotalDue,
+      });
+      toast({
+        title: 'Consumo registado no quarto!',
+        description: `${qty}× ${item.productName} (${formatCurrency(totalPrice)})`,
+      });
+      return;
+    }
+
+    if (!companyId || !user) throw new Error('Sessão indisponível.');
+
+    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
+    const staySnap = await getDoc(stayRef);
+    if (!staySnap.exists()) throw new Error('Estadia não encontrada no servidor.');
+    const stayData = staySnap.data() as Stay;
+
+    const serverConsumptions = [...(stayData.consumptions || []), newConsumption];
+    const serverConsumptionsTotal = serverConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+    const serverStayHoursTotal = (stayData.contractedHours || 1) * (stayData.ratePerHourApplied || 0);
+    const serverTotalDue = serverStayHoursTotal + serverConsumptionsTotal;
+
+    await updateDoc(stayRef, {
+      consumptions: serverConsumptions,
+      totalAmountDue: serverTotalDue,
+    });
+
+    toast({
+      title: 'Consumo registado no quarto!',
+      description: `${qty}× ${item.productName} (${formatCurrency(totalPrice)})`,
+    });
+  };
+
+  // 9. Lançar Múltiplos Consumos em Lote na Comanda do Quarto
+  const addStayConsumptionsBulk = async (
+    stayId: string,
+    items: {
+      productId?: string;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+    }[]
+  ): Promise<void> => {
+    if (!items || items.length === 0) return;
+    const currentStay = stays.find((s) => s.id === stayId);
+    if (!currentStay) throw new Error('Estadia não encontrada.');
+
+    const newConsumptions: StayConsumptionItem[] = items.map((item, index) => {
+      const qty = Math.max(1, item.quantity || 1);
+      const price = Math.max(0, item.unitPrice || 0);
+      return {
+        id: `cons-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: qty,
+        unitPrice: price,
+        totalPrice: qty * price,
+        addedAt: new Date().toISOString(),
+        addedBy: user?.id || 'unknown',
+        addedByName: user?.username || 'Barman / Receção',
+      };
+    });
+
+    const addedTotal = newConsumptions.reduce((sum, c) => sum + c.totalPrice, 0);
+    const updatedConsumptions = [...(currentStay.consumptions || []), ...newConsumptions];
+    const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+    const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+    const newTotalDue = stayHoursTotal + consumptionsTotal;
+
+    if (isGuest) {
+      updateGuestStay(stayId, {
+        consumptions: updatedConsumptions,
+        totalAmountDue: newTotalDue,
+      });
+      toast({
+        title: `Consumos lançados no ${currentStay.roomName}!`,
+        description: `${newConsumptions.length} itens adicionados (${formatCurrency(addedTotal)}). Serão cobrados no check-out.`,
+      });
+      return;
+    }
+
+    if (!companyId || !user) throw new Error('Sessão indisponível.');
+
+    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
+    const staySnap = await getDoc(stayRef);
+    if (!staySnap.exists()) throw new Error('Estadia não encontrada no servidor.');
+    const stayData = staySnap.data() as Stay;
+
+    const serverConsumptions = [...(stayData.consumptions || []), ...newConsumptions];
+    const serverConsumptionsTotal = serverConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+    const serverStayHoursTotal = (stayData.contractedHours || 1) * (stayData.ratePerHourApplied || 0);
+    const serverTotalDue = serverStayHoursTotal + serverConsumptionsTotal;
+
+    await updateDoc(stayRef, {
+      consumptions: serverConsumptions,
+      totalAmountDue: serverTotalDue,
+    });
+
+    toast({
+      title: `Consumos lançados no ${currentStay.roomName}!`,
+      description: `${newConsumptions.length} itens adicionados (${formatCurrency(addedTotal)}). Serão cobrados no check-out.`,
+    });
+  };
+
+  // 10. Remover Consumo da Comanda
+  const removeStayConsumption = async (stayId: string, consumptionId: string): Promise<void> => {
+    const currentStay = stays.find((s) => s.id === stayId);
+    if (!currentStay) throw new Error('Estadia não encontrada.');
+
+    const updatedConsumptions = (currentStay.consumptions || []).filter((c) => c.id !== consumptionId);
+    const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+    const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+    const newTotalDue = stayHoursTotal + consumptionsTotal;
+
+    if (isGuest) {
+      updateGuestStay(stayId, {
+        consumptions: updatedConsumptions,
+        totalAmountDue: newTotalDue,
+      });
+      toast({ title: 'Consumo removido da comanda do quarto.' });
+      return;
+    }
+
+    if (!companyId || !user) throw new Error('Sessão indisponível.');
+
+    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
+    await updateDoc(stayRef, {
+      consumptions: updatedConsumptions,
+      totalAmountDue: newTotalDue,
+    });
+
+    toast({ title: 'Consumo removido da comanda do quarto.' });
+  };
+
   return (
     <RoomsContext.Provider
       value={{
@@ -528,6 +718,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         checkOutStay,
         markRoomCleaned,
         refreshRealtimeStatuses,
+        addStayConsumption,
+        addStayConsumptionsBulk,
+        removeStayConsumption,
       }}
     >
       {children}

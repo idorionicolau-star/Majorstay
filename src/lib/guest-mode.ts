@@ -1051,6 +1051,7 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
     contractedHours: stay.contractedHours,
     ratePerHour: stay.ratePerHourApplied || room?.ratePerHour || 300,
     graceMinutes: 2,
+    consumptions: stay.consumptions || [],
   });
 
   const amountPaid = typeof options?.amountPaid === 'number' ? options.amountPaid : pricing.totalAmountDue;
@@ -1072,11 +1073,16 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
     notes: options?.notes ? (stay.notes ? stay.notes + ' | ' + options.notes : options.notes) : stay.notes,
   };
 
+  const consumptionsCount = (stay.consumptions || []).length;
+  const consumptionsText = consumptionsCount > 0
+    ? ` + Bar (${consumptionsCount} itens, ${pricing.consumptionsAmountDue} MT)`
+    : '';
+
   const sale: Sale = {
     id: saleId,
     date: now.toISOString().slice(0, 10),
     productId: stay.roomId,
-    productName: `Estadia: ${stay.roomName || room?.name || 'Quarto'}`,
+    productName: `Estadia: ${stay.roomName || room?.name || 'Quarto'}${consumptionsCount > 0 ? ' + Bar' : ''}`,
     quantity: pricing.billedHours,
     unit: 'horas',
     unitPrice: pricing.ratePerHour,
@@ -1090,7 +1096,7 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
     documentType: 'Venda a Dinheiro',
     clientName: stay.clientName || 'Hóspede Particular',
     paymentMethod,
-    notes: `Quarto: ${stay.roomName}. Horas: ${pricing.billedHours}h (${pricing.contractedHours}h contr. + ${pricing.overtimeHours}h exc.).`,
+    notes: `Quarto: ${stay.roomName}. Horas: ${pricing.billedHours}h (${pricing.stayAmountDue} MT)${consumptionsText}. ${options?.notes || ''}`.trim(),
     timestamp: fsTimestamp(now),
   };
 

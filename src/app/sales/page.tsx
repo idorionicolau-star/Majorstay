@@ -22,12 +22,14 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Card } from "@/components/ui/card";
 import { useFuse } from "@/hooks/use-fuse";
 import { DeepLinkBanner } from "@/components/deep-link-banner";
+import { cn } from "@/lib/utils";
 // Removed useFirestorePagination and firestore query imports
 
 export default function SalesPage() {
   const searchParams = useSearchParams();
   const [nameFilter, setNameFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'rooms' | 'bar'>('all');
   const [dateFilter, setDateFilter] = useState<Date | undefined>();
   const [view, setView] = useState<'list' | 'grid'>('grid');
   const [gridCols, setGridCols] = useState<'3' | '4' | '5'>('3');
@@ -73,6 +75,13 @@ export default function SalesPage() {
   const preFilteredSales = useMemo(() => {
     if (!contextSales) return [];
     let result = [...contextSales];
+
+    // 0. Category Filter (Quartos vs Bar)
+    if (categoryFilter === 'rooms') {
+      result = result.filter(s => s.productName?.startsWith('Estadia:'));
+    } else if (categoryFilter === 'bar') {
+      result = result.filter(s => !s.productName?.startsWith('Estadia:'));
+    }
 
     // 1. Status Filter
     if (statusFilter !== 'all') {
@@ -156,6 +165,46 @@ export default function SalesPage() {
                 onChange={(event) => setNameFilter(event.target.value)}
                 className="w-full sm:max-w-xs shadow-sm h-12 text-sm bg-background/50"
               />
+                            <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter('all')}
+                  className={cn(
+                    "flex-1 sm:flex-initial px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                    categoryFilter === 'all'
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Todas ({contextSales.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter('rooms')}
+                  className={cn(
+                    "flex-1 sm:flex-initial px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1",
+                    categoryFilter === 'rooms'
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>🛏️</span>
+                  Quartos ({contextSales.filter(s => s.productName?.startsWith('Estadia:')).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter('bar')}
+                  className={cn(
+                    "flex-1 sm:flex-initial px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1",
+                    categoryFilter === 'bar'
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>🍷</span>
+                  Bar / Loja ({contextSales.filter(s => !s.productName?.startsWith('Estadia:')).length})
+                </button>
+              </div>
               <div className="flex flex-col w-full sm:flex-row sm:w-auto items-center gap-2" data-tour="sales-date">
                 <DatePicker date={dateFilter} setDate={setDateFilter} />
               </div>

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Trash2, X, Minus, Plus, CreditCard, AlertTriangle, PauseCircle } from 'lucide-react';
+import { ShoppingCart, Trash2, X, Minus, Plus, CreditCard, AlertTriangle, PauseCircle, BedDouble } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { CartItem } from '@/lib/types';
 import { useState, useEffect } from 'react';
@@ -121,6 +121,8 @@ interface PosCartProps {
     onCheckout: () => void;
     /** Reter carrinho: guarda-o e deixa o balcão livre */
     onHold?: () => void;
+    onChargeToRoom?: () => void;
+    hasOpenRooms?: boolean;
     className?: string;
 }
 
@@ -138,6 +140,8 @@ export function PosCart({
     onClearCart,
     onCheckout,
     onHold,
+    onChargeToRoom,
+    hasOpenRooms,
     className
 }: PosCartProps) {
     const { isReadOnly } = useInventory();
@@ -307,6 +311,17 @@ export function PosCart({
                             <CreditCard className="mr-2 h-5 w-5" />
                             Finalizar Venda
                         </Button>
+                        {hasOpenRooms && onChargeToRoom && (
+                            <Button
+                                variant="outline"
+                                className="w-full mt-2 h-12 text-base font-semibold border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                                onClick={onChargeToRoom}
+                                disabled={isReadOnly}
+                            >
+                                <BedDouble className="mr-2 h-5 w-5" />
+                                Lançar na Conta do Quarto
+                            </Button>
+                        )}
                         {onHold && (
                             <Button variant="ghost" className="mt-2 w-full" onClick={onHold} data-testid="hold-cart">
                                 <PauseCircle className="mr-2 h-4 w-4" />Reter carrinho (o cliente volta já)

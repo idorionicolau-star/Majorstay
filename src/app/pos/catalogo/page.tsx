@@ -11,7 +11,7 @@ import React, { useState, useContext, useMemo, useCallback, useEffect } from 're
 import { InventoryContext } from '@/context/inventory-context';
 import { useCRM } from '@/context/crm-context';
 import type { CartItem, Product, Sale, Location } from '@/lib/types';
-import { formatCurrency, normalizeString } from '@/lib/utils';
+import { formatCurrency, normalizeString, cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFuse } from '@/hooks/use-fuse';
 
@@ -63,6 +63,8 @@ import { setSellMode } from '@/lib/sell-mode';
 import { holdCart, resumeCart, parseHeld, type HeldCart } from '@/lib/held-carts';
 import { Clock, Keyboard } from 'lucide-react';
 import { AiSuggestions } from '@/components/pos/ai-suggestions';
+import { useRooms } from '@/context/rooms-context';
+import { BedDouble } from 'lucide-react';
 
 type CatalogProduct = Omit<Product, 'stock' | 'instanceId' | 'reservedStock' | 'location' | 'lastUpdated'>;
 
@@ -112,6 +114,10 @@ export default function POSPage() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedLocation, setSelectedLocation] = useState<string>('');
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const { openStays, addStayConsumptionsBulk } = useRooms();
+    const [saleTarget, setSaleTarget] = useState<'checkout' | 'room'>('checkout');
+    const [selectedStayId, setSelectedStayId] = useState<string>('');
+    const [isSubmittingRoom, setIsSubmittingRoom] = useState(false);
 
     // Checkout form state
     const [checkoutClientName, setCheckoutClientName] = useState('');
@@ -316,6 +322,33 @@ export default function POSPage() {
         }
     }, [companyId]);
 
+    
+    const handleRoomCharge = async () => {
+        if (!selectedStayId || cart.length === 0) {
+            toast({ variant: 'destructive', title: 'Selecione um quarto ocupado.' });
+            return;
+        }
+        setIsSubmittingRoom(true);
+        try {
+            await addStayConsumptionsBulk(
+                selectedStayId,
+                cart.map(item => ({
+                    productId: item.productId,
+                    productName: item.productName,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                }))
+            );
+            clearCart();
+            setIsCheckoutOpen(false);
+            resetCheckoutForm();
+        } catch (err: any) {
+            toast({ variant: 'destructive', title: 'Erro ao lançar consumo', description: err.message || 'Tente novamente.' });
+        } finally {
+            setIsSubmittingRoom(false);
+        }
+    };
+
     // Checkout
     const handleCheckout = async () => {
         if (!addBulkSale || !user || cart.length === 0) return;
@@ -403,6 +436,8 @@ export default function POSPage() {
         setCheckoutDiscountType('fixed');
         setCheckoutDiscountValue(0);
         setCheckoutPendingPickup(false);
+        setSaleTarget('checkout');
+        setSelectedStayId('');
     };
 
     if (loading) {
@@ -573,8 +608,14 @@ export default function POSPage() {
                         onUpdatePrice={updateCartPrice}
                         onRemoveItem={removeFromCart}
                         onClearCart={clearCart}
-                        onCheckout={() => setIsCheckoutOpen(true)}
+                        onCheckout={() => { setSaleTarget('checkout'); setIsCheckoutOpen(true); }}
                         onHold={holdCurrent}
+                        onChargeToRoom={() => {
+                            setSaleTarget('room');
+                            if (!selectedStayId && openStays[0]) setSelectedStayId(openStays[0].id);
+                            setIsCheckoutOpen(true);
+                        }}
+                        hasOpenRooms={openStays.length > 0}
                     />
                 </div>
             </div>
@@ -622,8 +663,14 @@ export default function POSPage() {
                                 onUpdatePrice={updateCartPrice}
                                 onRemoveItem={removeFromCart}
                                 onClearCart={clearCart}
-                                onCheckout={() => setIsCheckoutOpen(true)}
+                                onCheckout={() => { setSaleTarget('checkout'); setIsCheckoutOpen(true); }}
                                 onHold={holdCurrent}
+                                onChargeToRoom={() => {
+                                    setSaleTarget('room');
+                                    if (!selectedStayId && openStays[0]) setSelectedStayId(openStays[0].id);
+                                    setIsCheckoutOpen(true);
+                                }}
+                                hasOpenRooms={openStays.length > 0}
                                 className="h-full border-none shadow-none"
                             />
                         </div>
@@ -634,18 +681,114 @@ export default function POSPage() {
             {/* Checkout Dialog */}
             <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
                 <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
+                                        <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Receipt className="h-5 w-5 text-primary" />
-                            Finalizar Venda
+                            {saleTarget === 'room' ? (
+                                <>
+                                    <BedDouble className="h-5 w-5 text-indigo-600" />
+                                    Lançar Consumo no Quarto
+                                </>
+                            ) : (
+                                <>
+                                    <Receipt className="h-5 w-5 text-primary" />
+                                    Finalizar Venda
+                                </>
+                            )}
                         </DialogTitle>
                         <DialogDescription>
-                            Confirme os detalhes da venda de {cart.length} {cart.length === 1 ? 'item' : 'itens'}.
+                            {saleTarget === 'room'
+                                ? `Lançamento de ${cart.length} ${cart.length === 1 ? 'item' : 'itens'} na conta do hóspede.`
+                                : `Confirme os detalhes da venda de ${cart.length} ${cart.length === 1 ? 'item' : 'itens'}.`}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <ScrollArea className="max-h-[60vh]">
-                        <div className="space-y-6 p-1">
+                    {openStays.length > 0 && (
+                        <div className="grid grid-cols-2 p-1 bg-muted rounded-xl gap-1">
+                            <button
+                                type="button"
+                                onClick={() => setSaleTarget('checkout')}
+                                className={cn(
+                                    "py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5",
+                                    saleTarget === 'checkout'
+                                        ? "bg-background text-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <Receipt className="h-4 w-4" />
+                                Venda Balcão / Caixa
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSaleTarget('room');
+                                    if (!selectedStayId && openStays[0]) setSelectedStayId(openStays[0].id);
+                                }}
+                                className={cn(
+                                    "py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5",
+                                    saleTarget === 'room'
+                                        ? "bg-indigo-600 text-white shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <BedDouble className="h-4 w-4" />
+                                Conta do Quarto (${openStays.length})
+                            </button>
+                        </div>
+                    )}
+
+                    {saleTarget === 'room' ? (
+                        <div className="space-y-4 py-2">
+                            <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 dark:bg-indigo-950/20 dark:border-indigo-800/40 p-4 space-y-3">
+                                <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
+                                    <BedDouble className="h-4 w-4" />
+                                    <span>Comanda do Quarto</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Os consumos serão associados ao quarto e cobrados no momento do check-out.
+                                </p>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-medium">Selecione o Quarto Ocupado</Label>
+                                    <Select value={selectedStayId} onValueChange={setSelectedStayId}>
+                                        <SelectTrigger className="h-11 bg-background">
+                                            <SelectValue placeholder="Selecione o quarto..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {openStays.map((s) => (
+                                                <SelectItem key={s.id} value={s.id}>
+                                                    <span className="font-bold">{s.roomName}</span>
+                                                    <span className="text-muted-foreground ml-2">· {s.clientName || 'Hóspede'}</span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="rounded-xl bg-muted p-4 space-y-2">
+                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Itens a lançar no quarto ({cart.length})
+                                </div>
+                                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                                    {cart.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center text-sm py-1 border-b border-border/40 last:border-0">
+                                            <div>
+                                                <span className="font-medium">{item.quantity}× {item.productName}</span>
+                                                <div className="text-xs text-muted-foreground">{formatCurrency(item.unitPrice)} cada</div>
+                                            </div>
+                                            <span className="font-bold">{formatCurrency(item.subtotal)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="flex justify-between items-center text-lg font-bold">
+                                    <span>Total da Comanda</span>
+                                    <span className="text-indigo-600 dark:text-indigo-400">{formatCurrency(cartTotal)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <ScrollArea className="max-h-[60vh]">
+                            <div className="space-y-6 p-1">
                             {/* Items Summary */}
                             <div className="space-y-2 rounded-lg border p-3">
                                 <h4 className="font-medium text-sm text-muted-foreground">Itens no Carrinho</h4>
@@ -805,19 +948,30 @@ export default function POSPage() {
                                 )}
                             </div>
                         </div>
-                    </ScrollArea>
+                        </ScrollArea>
+                    )}
 
                     <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => setIsCheckoutOpen(false)}>
                             Cancelar
                         </Button>
-                        <Button
-                            onClick={handleCheckout}
-                            disabled={isSubmitting || cart.length === 0}
-                            className="h-12 w-full text-base font-bold transition-all shadow-md hover:shadow-lg"
-                        >
-                            {isSubmitting ? 'A processar...' : `Confirmar ${formatCurrency(cartTotal)}`}
-                        </Button>
+                        {saleTarget === 'room' ? (
+                            <Button
+                                onClick={handleRoomCharge}
+                                disabled={isSubmittingRoom || !selectedStayId || cart.length === 0}
+                                className="h-12 w-full text-base font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md hover:shadow-lg"
+                            >
+                                {isSubmittingRoom ? 'A lançar na comanda...' : `Lançar no Quarto (${formatCurrency(cartTotal)})`}
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={handleCheckout}
+                                disabled={isSubmitting || cart.length === 0}
+                                className="h-12 w-full text-base font-bold transition-all shadow-md hover:shadow-lg"
+                            >
+                                {isSubmitting ? 'A processar...' : `Confirmar ${formatCurrency(cartTotal)}`}
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -133,6 +133,26 @@ describe('hospitality-calc', () => {
       expect(pricing.totalAmountDue).toBe(350);
       expect(pricing.isOvertime).toBe(false);
     });
+
+    it('integrates bar consumptions into total amount due', () => {
+      const baseIn = new Date('2026-11-08T14:00:00Z');
+      const checkOut = new Date(baseIn.getTime() + 60 * 60 * 1000); // 1h
+      const consumptions = [
+        { id: 'c1', productName: 'Cerveja 2M', quantity: 2, unitPrice: 80, totalPrice: 160, addedAt: baseIn, addedBy: 'u1' },
+        { id: 'c2', productName: 'Água Namaacha', quantity: 1, unitPrice: 40, totalPrice: 40, addedAt: baseIn, addedBy: 'u1' },
+      ];
+      const pricing = calculateStayPricing({
+        checkInAt: baseIn,
+        checkOutAt: checkOut,
+        contractedHours: 1,
+        ratePerHour: 300,
+        consumptions,
+      });
+
+      expect(pricing.stayAmountDue).toBe(300);
+      expect(pricing.consumptionsAmountDue).toBe(200);
+      expect(pricing.totalAmountDue).toBe(500);
+    });
   });
 
   describe('calculateExpectedCheckOut & extensions', () => {

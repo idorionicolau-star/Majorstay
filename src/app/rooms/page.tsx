@@ -26,6 +26,7 @@ import { CheckInDialog } from '@/components/rooms/check-in-dialog';
 import { ExtendStayDialog } from '@/components/rooms/extend-stay-dialog';
 import { CheckOutDialog } from '@/components/rooms/check-out-dialog';
 import { RoomFormDialog } from '@/components/rooms/room-form-dialog';
+import { RoomConsumptionDialog } from '@/components/rooms/room-consumption-dialog';
 import type { Room, Stay } from '@/lib/types';
 
 type FilterTab = 'all' | 'free' | 'occupied' | 'overtime' | 'cleaning';
@@ -52,6 +53,16 @@ export default function RoomsPage() {
 
   const [roomFormOpen, setRoomFormOpen] = useState(false);
   const [roomToEdit, setRoomToEdit] = useState<Room | null>(null);
+
+  const [consumptionOpen, setConsumptionOpen] = useState(false);
+  const [stayForConsumption, setStayForConsumption] = useState<Stay | null>(null);
+  const [roomForConsumption, setRoomForConsumption] = useState<Room | null>(null);
+
+  const handleOpenConsumption = (room: Room, stay: Stay) => {
+    setRoomForConsumption(room);
+    setStayForConsumption(stay);
+    setConsumptionOpen(true);
+  };
 
   // Mapear cada quarto para a sua estadia aberta correspondente
   const staysByRoomId = useMemo(() => {
@@ -387,6 +398,7 @@ export default function RoomsPage() {
                 onCheckIn={(r) => handleOpenCheckIn(r)}
                 onExtend={(r, s) => handleOpenExtend(r, s)}
                 onCheckOut={(r, s) => handleOpenCheckOut(r, s)}
+                onConsumption={(r, s) => handleOpenConsumption(r, s)}
                 onEditRoom={(r) => handleOpenEditRoom(r)}
               />
             );
@@ -419,6 +431,13 @@ export default function RoomsPage() {
         open={roomFormOpen}
         onOpenChange={setRoomFormOpen}
         roomToEdit={roomToEdit}
+      />
+
+      <RoomConsumptionDialog
+        open={consumptionOpen}
+        onOpenChange={setConsumptionOpen}
+        room={roomForConsumption}
+        stay={stayForConsumption}
       />
     </div>
   );

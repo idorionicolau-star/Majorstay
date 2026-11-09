@@ -33,10 +33,15 @@ export function SaleCard({ sale, onUpdateSale, onConfirmPickup, onDeleteSale, vi
         <Card data-tour="sales-item" className="glass-card flex flex-col h-full group p-2 sm:p-4 shadow-sm">
             <CardHeader className="p-1 sm:p-2">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="text-xs font-bold truncate leading-tight">
+                    <CardTitle className="text-xs font-bold truncate leading-tight flex items-center gap-1.5">
+                        {sale.productName?.startsWith("Estadia:") ? (
+                            <span className="shrink-0 inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">
+                                🛏️ Quarto
+                            </span>
+                        ) : null}
                         <Link
-                            href={`/inventory?filter=${encodeURIComponent(sale.productName)}`}
-                            className="hover:underline hover:text-primary transition-colors cursor-pointer"
+                            href={sale.productName?.startsWith("Estadia:") ? "/rooms" : `/inventory?filter=${encodeURIComponent(sale.productName)}`}
+                            className="hover:underline hover:text-primary transition-colors cursor-pointer truncate"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {sale.productName}
