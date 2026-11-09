@@ -1,17 +1,14 @@
-// Níveis da subscrição (Básico, Pro, Business): o que cada um inclui e quanto custa. Puro, para ser testado.
-//
-// "Plano" em lib/plans.ts é o PERÍODO (mensal, trimestral, anual); aqui é o NÍVEL. O preço = nível × período.
-// Empresas que já pagavam antes de haver níveis (sem `tier`) mantêm TUDO ao preço do Pro — ninguém perde nada.
-// Durante o teste gratuito tudo está aberto, para a pessoa ver o que cada plano dá.
+// Níveis da subscrição MajorStay Hospitality (Pro, Business, Enterprise)
 import type { PlanId } from '@/lib/plans';
 
-export type TierId = 'basico' | 'pro' | 'business';
-/** O que se pode pagar: um nível, ou manter o plano antigo (só quem já pagava antes dos níveis). */
+export type TierId = 'pro' | 'business' | 'enterprise' | 'basico';
+/** O que se pode pagar: um nível, ou manter o plano antigo. */
 export type PayTier = TierId | 'atual';
 
 export type Feature =
     | 'rooms'       // Quartos e estadias em tempo real
-    | 'tapSell'     // Vender por toque
+    | 'tapSell'     // Vender por toque (Lounge & Bar)
+    | 'bookings'    // Reservas antecipadas e WhatsApp
     | 'variants'    // variações no catálogo
     | 'documents'   // proformas e documentos com a marca
     | 'orders'      // encomendas
@@ -32,43 +29,91 @@ export type Tier = {
     highlights: string[];
 };
 
-// Vender por toque está em todos: é o que mais depressa convence uma loja pequena (abrir, tocar, vender)
-const BASIC_FEATURES: Feature[] = ['rooms', 'tapSell'];
-const PRO_FEATURES: Feature[] = [...BASIC_FEATURES, 'variants', 'documents', 'orders', 'reports'];
+const PRO_FEATURES: Feature[] = ['rooms', 'tapSell', 'bookings', 'documents', 'reports'];
+const BUSINESS_FEATURES: Feature[] = [...PRO_FEATURES, 'variants', 'orders', 'production'];
+const ENTERPRISE_FEATURES: Feature[] = [...BUSINESS_FEATURES, 'locations'];
 
 export const TIERS: Tier[] = [
     {
-        id: 'basico', label: 'Básico', monthly: 300, forWho: 'Banca, loja pequena', maxUsers: 1, features: BASIC_FEATURES,
-        highlights: ['1 utilizador', 'Vender por toque, leitor de códigos e voz', 'Stock, clientes e dívidas, despesas', 'Resumo do dia'],
+        id: 'pro',
+        label: 'Pro',
+        monthly: 1500,
+        forWho: 'Guest Houses, Pensões e Alojamentos',
+        maxUsers: 3,
+        features: PRO_FEATURES,
+        highlights: [
+            'Até 10 quartos e estadias em tempo real',
+            'Cobrança por hora e pernoita',
+            'Lounge & Bar com comanda digital',
+            'Recibos e reservas por WhatsApp',
+            '3 utilizadores incluídos',
+        ],
     },
     {
-        id: 'pro', label: 'Pro', monthly: 1000, forWho: 'Loja, ferragem, mercearia', maxUsers: 5, features: PRO_FEATURES,
-        highlights: ['Até 5 utilizadores', 'Tudo do Básico', 'Catálogo com variações', 'Proformas e documentos com a sua marca', 'Encomendas e relatórios completos'],
+        id: 'business',
+        label: 'Business',
+        monthly: 3500,
+        forWho: 'Lodges, Motéis e Hotéis Médios',
+        maxUsers: 10,
+        features: BUSINESS_FEATURES,
+        highlights: [
+            'Até 30 quartos e reservas antecipadas',
+            'Controlo de turnos de receção e auditoria',
+            'Gestão de stock de Bar e Frigobar',
+            'Documentos e comanda com a sua marca',
+            '10 utilizadores incluídos',
+        ],
     },
     {
-        id: 'business', label: 'Business', monthly: 2000, forWho: 'Fábrica, armazém, várias lojas', maxUsers: null, features: [...PRO_FEATURES, 'production', 'locations'],
-        highlights: ['Utilizadores sem limite', 'Tudo do Pro', 'Produção e matérias-primas', 'Várias localizações'],
+        id: 'enterprise',
+        label: 'Enterprise',
+        monthly: 7500,
+        forWho: 'Hotéis de Grande Porte, Resorts e Redes',
+        maxUsers: null,
+        features: ENTERPRISE_FEATURES,
+        highlights: [
+            'Quartos ilimitados e multi-propriedades',
+            'Tudo do Business + Várias localizações',
+            'Auditoria avançada e permissões de gerência',
+            'Suporte prioritário dedicado 24/7',
+            'Utilizadores ilimitados',
+        ],
     },
 ];
 
 export const FEATURE_LABEL: Record<Feature, string> = {
     rooms: 'Quadro de Quartos e Estadias',
-    tapSell: 'Vender por toque',
-    variants: 'Variações de produtos',
-    documents: 'Proformas e documentos',
-    orders: 'Encomendas',
-    reports: 'Relatórios completos',
-    production: 'Produção e matérias-primas',
-    locations: 'Várias localizações',
+    tapSell: 'Lounge & Bar (Venda Rápida)',
+    bookings: 'Reservas Antecipadas & WhatsApp',
+    variants: 'Variações de produtos e serviços',
+    documents: 'Recibos, proformas e documentos',
+    orders: 'Encomendas e fornecedores',
+    reports: 'Relatórios completos de ocupação e receita',
+    production: 'Produção e cozinha',
+    locations: 'Várias localizações e propriedades',
 };
 
-export const tierById = (id: unknown): Tier | undefined => TIERS.find((t) => t.id === id);
+export const tierById = (id: unknown): Tier | undefined => {
+    if (id === 'basico') {
+        return {
+            id: 'basico',
+            label: 'Básico',
+            monthly: 1500,
+            forWho: 'Alojamento Inicial',
+            maxUsers: 1,
+            features: PRO_FEATURES,
+            highlights: ['1 utilizador', 'Quadro de Quartos e Bar', 'Cobrança por hora'],
+        };
+    }
+    return TIERS.find((t) => t.id === id);
+};
+
 export const isTierId = (id: unknown): id is TierId => !!tierById(id);
 
 /** O nível mais barato que inclui a funcionalidade. */
-export const tierFor = (f: Feature): Tier => TIERS.find((t) => t.features.includes(f))!;
+export const tierFor = (f: Feature): Tier => TIERS.find((t) => t.features.includes(f)) || TIERS[0];
 
-/** Desconto por período (o mesmo de sempre: trimestral -10%, anual -15%). */
+/** Desconto por período (trimestral -10%, anual -15%). */
 const PERIOD: Record<PlanId, { months: number; factor: number }> = {
     mensal: { months: 1, factor: 1 },
     trimestral: { months: 3, factor: 0.9 },
@@ -116,7 +161,6 @@ export const tierLabel = (t: PayTier) => (t === 'atual' ? 'Completo' : tierById(
 export function resolvePayTier(requested: unknown, c: CompanyLike): PayTier | null {
     if (isTierId(requested)) return requested;
     if (requested === 'atual') return onLegacyPlan(c) ? 'atual' : null;
-    // pedidos sem nível (versão anterior da app): o que a empresa já tem
     if (requested == null || requested === '') return isTierId(c?.tier) ? (c!.tier as TierId) : onLegacyPlan(c) ? 'atual' : 'pro';
     return null;
 }

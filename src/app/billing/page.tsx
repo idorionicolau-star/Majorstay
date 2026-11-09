@@ -182,7 +182,8 @@ function BillingInner() {
     return (
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 pb-24">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight">Subscrição MajorStockX</h1>
+                <h1 className="text-2xl sm:text-3xl font-headline font-extrabold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">Subscrição MajorStay Hospitality</h1>
+                <p className="text-xs text-[#827568] dark:text-[#B0A294] mt-1">Planos dedicados para Alojamentos, Pensões, Lodges, Motéis e Hotéis.</p>
                 <p className={cn("mt-1 text-sm", isReadOnly ? "font-semibold text-red-600" : "text-muted-foreground")}>{statusLine}</p>
                 {companyData && <p className="mt-0.5 text-sm" data-testid="current-tier">Plano: <b>{companyTierLabel(companyData)}</b></p>}
             </div>
@@ -227,8 +228,8 @@ function BillingInner() {
                             )}
                             {TIERS.map((t) => (
                                 <button key={t.id} type="button" role="radio" aria-checked={tier === t.id} onClick={() => setTier(t.id)}
-                                    className={cn("relative rounded-2xl border-2 p-4 text-left transition", tier === t.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50")}>
-                                    {t.id === "pro" && <span className="absolute right-3 top-3 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">Mais escolhido</span>}
+                                    className={cn("relative rounded-2xl border p-4 text-left transition shadow-sm", tier === t.id ? "border-[#BA5A1A] ring-2 ring-[#BA5A1A]/20 bg-[#FAF0E6]/60 dark:bg-[#2A201A]" : "border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#BA5A1A]/50")}>
+                                    {t.id === "business" && <span className="absolute right-3 top-3 rounded-full bg-[#FAF0E6] dark:bg-[#34241B] text-[#BA5A1A] border border-[#F0D5C0] dark:border-[#523A2C] px-2.5 py-0.5 text-[11px] font-bold">Mais escolhido</span>}
                                     <p className="font-semibold">{t.label}</p>
                                     <p className="text-xs text-muted-foreground">{t.forWho}</p>
                                     <p className="mt-1 text-xl font-bold tabular-nums">{formatCurrency(t.monthly)}<span className="text-xs font-normal text-muted-foreground">/mês</span></p>
@@ -248,7 +249,7 @@ function BillingInner() {
                     <div className="grid gap-3 sm:grid-cols-3" data-tour="bill-plans">
                         {PLANS.map((p) => { const pr = priceOf(p.id); return (
                             <button key={p.id} type="button" onClick={() => setSelected(p.id)}
-                                className={cn("relative rounded-2xl border-2 p-4 text-left transition", selected === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50")}>
+                                className={cn("relative rounded-2xl border p-4 text-left transition shadow-sm", selected === p.id ? "border-[#BA5A1A] ring-2 ring-[#BA5A1A]/20 bg-[#FAF0E6]/60 dark:bg-[#2A201A]" : "border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] hover:border-[#BA5A1A]/50")}>
                                 {p.note && <span className="absolute right-3 top-3 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600">{p.note}</span>}
                                 <p className="font-semibold">{p.label}</p>
                                 {pr.discounted && <p className="mt-2 text-sm text-muted-foreground line-through tabular-nums">{formatCurrency(pr.full)}</p>}
@@ -277,7 +278,7 @@ function BillingInner() {
                         ))}
                     </div>
 
-                    <Button data-tour="bill-pay" onClick={pay} disabled={busy} className="h-12 rounded-xl text-base">
+                    <Button data-tour="bill-pay" onClick={pay} disabled={busy} className="h-12 rounded-xl text-base font-bold bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-md shadow-[#BA5A1A]/20">
                         {busy ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : method === "card" ? <CreditCard className="mr-2 h-5 w-5" /> : <Smartphone className="mr-2 h-5 w-5" />}
                         Pagar {formatCurrency(priceOf(selected).amount)} · {tierLabel(tier)}{method === "card" ? " com cartão" : ` por ${MANUAL_METHODS[method].label}`}
                     </Button>

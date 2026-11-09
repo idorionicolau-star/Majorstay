@@ -647,3 +647,24 @@ export type HospitalityAuditLog = {
   timestamp: string | any;
   companyId: string;
 };
+
+export type BookingStatus = 'confirmed' | 'pending' | 'checked_in' | 'cancelled';
+
+export type Booking = {
+  id: string;
+  roomId?: string; // Quarto reservado (opcional ou pré-atribuído)
+  roomName?: string;
+  clientName: string;
+  clientPhone: string;
+  clientEmail?: string;
+  checkInDate: string | any; // Data e hora prevista de entrada
+  durationHours: number; // Horas previstas (ex: 2h, 4h, 12h pernoita, 24h)
+  isOvernight?: boolean;
+  depositAmount?: number; // Sinal / Depósito antecipado em MT
+  totalEstimated?: number;
+  status: BookingStatus;
+  notes?: string;
+  createdBy: string;
+  createdByName?: string;
+  createdAt: string | any;
+};

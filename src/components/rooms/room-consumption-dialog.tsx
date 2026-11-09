@@ -239,12 +239,12 @@ export function RoomConsumptionDialog({
             <TabsContent value="add" className="space-y-3.5 m-0">
               {/* Barra de pesquisa */}
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#827568]" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
                 <Input
                   placeholder="Pesquisar bebidas, petiscos, água..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
                 />
               </div>
 

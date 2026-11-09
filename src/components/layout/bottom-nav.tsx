@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   BedDouble,
   Package,
-  Zap,
+  Wine,
   Menu
 } from "lucide-react";
 import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
@@ -21,7 +21,7 @@ export function useNavTabs() {
   return [
     { title: "Início", href: "/dashboard", icon: LayoutDashboard, id: "dashboard" },
     { title: "Quartos", href: "/rooms", icon: BedDouble, id: "rooms" },
-    { title: "Lounge", href: "/pos", icon: Zap, id: "pos" },
+    { title: "Lounge & Bar", href: "/pos", icon: Wine, id: "pos" },
     { title: "Bar", href: "/inventory", icon: Package, id: "inventory", also: ["/catalog"] },
   ];
 }

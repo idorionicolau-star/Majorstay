@@ -59,7 +59,7 @@ export function InstallPrompt() {
         <div role="region" aria-label="Instalar a app" className="mb-3 flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
             <Download className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
-                <p className="font-semibold">Instale a MajorStockX no seu aparelho</p>
+                <p className="font-semibold">Instale o MajorStay no seu aparelho</p>
                 {mode === "prompt" ? (
                     <p className="text-muted-foreground">Abre mais depressa, em ecrã inteiro, e funciona sem internet.</p>
                 ) : (

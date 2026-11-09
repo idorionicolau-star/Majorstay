@@ -135,26 +135,26 @@ export function RoomCard({
       <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-3">
         {/* Cabeçalho do Cartão: Quarto, Tipo e Badge */}
         <div>
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-headline font-bold text-lg text-stone-900 dark:text-stone-100 leading-tight">
+          <div className="flex items-start justify-between gap-2 min-w-0">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-headline font-bold text-base sm:text-lg text-[#251D18] dark:text-[#F5EFEB] leading-tight whitespace-nowrap">
                   {room.name}
                 </h3>
                 {room.type && (
-                  <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0 h-4 border-[#E5DFD6] dark:border-[#382D26] text-stone-600 dark:text-stone-300 bg-[#F8F5EE] dark:bg-[#2A201A]">
+                  <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0 h-4 border-[#E5DFD6] dark:border-[#382D26] text-stone-600 dark:text-stone-300 bg-[#F8F5EE] dark:bg-[#2A201A] shrink-0">
                     {room.type}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 font-medium">
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 font-medium truncate">
                 {formatCurrency(room.ratePerHour)}/hora (mín. {room.minimumHours || 1}h)
               </p>
             </div>
 
             {/* Badge de Estado e Menu */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Badge className={`text-xs font-bold px-2 py-0.5 flex items-center gap-1 rounded-full shadow-none ${statusTheme.badgeClass}`}>
+            <div className="flex items-center gap-1 shrink-0">
+              <Badge className={`text-xs font-bold px-2 py-0.5 flex items-center gap-1 rounded-full shadow-none whitespace-nowrap ${statusTheme.badgeClass}`}>
                 <StatusIcon className="h-3 w-3" />
                 {statusTheme.badgeText}
               </Badge>
@@ -200,13 +200,13 @@ export function RoomCard({
           {(isOccupied || isOvertime) && stay && realtime && (
             <div className="mt-3 p-3 rounded-xl bg-[#F8F5EE] dark:bg-[#261D19] border border-[#EBE3D5] dark:border-[#382B24] space-y-2 text-xs">
               {/* Informações do Hóspede */}
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-stone-900 dark:text-stone-100 truncate flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className="font-bold text-stone-900 dark:text-stone-100 truncate flex items-center gap-1.5 min-w-0">
                   <User className="h-3.5 w-3.5 text-primary shrink-0" />
-                  {stay.clientName || 'Hóspede Particular'}
+                  <span className="truncate">{stay.clientName || 'Hóspede Particular'}</span>
                 </span>
                 {stay.clientPhone && (
-                  <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 font-mono text-[11px]">
+                  <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 font-mono text-[11px] shrink-0">
                     <Phone className="h-3 w-3 text-stone-400" />
                     {stay.clientPhone}
                   </span>
@@ -244,12 +244,12 @@ export function RoomCard({
 
               {/* Barra de Progresso e Alerta de Tempo */}
               <div className="space-y-1 pt-1">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-stone-400" />
-                    Decorrido: {formatStayDuration(elapsedMinutes)}
+                <div className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 truncate">
+                    <Clock className="h-3 w-3 text-stone-400 shrink-0" />
+                    Decorrido: <strong className="text-stone-800 dark:text-stone-200">{formatStayDuration(elapsedMinutes)}</strong>
                   </span>
-                  <span className={`font-bold ${isOvertime ? 'text-rose-600 dark:text-rose-400' : 'text-[#BA5A1A] dark:text-[#E0852E]'}`}>
+                  <span className={`font-bold shrink-0 ${isOvertime ? 'text-rose-600 dark:text-rose-400' : 'text-[#BA5A1A] dark:text-[#E0852E]'}`}>
                     {formatTimeRemaining(realtime.minutesRemainingOrOverdue)}
                   </span>
                 </div>

@@ -29,6 +29,9 @@ interface CheckInDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedRoomId?: string | null;
+  initialGuestName?: string;
+  initialGuestPhone?: string;
+  initialHours?: number;
 }
 
 const PRESET_HOURS = [
@@ -50,7 +53,7 @@ const PAYMENT_METHODS = [
   { id: 'Transferência', label: 'Transferência Bancária' },
 ];
 
-export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckInDialogProps) {
+export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGuestName, initialGuestPhone, initialHours }: CheckInDialogProps) {
   const { rooms, checkInStay } = useRooms();
 
   const freeRooms = rooms.filter((r) => r.active && (r.status === 'free' || r.id === preselectedRoomId));
@@ -65,6 +68,14 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId }: CheckIn
   const [loading, setLoading] = useState(false);
 
   // Selecionar o quarto inicial
+  useEffect(() => {
+    if (open) {
+      if (initialGuestName) setClientName(initialGuestName);
+      if (initialGuestPhone) setClientPhone(initialGuestPhone);
+      if (initialHours) setContractedHours(initialHours);
+    }
+  }, [open, initialGuestName, initialGuestPhone, initialHours]);
+
   useEffect(() => {
     if (preselectedRoomId) {
       setRoomId(preselectedRoomId);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
-import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem } from '@/lib/types';
+import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem, Booking, BookingStatus } from '@/lib/types';
 import {
   isGuestCompany,
   getGuestRooms,
@@ -13,6 +13,9 @@ import {
   updateGuestStay,
   checkoutGuestStay,
   GUEST_DATA_EVENT,
+  getGuestBookings,
+  addGuestBooking,
+  updateGuestBooking,
 } from '@/lib/guest-mode';
 import { useInventory } from '@/context/inventory-context';
 import { db } from '@/firebase/index';
@@ -96,6 +99,10 @@ interface RoomsContextType {
     }[]
   ) => Promise<void>;
   removeStayConsumption: (stayId: string, consumptionId: string) => Promise<void>;
+  bookings: Booking[];
+  addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<Booking>;
+  updateBookingStatus: (bookingId: string, status: BookingStatus) => Promise<void>;
+  cancelBooking: (bookingId: string) => Promise<void>;
 }
 
 const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
@@ -106,6 +113,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
   const [rawRooms, setRawRooms] = useState<Room[]>([]);
   const [stays, setStays] = useState<Stay[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setTick] = useState(0);
 
@@ -117,6 +125,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       const loadGuestData = () => {
         setRawRooms(getGuestRooms());
         setStays(getGuestStays());
+        setBookings(getGuestBookings());
       };
       loadGuestData();
       setLoading(false);
@@ -127,6 +136,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     if (!companyId || !canRooms) {
       setRawRooms([]);
       setStays([]);
+      setBookings([]);
       setLoading(false);
       return;
     }
@@ -169,9 +179,27 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    const bookingsRef = collection(db, `companies/${companyId}/bookings`);
+    const bookingsQuery = query(bookingsRef, orderBy('checkInDate', 'asc'));
+
+    const unsubBookings = onSnapshot(
+      bookingsQuery,
+      (snapshot) => {
+        const list = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        })) as Booking[];
+        setBookings(list);
+      },
+      (error) => {
+        console.error('Erro ao carregar reservas:', error);
+      }
+    );
+
     return () => {
       unsubRooms();
       unsubStays();
+      unsubBookings();
     };
   }, [companyId, canRooms, isGuest]);
 
@@ -702,6 +730,45 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     toast({ title: 'Consumo removido da comanda do quarto.' });
   };
 
+  // Métodos de Reservas Antecipadas
+  const addBooking = async (data: Omit<Booking, 'id' | 'createdAt'>): Promise<Booking> => {
+    const newBooking: Booking = {
+      ...data,
+      id: `book-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (isGuest) {
+      addGuestBooking(newBooking);
+      setBookings((prev) => [newBooking, ...prev]);
+      return newBooking;
+    }
+
+    if (!companyId) throw new Error('Empresa não selecionada');
+    const bookingsRef = collection(db, `companies/${companyId}/bookings`);
+    const docRef = await addDoc(bookingsRef, {
+      ...data,
+      createdAt: serverTimestamp(),
+    });
+    newBooking.id = docRef.id;
+    return newBooking;
+  };
+
+  const updateBookingStatus = async (bookingId: string, status: BookingStatus): Promise<void> => {
+    if (isGuest) {
+      updateGuestBooking(bookingId, { status });
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status } : b)));
+      return;
+    }
+    if (!companyId) return;
+    const docRef = doc(db, `companies/${companyId}/bookings/${bookingId}`);
+    await updateDoc(docRef, { status });
+  };
+
+  const cancelBooking = async (bookingId: string): Promise<void> => {
+    await updateBookingStatus(bookingId, 'cancelled');
+  };
+
   return (
     <RoomsContext.Provider
       value={{
@@ -721,6 +788,10 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         addStayConsumption,
         addStayConsumptionsBulk,
         removeStayConsumption,
+        bookings,
+        addBooking,
+        updateBookingStatus,
+        cancelBooking,
       }}
     >
       {children}

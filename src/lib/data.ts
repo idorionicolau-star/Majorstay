@@ -10,6 +10,7 @@ import {
   FileText,
   Zap,
   CreditCard,
+  Wine,
 } from 'lucide-react';
 
 export const mainNavItems: NavItem[] = [
@@ -19,7 +20,7 @@ export const mainNavItems: NavItem[] = [
   // Quartos: o quadro de quartos e estadias (fica no grupo Início, que não mostra título)
   { title: 'Quartos', href: '/rooms', id: 'rooms', icon: BedDouble, group: 'inicio' },
   // Lounge (as vendas do bar)
-  { title: 'Venda Rápida', href: '/pos', id: 'sales', icon: Zap, group: 'vender' },
+  { title: 'Lounge & Bar', href: '/pos', id: 'sales', icon: Wine, group: 'vender' },
   { title: 'Histórico de Vendas', href: '/sales', id: 'sales', icon: ShoppingCart, group: 'vender' },
   { title: 'Documentos', href: '/documents', id: 'sales', icon: FileText, group: 'vender' },
   // Bar

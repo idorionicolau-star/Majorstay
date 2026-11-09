@@ -1,43 +1,44 @@
 import { describe, expect, it } from 'vitest';
 import { companyHas, companyMaxUsers, companyTierLabel, featureForPath, onLegacyPlan, resolvePayTier, tierAmount, tierFor } from '../tiers';
 
-describe('planos: preços', () => {
-    it('Pro mantém os preços de sempre', () => {
-        expect([tierAmount('pro', 'mensal'), tierAmount('pro', 'trimestral'), tierAmount('pro', 'anual')]).toEqual([1000, 2700, 10200]);
+describe('planos MajorStay: preços', () => {
+    it('Pro preços de hotelaria (1500 MT/mês)', () => {
+        expect([tierAmount('pro', 'mensal'), tierAmount('pro', 'trimestral'), tierAmount('pro', 'anual')]).toEqual([1500, 4050, 15300]);
     });
-    it('Básico e Business com o mesmo desconto por período', () => {
-        expect([tierAmount('basico', 'mensal'), tierAmount('basico', 'trimestral'), tierAmount('basico', 'anual')]).toEqual([300, 810, 3060]);
-        expect([tierAmount('business', 'mensal'), tierAmount('business', 'trimestral'), tierAmount('business', 'anual')]).toEqual([2000, 5400, 20400]);
+    it('Business e Enterprise com desconto por período (10% trimestral, 15% anual)', () => {
+        expect([tierAmount('business', 'mensal'), tierAmount('business', 'trimestral'), tierAmount('business', 'anual')]).toEqual([3500, 9450, 35700]);
+        expect([tierAmount('enterprise', 'mensal'), tierAmount('enterprise', 'trimestral'), tierAmount('enterprise', 'anual')]).toEqual([7500, 20250, 76500]);
     });
     it('plano antigo paga o preço do Pro', () => {
-        expect(tierAmount('atual', 'anual')).toBe(10200);
+        expect(tierAmount('atual', 'anual')).toBe(15300);
     });
 });
 
-describe('planos: o que cada empresa tem', () => {
-    const basico = { status: 'active', tier: 'basico' };
+describe('planos MajorStay: o que cada alojamento tem', () => {
     const pro = { status: 'active', tier: 'pro' };
     const business = { status: 'active', tier: 'business' };
+    const enterprise = { status: 'active', tier: 'enterprise' };
     const antiga = { status: 'active' };
-    const teste = { status: 'trial', tier: 'basico' };
+    const teste = { status: 'trial', tier: 'pro' };
 
-    it('Básico: sem produção, sem encomendas, 1 utilizador', () => {
-        expect(companyHas(basico, 'production')).toBe(false);
-        expect(companyHas(basico, 'orders')).toBe(false);
-        expect(companyHas(basico, 'rooms')).toBe(true);
-        expect(companyHas(basico, 'tapSell')).toBe(true); // vender por toque em todos os planos
-        expect(companyMaxUsers(basico)).toBe(1);
+    it('Pro: quartos, bar, reservas e documentos, 3 utilizadores', () => {
+        expect(companyHas(pro, 'rooms')).toBe(true);
+        expect(companyHas(pro, 'tapSell')).toBe(true);
+        expect(companyHas(pro, 'bookings')).toBe(true);
+        expect(companyHas(pro, 'documents')).toBe(true);
+        expect(companyHas(pro, 'locations')).toBe(false);
+        expect(companyMaxUsers(pro)).toBe(3);
     });
-    it('Pro: encomendas e variações sim, produção não, 5 utilizadores', () => {
-        expect(companyHas(pro, 'orders')).toBe(true);
-        expect(companyHas(pro, 'variants')).toBe(true);
-        expect(companyHas(pro, 'production')).toBe(false);
-        expect(companyMaxUsers(pro)).toBe(5);
-    });
-    it('Business: tudo, sem limite de utilizadores', () => {
+    it('Business: encomendas e variações sim, 10 utilizadores', () => {
+        expect(companyHas(business, 'orders')).toBe(true);
+        expect(companyHas(business, 'variants')).toBe(true);
         expect(companyHas(business, 'production')).toBe(true);
-        expect(companyHas(business, 'locations')).toBe(true);
-        expect(companyMaxUsers(business)).toBeNull();
+        expect(companyMaxUsers(business)).toBe(10);
+    });
+    it('Enterprise: tudo, sem limite de utilizadores', () => {
+        expect(companyHas(enterprise, 'production')).toBe(true);
+        expect(companyHas(enterprise, 'locations')).toBe(true);
+        expect(companyMaxUsers(enterprise)).toBeNull();
     });
     it('quem já pagava antes dos planos não perde nada', () => {
         expect(onLegacyPlan(antiga)).toBe(true);
@@ -50,8 +51,8 @@ describe('planos: o que cada empresa tem', () => {
         expect(onLegacyPlan({ status: 'trial' })).toBe(false);
     });
     it('a funcionalidade diz qual o plano mais barato que a tem', () => {
-        expect(tierFor('production').id).toBe('business');
-        expect(tierFor('orders').id).toBe('pro');
+        expect(tierFor('locations').id).toBe('enterprise');
+        expect(tierFor('orders').id).toBe('business');
     });
 });
 
@@ -64,7 +65,7 @@ describe('planos: o que se pode pagar', () => {
         expect(resolvePayTier('ultra', { status: 'active' })).toBeNull();
     });
     it('pedido sem nível (app antiga): o que a empresa já tem', () => {
-        expect(resolvePayTier(undefined, { status: 'active', tier: 'basico' })).toBe('basico');
+        expect(resolvePayTier(undefined, { status: 'active', tier: 'pro' })).toBe('pro');
         expect(resolvePayTier(undefined, { status: 'active' })).toBe('atual');
         expect(resolvePayTier(undefined, { status: 'trial' })).toBe('pro');
     });
@@ -72,7 +73,7 @@ describe('planos: o que se pode pagar', () => {
 
 describe('planos: páginas', () => {
     it('cada página da sua funcionalidade', () => {
-        expect(featureForPath('/production/new')).toBe('production');
+        expect(featureForPath('/production')).toBe('production');
         expect(featureForPath('/raw-materials')).toBe('production');
         expect(featureForPath('/pos/catalogo')).toBe('tapSell');
         expect(featureForPath('/pos')).toBeNull();

@@ -454,8 +454,8 @@ export function FastSale() {
             <BarcodeScanner open={scanOpen} onClose={() => { setScanOpen(false); focusSearch(); }} onScan={(c) => handleCode(c, true)} onUnknown={canLink ? linkCode : undefined} />
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Venda Rápida</h1>
-                    <p className="text-xs text-muted-foreground">Escreva, leia o código de barras ou dite — Enter junta ao carrinho.</p>
+                    <h1 className="text-2xl font-bold tracking-tight">Lounge & Bar</h1>
+                    <p className="text-xs text-muted-foreground">Serviço de bar, bebidas e petiscos — lance na comanda do quarto ou fature avulso.</p>
                     <p className="hidden text-[11px] text-muted-foreground/70 md:block">Atalhos: F2 pesquisar · F8 câmara · Ctrl+Enter finalizar · Alt+1…5 pagamento</p>
                 </div>
                 <div className="flex shrink-0 gap-2">

@@ -1,4 +1,4 @@
-import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification, Room, Stay } from "@/lib/types";
+import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification, Room, Stay, Booking } from "@/lib/types";
 import { calculateStayPricing } from "@/lib/hospitality-calc";
 import { GUEST_PRODUCTS, GUEST_LOCATIONS, guestLocation } from "@/lib/demo-data";
 import { GUEST_TRIAL_LIMIT_MS, GUEST_TRIAL_GAP_MS } from "@/lib/guest-trial";
@@ -1116,4 +1116,35 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
   }
 
   return { stay: closedStay, sale, pricing };
+}
+
+
+export const INITIAL_GUEST_BOOKINGS: Booking[] = [
+  {
+    id: "guest-booking-1",
+    clientName: "Fernando Macamo",
+    clientPhone: "841234567",
+    roomName: "Suíte Presidencial 201",
+    checkInDate: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+    durationHours: 3,
+    depositAmount: 500,
+    totalEstimated: 1500,
+    status: "confirmed",
+    notes: "Ligou a pedir ar condicionado ligado e água no frigobar",
+    createdBy: "guest-admin",
+    createdByName: "Recepção",
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getGuestBookings(): Booking[] {
+  return readStore<Booking[]>("bookings", () => INITIAL_GUEST_BOOKINGS);
+}
+
+export function addGuestBooking(booking: Booking): void {
+  writeStore("bookings", [booking, ...getGuestBookings()]);
+}
+
+export function updateGuestBooking(id: string, data: Partial<Booking>): void {
+  writeStore("bookings", getGuestBookings().map((b) => (b.id === id ? { ...b, ...data } : b)));
 }

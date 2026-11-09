@@ -152,7 +152,7 @@ export function RecycleBin() {
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Procurar itens apagados..."
-                            className="pl-9 sm:pl-9 bg-background"
+                            className="pl-10 sm:pl-9 bg-background"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />

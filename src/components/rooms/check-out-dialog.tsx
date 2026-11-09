@@ -19,7 +19,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { LogOut, Clock, AlertTriangle, Sparkles, CheckCircle2, DollarSign, CreditCard } from 'lucide-react';
+import { LogOut, Clock, AlertTriangle, Sparkles, CheckCircle2, DollarSign, CreditCard, MessageCircle } from 'lucide-react';
+import { buildStayReceiptWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp';
+import { useInventory } from '@/context/inventory-context';
 import { formatCurrency } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
@@ -44,6 +46,7 @@ const PAYMENT_METHODS = [
 
 export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialogProps) {
   const { checkOutStay } = useRooms();
+  const { companyData } = useInventory();
 
   const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
   const [roomNextStatus, setRoomNextStatus] = useState<'cleaning' | 'free'>('cleaning');
@@ -78,6 +81,19 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   const previousPaid = Number(stay.totalAmountPaid) || 0;
   const balanceToPay = Math.max(0, pricing.totalAmountDue - previousPaid);
 
+
+  const handleSendWhatsAppReceipt = () => {
+    if (!stay) return;
+    const simulatedStay: Stay = {
+      ...stay,
+      checkOutAt: new Date(),
+      billedHours: pricing.billedHours,
+      totalAmountPaid: pricing.totalAmountDue,
+      paymentMethod,
+    };
+    const msg = buildStayReceiptWhatsAppMessage(simulatedStay, room, companyData?.name);
+    openWhatsApp(stay.clientPhone || '', msg);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stay.id) return;
@@ -295,19 +311,33 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
             />
           </div>
 
-          <DialogFooter className="pt-2 gap-2 sm:gap-0">
+          <DialogFooter className="pt-2 flex-col sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
-              className="rounded-xl border-[#E5DFD6] dark:border-[#382D26] hover:bg-[#F4EDE0]"
+              className="w-full sm:w-auto rounded-xl border-[#E5DFD6] dark:border-[#382D26] hover:bg-[#F4EDE0]"
             >
               Cancelar
             </Button>
+
+            {stay.clientPhone && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSendWhatsAppReceipt}
+                disabled={loading}
+                className="w-full sm:w-auto rounded-xl border-[#CDE5D5] text-[#245D3B] dark:border-[#2E543C] dark:text-[#64C28D] bg-[#EDF6F0] dark:bg-[#1C3325] hover:bg-[#DDF0E2] font-semibold flex items-center justify-center gap-1.5"
+              >
+                <MessageCircle className="w-4 h-4 fill-current" />
+                Recibo WhatsApp
+              </Button>
+            )}
+
             <Button
               type="submit"
-              className="bg-[#BA5A1A] hover:bg-[#9C4811] text-white font-bold rounded-xl shadow-sm transition-all"
+              className="w-full sm:w-auto bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white font-bold rounded-xl shadow-md shadow-[#BA5A1A]/20 transition-all"
               disabled={loading}
             >
               {loading ? 'A Concluir...' : `Concluir Check-out (${formatCurrency(pricing.totalAmountDue)})`}
