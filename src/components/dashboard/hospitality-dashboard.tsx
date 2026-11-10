@@ -55,24 +55,24 @@ interface TileProps {
 function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
   const toneConfig = {
     free: {
-      badgeBg: "bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3023] dark:text-[#8CD9A9]",
-      textCol: "text-[#245D3B] dark:text-[#8CD9A9]",
-      hoverBorder: "hover:border-[#488C64]/60",
+      badgeBg: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-100/80 dark:border-emerald-900/40",
+      textCol: "text-slate-800 dark:text-slate-100",
+      hoverBorder: "hover:border-emerald-300 dark:hover:border-emerald-700/60",
     },
     occupied: {
-      badgeBg: "bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#282012] dark:text-[#E8BF72]",
-      textCol: "text-[#C58A2C] dark:text-[#E8BF72]",
-      hoverBorder: "hover:border-[#C58A2C]/60",
+      badgeBg: "bg-blue-50 text-[#007bb9] dark:bg-blue-950/40 dark:text-sky-400 border border-blue-100/80 dark:border-blue-900/40",
+      textCol: "text-[#007bb9] dark:text-sky-400",
+      hoverBorder: "hover:border-blue-300 dark:hover:border-blue-700/60",
     },
     overtime: {
-      badgeBg: "bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2]",
-      textCol: value > 0 ? "text-[#C53030] dark:text-[#FEB2B2]" : "text-stone-700 dark:text-stone-300",
-      hoverBorder: "hover:border-[#C53030]/60",
+      badgeBg: "bg-rose-50 text-rose-500 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40",
+      textCol: value > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-800 dark:text-slate-100",
+      hoverBorder: "hover:border-rose-300 dark:hover:border-rose-700/60",
     },
     cleaning: {
-      badgeBg: "bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B]",
-      textCol: "text-[#975A16] dark:text-[#ECC94B]",
-      hoverBorder: "hover:border-[#DF9E42]/60",
+      badgeBg: "bg-amber-50 text-amber-500 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40",
+      textCol: "text-slate-800 dark:text-slate-100",
+      hoverBorder: "hover:border-amber-300 dark:hover:border-amber-700/60",
     },
   }[tone];
 
@@ -80,19 +80,19 @@ function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
     <Link
       href="/rooms"
       className={cn(
-        "group rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "group rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-5 flex flex-col justify-between h-[130px] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
         toneConfig.hoverBorder
       )}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
           {label}
         </p>
-        <div className={cn("p-2 rounded-xl", toneConfig.badgeBg)}>
+        <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", toneConfig.badgeBg)}>
           <Icon className="h-4 w-4" />
         </div>
       </div>
-      <p className={cn("mt-2 text-3xl font-headline font-black", toneConfig.textCol)}>
+      <p className={cn("text-3xl font-headline font-extrabold leading-none", toneConfig.textCol)}>
         {value}
       </p>
     </Link>
@@ -192,19 +192,43 @@ export function HospitalityDashboard() {
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full px-2 sm:px-0">
+      {/* Hero Welcome Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#006194] via-[#007bb9] to-[#0284c7] dark:from-[#131B26] dark:via-[#182332] dark:to-[#1B293A] p-6 sm:p-7 text-white shadow-soft border border-blue-400/20 dark:border-blue-900/40">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm text-xs font-semibold mb-2 text-white">
+              <span>✨ Gestão em tempo real</span>
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-tight">Painel de Acompanhamento</h1>
+            <p className="text-blue-100 dark:text-slate-300 text-xs mt-1 font-medium">
+              Controlo de ocupação, estadias ativas e balanço financeiro do Major Stay.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="bg-white/15 dark:bg-white/5 backdrop-blur-md rounded-2xl px-4 py-2 text-right border border-white/20 dark:border-white/10">
+              <span className="text-[11px] font-semibold text-blue-100 dark:text-slate-300 block">Total Previsto a Receber</span>
+              <span className="text-lg font-black tracking-tight text-white">{formatCurrency(toReceive)}</span>
+            </div>
+            <Link
+              href="/rooms/checkin"
+              className="px-4 py-2.5 rounded-2xl bg-white text-[#006194] hover:bg-blue-50 font-extrabold text-xs shadow-md transition-all flex items-center gap-2 active:scale-95 shrink-0"
+            >
+              <Key className="w-3.5 h-3.5" />
+              Novo Check-in
+            </Link>
+          </div>
+        </div>
+        {/* Decorative subtle background shapes */}
+        <div className="absolute -right-8 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none" />
+        <div className="absolute left-1/2 -top-12 w-36 h-36 rounded-full bg-sky-400/20 blur-2xl pointer-events-none" />
+      </div>
+
       {/* 1. Quartos agora */}
       <section className="flex flex-col gap-3" data-tour="hotel-rooms">
         <div className="flex items-center justify-between gap-3">
           <SectionTitle subtitle="Disponibilidade e ocupação em tempo real">
             Quartos & Ocupação Agora
           </SectionTitle>
-          <Link
-            href="/rooms/checkin"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C58A2C] hover:bg-[#A87019] text-white text-xs font-bold shadow-xs transition-all shrink-0"
-          >
-            <Key className="w-3.5 h-3.5" />
-            Novo Check-in
-          </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Tile label="Livres" value={stats.free} icon={CheckCircle2} tone="free" />
@@ -266,58 +290,82 @@ export function HospitalityDashboard() {
             Estadias Abertas
           </SectionTitle>
           {rows.length > 0 && (
-            <div className="text-xs text-stone-500 dark:text-stone-400 bg-[#FFFDF9] dark:bg-[#191E25] border border-[#E5DFD6] dark:border-[#2C3440] px-3 py-1 rounded-full shadow-sm">
-              A receber agora: <b className="text-stone-900 dark:text-stone-100 font-bold">{formatCurrency(toReceive)}</b>
+            <div className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-1.5">
+              <span>A receber agora:</span>
+              <span className="font-extrabold text-[#006194] dark:text-sky-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">
+                {formatCurrency(toReceive)}
+              </span>
             </div>
           )}
         </div>
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-6 text-center text-xs text-stone-500 shadow-sm">
+          <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-8 text-center text-xs text-slate-400 shadow-sm">
             Nenhum quarto com estadia ativa neste momento.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {rows.map(({ stay, realtime, pricing }) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rows.map(({ stay, realtime, pricing }, idx) => (
               <Link
                 key={stay.id}
                 href="/rooms"
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-2xl border bg-[#FFFDF9] dark:bg-[#191E25] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+                  "flex items-center justify-between gap-3 rounded-3xl border bg-white dark:bg-[#191E25] p-5 shadow-card hover:shadow-md transition-all group",
                   realtime.isOvertime
-                    ? "border-[#FBD5D0] dark:border-[#5C2323]"
-                    : "border-[#E5DFD6] dark:border-[#2C3440] hover:border-[#C58A2C]/40"
+                    ? "border-rose-200 dark:border-rose-900/60"
+                    : "border-slate-200/70 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/50"
                 )}
               >
-                <div className="min-w-0 flex-1">
+                <div className="space-y-2 min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate font-headline font-bold text-sm text-stone-900 dark:text-stone-100">
-                      {stay.roomName}
-                    </p>
-                    {stay.clientName && (
-                      <span className="text-xs text-stone-500 dark:text-stone-400 truncate">
-                        · {stay.clientName}
+                    <span className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-[#007bb9] dark:text-sky-300 font-extrabold text-xs flex items-center justify-center shrink-0">
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                    <div className="truncate">
+                      <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                        {stay.roomName}
                       </span>
-                    )}
+                      {stay.clientName && (
+                        <>
+                          <span className="text-slate-300 mx-1.5">·</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            {stay.clientName}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-stone-400" />
-                    Entrada {hhmm(normalizeDate(stay.checkInAt))} · Saída {hhmm(realtime.expectedCheckOut)}
-                  </p>
-                  <p
-                    className={cn(
-                      "text-xs font-bold mt-1",
-                      realtime.isOvertime ? "text-[#C53030] dark:text-[#FEB2B2]" : "text-[#C58A2C] dark:text-[#E0852E]"
-                    )}
-                  >
-                    {formatTimeRemaining(realtime.minutesRemainingOrOverdue)}
-                  </p>
+                  <div className="text-[11px] text-slate-400 dark:text-slate-400 font-medium flex items-center gap-1.5 pl-0.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Entrada {hhmm(normalizeDate(stay.checkInAt))} · Saída {hhmm(realtime.expectedCheckOut)}</span>
+                  </div>
+                  <div>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs",
+                        realtime.isOvertime
+                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/50"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/50"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          realtime.isOvertime ? "bg-rose-500 animate-ping" : "bg-amber-500 animate-ping"
+                        )}
+                      />
+                      {formatTimeRemaining(realtime.minutesRemainingOrOverdue)}
+                    </span>
+                  </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-headline font-black text-base text-stone-900 dark:text-stone-100">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    Valor
+                  </span>
+                  <div className="text-lg font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
                     {formatCurrency(pricing.totalAmountDue)}
-                  </p>
+                  </div>
                   {pricing.consumptionsAmountDue > 0 && (
-                    <p className="text-[10px] font-semibold text-[#DF9E42] flex items-center justify-end gap-1 mt-0.5">
+                    <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 flex items-center justify-end gap-1 mt-0.5">
                       <Wine className="h-3 w-3" />
                       +{formatCurrency(pricing.consumptionsAmountDue)}
                     </p>
@@ -337,39 +385,46 @@ export function HospitalityDashboard() {
             <SectionTitle subtitle="Total arrecadado hoje no fecho de turno">
               Hoje no Caixa
             </SectionTitle>
-            <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-5 shadow-sm">
-              <div className="flex items-baseline justify-between">
+            <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-6 shadow-sm">
+              <div className="flex items-start justify-between mb-6">
                 <div>
-                  <p className="text-3xl font-headline font-black text-stone-900 dark:text-stone-100">
+                  <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
                     {formatCurrency(today.total)}
-                  </p>
-                  <p className="mt-1 text-xs text-stone-500">
+                  </div>
+                  <div className="text-xs text-slate-400 font-semibold mt-1 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     {today.tickets === 0
-                      ? "Nenhum encerramento ou venda registada hoje"
+                      ? "Nenhum movimento registado hoje"
                       : plural(today.tickets, "movimento registado", "movimentos registados")}
-                  </p>
+                  </div>
                 </div>
-                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                  <DollarSign className="h-6 w-6" />
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-400 text-white flex items-center justify-center font-extrabold text-lg shadow-md shadow-orange-400/20">
+                  <DollarSign className="h-5 w-5" />
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#E5DFD6] dark:border-[#2C3440] pt-4">
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#111418] border border-[#E5DFD6] dark:border-[#2C3440]">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-                    Quartos & Estadias
-                  </p>
-                  <p className="text-lg font-headline font-black text-stone-900 dark:text-stone-100 mt-0.5">
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 rounded-2xl p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                      QUARTOS & ESTADIAS
+                    </span>
+                  </div>
+                  <div className="text-base font-extrabold text-slate-800 dark:text-slate-100">
                     {formatCurrency(today.roomsTotal)}
-                  </p>
+                  </div>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#111418] border border-[#E5DFD6] dark:border-[#2C3440]">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-                    Lounge / Bar
-                  </p>
-                  <p className="text-lg font-headline font-black text-stone-900 dark:text-stone-100 mt-0.5">
+                <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 rounded-2xl p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400" />
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                      LOUNGE / BAR
+                    </span>
+                  </div>
+                  <div className="text-base font-extrabold text-slate-800 dark:text-slate-100">
                     {formatCurrency(today.barTotal)}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -380,24 +435,51 @@ export function HospitalityDashboard() {
             <SectionTitle subtitle="Evolução de receitas ao longo da semana">
               Últimos 7 Dias
             </SectionTitle>
-            <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-5 shadow-sm flex flex-col justify-between">
-              <div className="flex h-36 items-end gap-2 pt-2">
-                {week.map((b) => (
-                  <div key={b.key} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
-                    <span className="h-3 truncate text-[10px] font-bold text-stone-500">
-                      {b.total > 0 ? compact(b.total) : ""}
-                    </span>
-                    <div className="flex w-full flex-1 items-end bg-[#FAF7F2] dark:bg-[#1A1411] rounded-t-lg overflow-hidden p-0.5">
-                      <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-[#C58A2C] to-[#DF9E42] transition-all duration-300"
-                        style={{ height: `${b.total > 0 ? Math.max(8, (b.total / weekMax) * 100) : 0}%` }}
-                      />
+            <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-6 shadow-sm flex flex-col justify-between">
+              <div className="h-[148px] flex items-end justify-between gap-3 pt-4 pb-1">
+                {week.map((b) => {
+                  const isPeak = b.total > 0 && b.total === weekMax;
+                  const heightPercent = b.total > 0 ? Math.max(12, (b.total / weekMax) * 100) : 0;
+                  return (
+                    <div key={b.key} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative">
+                      {b.total > 0 && (
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded-full border shadow-2xs whitespace-nowrap",
+                            isPeak
+                              ? "text-[#006194] dark:text-sky-300 bg-blue-50 dark:bg-blue-950/70 border-blue-200 dark:border-blue-800"
+                              : "text-slate-400 bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800"
+                          )}
+                        >
+                          {compact(b.total)}
+                        </span>
+                      )}
+                      <div className="w-full flex-1 flex items-end">
+                        <div
+                          className={cn(
+                            "w-full rounded-xl transition-all duration-300",
+                            isPeak
+                              ? "bg-gradient-to-t from-[#006194] via-[#007bb9] to-sky-400 shadow-md shadow-blue-500/20"
+                              : b.total > 0
+                              ? "bg-gradient-to-t from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700 group-hover:from-blue-200 group-hover:to-blue-300"
+                              : "bg-slate-100 dark:bg-slate-900 group-hover:bg-slate-200 dark:group-hover:bg-slate-800"
+                          )}
+                          style={{ height: `${heightPercent || 10}%` }}
+                        />
+                      </div>
+                      <span
+                        className={cn(
+                          "text-[10px] uppercase tracking-tight mt-1",
+                          isPeak
+                            ? "font-black text-[#006194] dark:text-sky-400"
+                            : "font-bold text-slate-400 dark:text-slate-500"
+                        )}
+                      >
+                        {b.label}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider">
-                      {b.label}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </section>
