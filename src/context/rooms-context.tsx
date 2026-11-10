@@ -98,7 +98,7 @@ interface RoomsContextType {
       unitPrice: number;
     }[]
   ) => Promise<void>;
-  removeStayConsumption: (stayId: string, consumptionId: string) => Promise<void>;
+  removeStayConsumption: (stayId: string, consumptionId: string, reason?: string) => Promise<void>;
   bookings: Booking[];
   addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<Booking>;
   updateBookingStatus: (bookingId: string, status: BookingStatus) => Promise<void>;
@@ -577,24 +577,23 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const price = Math.max(0, item.unitPrice || 0);
     const totalPrice = qty * price;
 
-    const newConsumption: StayConsumptionItem = {
-      id: `cons-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      productId: item.productId,
-      productName: item.productName,
-      quantity: qty,
-      unitPrice: price,
-      totalPrice,
-      addedAt: new Date().toISOString(),
-      addedBy: user?.id || 'unknown',
-      addedByName: user?.username || 'Barman / Receção',
-    };
-
-    const updatedConsumptions = [...(currentStay.consumptions || []), newConsumption];
-    const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-    const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
-    const newTotalDue = stayHoursTotal + consumptionsTotal;
-
     if (isGuest) {
+      const newConsumption: StayConsumptionItem = {
+        id: `cons-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: qty,
+        unitPrice: price,
+        totalPrice,
+        addedAt: new Date().toISOString(),
+        addedBy: user?.id || 'unknown',
+        addedByName: user?.username || 'Barman / Receção',
+      };
+      const updatedConsumptions = [...(currentStay.consumptions || []), newConsumption];
+      const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+      const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+      const newTotalDue = stayHoursTotal + consumptionsTotal;
+
       updateGuestStay(stayId, {
         consumptions: updatedConsumptions,
         totalAmountDue: newTotalDue,
@@ -606,21 +605,20 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!companyId || !user) throw new Error('Sessão indisponível.');
+    if (!companyId) throw new Error('Empresa indisponível.');
 
-    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
-    const staySnap = await getDoc(stayRef);
-    if (!staySnap.exists()) throw new Error('Estadia não encontrada no servidor.');
-    const stayData = staySnap.data() as Stay;
-
-    const serverConsumptions = [...(stayData.consumptions || []), newConsumption];
-    const serverConsumptionsTotal = serverConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-    const serverStayHoursTotal = (stayData.contractedHours || 1) * (stayData.ratePerHourApplied || 0);
-    const serverTotalDue = serverStayHoursTotal + serverConsumptionsTotal;
-
-    await updateDoc(stayRef, {
-      consumptions: serverConsumptions,
-      totalAmountDue: serverTotalDue,
+    await authedFetch('/api/stays/consumption', 'POST', {
+      companyId,
+      stayId,
+      action: 'add',
+      items: [
+        {
+          productId: item.productId,
+          productName: item.productName,
+          quantity: qty,
+          unitPrice: price,
+        },
+      ],
     });
 
     toast({
@@ -643,29 +641,29 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const currentStay = stays.find((s) => s.id === stayId);
     if (!currentStay) throw new Error('Estadia não encontrada.');
 
-    const newConsumptions: StayConsumptionItem[] = items.map((item, index) => {
-      const qty = Math.max(1, item.quantity || 1);
-      const price = Math.max(0, item.unitPrice || 0);
-      return {
-        id: `cons-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
-        productId: item.productId,
-        productName: item.productName,
-        quantity: qty,
-        unitPrice: price,
-        totalPrice: qty * price,
-        addedAt: new Date().toISOString(),
-        addedBy: user?.id || 'unknown',
-        addedByName: user?.username || 'Barman / Receção',
-      };
-    });
-
-    const addedTotal = newConsumptions.reduce((sum, c) => sum + c.totalPrice, 0);
-    const updatedConsumptions = [...(currentStay.consumptions || []), ...newConsumptions];
-    const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-    const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
-    const newTotalDue = stayHoursTotal + consumptionsTotal;
-
     if (isGuest) {
+      const newConsumptions: StayConsumptionItem[] = items.map((item, index) => {
+        const qty = Math.max(1, item.quantity || 1);
+        const price = Math.max(0, item.unitPrice || 0);
+        return {
+          id: `cons-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+          productId: item.productId,
+          productName: item.productName,
+          quantity: qty,
+          unitPrice: price,
+          totalPrice: qty * price,
+          addedAt: new Date().toISOString(),
+          addedBy: user?.id || 'unknown',
+          addedByName: user?.username || 'Barman / Receção',
+        };
+      });
+
+      const addedTotal = newConsumptions.reduce((sum, c) => sum + c.totalPrice, 0);
+      const updatedConsumptions = [...(currentStay.consumptions || []), ...newConsumptions];
+      const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+      const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+      const newTotalDue = stayHoursTotal + consumptionsTotal;
+
       updateGuestStay(stayId, {
         consumptions: updatedConsumptions,
         totalAmountDue: newTotalDue,
@@ -677,40 +675,36 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!companyId || !user) throw new Error('Sessão indisponível.');
+    if (!companyId) throw new Error('Empresa indisponível.');
 
-    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
-    const staySnap = await getDoc(stayRef);
-    if (!staySnap.exists()) throw new Error('Estadia não encontrada no servidor.');
-    const stayData = staySnap.data() as Stay;
-
-    const serverConsumptions = [...(stayData.consumptions || []), ...newConsumptions];
-    const serverConsumptionsTotal = serverConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-    const serverStayHoursTotal = (stayData.contractedHours || 1) * (stayData.ratePerHourApplied || 0);
-    const serverTotalDue = serverStayHoursTotal + serverConsumptionsTotal;
-
-    await updateDoc(stayRef, {
-      consumptions: serverConsumptions,
-      totalAmountDue: serverTotalDue,
+    await authedFetch('/api/stays/consumption', 'POST', {
+      companyId,
+      stayId,
+      action: 'add',
+      items,
     });
 
     toast({
       title: `Consumos lançados no ${currentStay.roomName}!`,
-      description: `${newConsumptions.length} itens adicionados (${formatCurrency(addedTotal)}). Serão cobrados no check-out.`,
+      description: `${items.length} itens adicionados à comanda. Serão cobrados no check-out.`,
     });
   };
 
   // 10. Remover Consumo da Comanda
-  const removeStayConsumption = async (stayId: string, consumptionId: string): Promise<void> => {
+  const removeStayConsumption = async (
+    stayId: string,
+    consumptionId: string,
+    reason = 'Removido da comanda pelo operador'
+  ): Promise<void> => {
     const currentStay = stays.find((s) => s.id === stayId);
     if (!currentStay) throw new Error('Estadia não encontrada.');
 
-    const updatedConsumptions = (currentStay.consumptions || []).filter((c) => c.id !== consumptionId);
-    const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-    const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
-    const newTotalDue = stayHoursTotal + consumptionsTotal;
-
     if (isGuest) {
+      const updatedConsumptions = (currentStay.consumptions || []).filter((c) => c.id !== consumptionId);
+      const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
+      const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+      const newTotalDue = stayHoursTotal + consumptionsTotal;
+
       updateGuestStay(stayId, {
         consumptions: updatedConsumptions,
         totalAmountDue: newTotalDue,
@@ -719,12 +713,14 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!companyId || !user) throw new Error('Sessão indisponível.');
+    if (!companyId) throw new Error('Empresa indisponível.');
 
-    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
-    await updateDoc(stayRef, {
-      consumptions: updatedConsumptions,
-      totalAmountDue: newTotalDue,
+    await authedFetch('/api/stays/consumption', 'POST', {
+      companyId,
+      stayId,
+      action: 'remove',
+      consumptionId,
+      reason: reason || 'Removido da comanda pelo operador',
     });
 
     toast({ title: 'Consumo removido da comanda do quarto.' });

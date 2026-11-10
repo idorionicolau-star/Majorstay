@@ -98,13 +98,28 @@ export async function POST(req: Request) {
       const contractedHours = Number(stayData.contractedHours) || 1;
       const ratePerHour = Number(stayData.ratePerHourApplied || roomData.ratePerHour || 0);
 
+      // Validação e recálculo dos consumos no servidor (sem confiar no totalPrice guardado)
+      const sanitizedConsumptions = (stayData.consumptions || []).map((c: any) => {
+        const qty = Number(c.quantity);
+        const unitPrice = Number(c.unitPrice);
+        if (!Number.isFinite(qty) || !Number.isFinite(unitPrice) || qty <= 0 || unitPrice < 0) {
+          throw new Error(`Consumo com valor inválido detectado na estadia (${c.productName || 'Item'}): quantidade=${c.quantity}, preço=${c.unitPrice}.`);
+        }
+        return {
+          ...c,
+          quantity: qty,
+          unitPrice,
+          totalPrice: qty * unitPrice,
+        };
+      });
+
       const pricing = calculateStayPricing({
         checkInAt: checkInDate,
         checkOutAt: serverNow,
         contractedHours,
         ratePerHour,
         graceMinutes: 10,
-        consumptions: stayData.consumptions || [],
+        consumptions: sanitizedConsumptions,
       });
 
       const totalAmountDue = pricing.totalAmountDue;
@@ -119,10 +134,10 @@ export async function POST(req: Request) {
       const saleRef = db.collection(`companies/${companyId}/sales`).doc();
       const checkInStr = checkInDate.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
       const checkOutStr = serverNow.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
-      const consumptionsCount = (stayData.consumptions || []).length;
+      const consumptionsCount = sanitizedConsumptions.length;
       const consumptionsText = consumptionsCount > 0
         ? ` | Consumos do Bar (${consumptionsCount} itens, ${pricing.consumptionsAmountDue} MT): ` +
-          stayData.consumptions.map((c: any) => `${c.quantity}x ${c.productName} (${c.totalPrice} MT)`).join(', ')
+          sanitizedConsumptions.map((c: any) => `${c.quantity}x ${c.productName} (${c.totalPrice} MT)`).join(', ')
         : '';
       const staySummaryNote = `Quarto: ${stayData.roomName || roomData.name}. Entrada: ${checkInStr}. Saída: ${checkOutStr}. Horas: ${pricing.billedHours}h (${pricing.stayAmountDue} MT)${consumptionsText}. ${notes}`.trim();
 

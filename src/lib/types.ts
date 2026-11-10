@@ -628,6 +628,7 @@ export type HospitalityAuditAction =
   | 'create_stay'
   | 'extend_stay'
   | 'add_consumption'
+  | 'remove_consumption'
   | 'close_stay'
   | 'cancel_stay'
   | 'edit_stay'

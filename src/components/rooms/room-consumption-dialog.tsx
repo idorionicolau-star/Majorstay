@@ -175,11 +175,25 @@ export function RoomConsumptionDialog({
 
   const handleRemove = async (consumptionId: string) => {
     if (!stay) return;
+    const reason = window.prompt('Motivo da remoção do consumo (obrigatório para auditoria):');
+    if (!reason || !reason.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Motivo obrigatório',
+        description: 'É necessário indicar o motivo para remover um item da comanda.',
+      });
+      return;
+    }
     try {
       setLoading(true);
-      await removeStayConsumption(stay.id, consumptionId);
-    } catch (err: any) {
+      await removeStayConsumption(stay.id, consumptionId, reason.trim());
+    } catch (err: unknown) {
       console.error('Erro ao remover consumo:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao remover consumo',
+        description: err instanceof Error ? err.message : 'Falha ao remover item da comanda.',
+      });
     } finally {
       setLoading(false);
     }

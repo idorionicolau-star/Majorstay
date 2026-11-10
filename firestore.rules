@@ -401,7 +401,7 @@ service cloud.firestore {
             // Se está a fechar a estadia pelo cliente, checkOutAt tem de ser request.time
             (request.resource.data.status == 'closed' && request.resource.data.checkOutAt == request.time) ||
             // Ou prorrogação/extensão mantendo a estadia aberta
-            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied']))
+            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied', 'consumptions']))
           );
         // Eliminação de estadia: apenas gestor
         allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');

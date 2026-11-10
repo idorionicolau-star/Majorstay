@@ -92,7 +92,12 @@ export function calculateStayPricing(params: {
   const safeRate = Math.max(0, ratePerHour || 0);
   const stayAmountDue = billedHours * safeRate;
   const consumptionsAmountDue = (consumptions || []).reduce((acc, item) => {
-    return acc + (Number(item.totalPrice) || (Number(item.quantity) * Number(item.unitPrice)) || 0);
+    const qty = Number(item.quantity);
+    const price = Number(item.unitPrice);
+    if (!Number.isFinite(qty) || !Number.isFinite(price) || qty < 0 || price < 0) {
+      throw new Error('Consumo inválido: quantidade e preço unitário devem ser números positivos ou zero.');
+    }
+    return acc + (qty * price);
   }, 0);
   const totalAmountDue = stayAmountDue + consumptionsAmountDue;
   const isOvertime = overtimeHours > 0;
