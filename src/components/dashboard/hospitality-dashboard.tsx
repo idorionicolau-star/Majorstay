@@ -22,6 +22,7 @@ import {
   computeStayRealtimeStatus,
   formatTimeRemaining,
   normalizeDate,
+  totalContractedHours,
 } from "@/lib/hospitality-calc";
 import { lastDays, summarizeDay } from "@/lib/hospitality-dashboard";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -125,7 +126,7 @@ export function HospitalityDashboard() {
           const pricing = calculateStayPricing({
             checkInAt: stay.checkInAt,
             checkOutAt: now,
-            contractedHours: stay.contractedHours,
+            contractedHours: totalContractedHours(stay),
             ratePerHour: stay.ratePerHourApplied,
             consumptions: stay.consumptions,
           });

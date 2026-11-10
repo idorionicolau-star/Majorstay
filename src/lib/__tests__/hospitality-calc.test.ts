@@ -8,6 +8,7 @@ import {
   computeStayRealtimeStatus,
   formatStayDuration,
   formatTimeRemaining,
+  totalContractedHours,
 } from '../hospitality-calc';
 
 describe('hospitality-calc', () => {
@@ -242,6 +243,94 @@ describe('hospitality-calc', () => {
       expect(formatTimeRemaining(-4)).toBe('Compensação: restam 6 min');
       expect(formatTimeRemaining(-20)).toBe('Excedido há 20 min');
       expect(formatTimeRemaining(-80)).toBe('Excedido há 1h 20 min');
+    });
+  });
+
+  describe('totalContractedHours & Prorrogações (Opção A)', () => {
+    const baseIn = new Date('2026-11-10T12:00:00Z');
+
+    it('calcula totalContractedHours como contractedHours + soma das horas de extensions', () => {
+      expect(totalContractedHours({ contractedHours: 1, extensions: [{ hours: 1, addedAt: baseIn, addedBy: 'u1' }] })).toBe(2);
+      expect(totalContractedHours({ contractedHours: 2, extensions: [{ hours: 1, addedAt: baseIn, addedBy: 'u1' }, { hours: 2, addedAt: baseIn, addedBy: 'u1' }] })).toBe(5);
+      expect(totalContractedHours({ contractedHours: 1 })).toBe(1);
+      expect(totalContractedHours(null)).toBe(1);
+    });
+
+    it('1h contratada + 1h prorrogada, 300 MT/h, tolerância 10 min: saída aos 65 min cobra 2h (600)', () => {
+      const stay = {
+        contractedHours: 1,
+        extensions: [{ hours: 1, addedAt: baseIn, addedBy: 'u1' }],
+      };
+      const checkOut = new Date(baseIn.getTime() + 65 * 60 * 1000);
+      const pricing = calculateStayPricing({
+        checkInAt: baseIn,
+        checkOutAt: checkOut,
+        contractedHours: totalContractedHours(stay),
+        ratePerHour: 300,
+        graceMinutes: 10,
+      });
+
+      expect(pricing.billedHours).toBe(2);
+      expect(pricing.totalAmountDue).toBe(600);
+      expect(pricing.overtimeHours).toBe(0);
+    });
+
+    it('1h contratada + 1h prorrogada, 300 MT/h, tolerância 10 min: saída aos 125 min cobra 2h (600)', () => {
+      const stay = {
+        contractedHours: 1,
+        extensions: [{ hours: 1, addedAt: baseIn, addedBy: 'u1' }],
+      };
+      const checkOut = new Date(baseIn.getTime() + 125 * 60 * 1000);
+      const pricing = calculateStayPricing({
+        checkInAt: baseIn,
+        checkOutAt: checkOut,
+        contractedHours: totalContractedHours(stay),
+        ratePerHour: 300,
+        graceMinutes: 10,
+      });
+
+      expect(pricing.billedHours).toBe(2);
+      expect(pricing.totalAmountDue).toBe(600);
+      expect(pricing.overtimeHours).toBe(0);
+    });
+
+    it('1h contratada + 1h prorrogada, 300 MT/h, tolerância 10 min: saída aos 140 min cobra 3h (900)', () => {
+      const stay = {
+        contractedHours: 1,
+        extensions: [{ hours: 1, addedAt: baseIn, addedBy: 'u1' }],
+      };
+      // 140 min ultrapassa 120 + 10 min de tolerância -> 3ª hora começada
+      const checkOut = new Date(baseIn.getTime() + 140 * 60 * 1000);
+      const pricing = calculateStayPricing({
+        checkInAt: baseIn,
+        checkOutAt: checkOut,
+        contractedHours: totalContractedHours(stay),
+        ratePerHour: 300,
+        graceMinutes: 10,
+      });
+
+      expect(pricing.billedHours).toBe(3);
+      expect(pricing.totalAmountDue).toBe(900);
+      expect(pricing.overtimeHours).toBe(1);
+    });
+
+    it('sem prorrogação, o comportamento atual mantém-se (1h contratada, 300 MT/h: saída aos 65 min cobra 1h devido aos 10 min de tolerância)', () => {
+      const stay = {
+        contractedHours: 1,
+        extensions: [],
+      };
+      const checkOut = new Date(baseIn.getTime() + 65 * 60 * 1000);
+      const pricing = calculateStayPricing({
+        checkInAt: baseIn,
+        checkOutAt: checkOut,
+        contractedHours: totalContractedHours(stay),
+        ratePerHour: 300,
+        graceMinutes: 10,
+      });
+
+      expect(pricing.billedHours).toBe(1);
+      expect(pricing.totalAmountDue).toBe(300);
+      expect(pricing.overtimeHours).toBe(0);
     });
   });
 });

@@ -1,5 +1,5 @@
 import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification, Room, Stay, Booking } from "@/lib/types";
-import { calculateStayPricing } from "@/lib/hospitality-calc";
+import { calculateStayPricing, totalContractedHours } from "@/lib/hospitality-calc";
 import { GUEST_PRODUCTS, GUEST_LOCATIONS, guestLocation } from "@/lib/demo-data";
 import { GUEST_TRIAL_LIMIT_MS, GUEST_TRIAL_GAP_MS } from "@/lib/guest-trial";
 
@@ -1048,7 +1048,7 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
   const pricing = calculateStayPricing({
     checkInAt: stay.checkInAt,
     checkOutAt: now,
-    contractedHours: stay.contractedHours,
+    contractedHours: totalContractedHours(stay),
     ratePerHour: stay.ratePerHourApplied || room?.ratePerHour || 300,
     graceMinutes: 10,
     consumptions: stay.consumptions || [],

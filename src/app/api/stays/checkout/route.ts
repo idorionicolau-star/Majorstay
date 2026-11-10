@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
-import { calculateStayPricing, normalizeDate } from '@/lib/hospitality-calc';
+import { calculateStayPricing, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
 import { nextGuideNumber } from '@/lib/sale-plan';
 import type { Sale } from '@/lib/types';
 
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
       // Carimbo oficial do servidor
       const serverNow = new Date();
       const checkInDate = normalizeDate(stayData.checkInAt);
-      const contractedHours = Number(stayData.contractedHours) || 1;
+      const contractedHours = totalContractedHours(stayData);
       const ratePerHour = Number(stayData.ratePerHourApplied || roomData.ratePerHour || 0);
 
       // Validação e recálculo dos consumos no servidor (sem confiar no totalPrice guardado)

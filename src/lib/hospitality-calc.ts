@@ -116,6 +116,19 @@ export function calculateStayPricing(params: {
 }
 
 /**
+ * Calcula o total de horas contratadas da estadia incluindo todas as prorrogações efetuadas.
+ * Regra de Negócio (Opção A): Uma prorrogação contratada aumenta o patamar mínimo de horas a faturar.
+ */
+export function totalContractedHours(
+  stay?: { contractedHours?: number; extensions?: StayExtension[] } | null
+): number {
+  if (!stay) return 1;
+  const initial = Number(stay.contractedHours) || 1;
+  const extensionHours = (stay.extensions || []).reduce((acc, ext) => acc + (Number(ext.hours) || 0), 0);
+  return Math.max(1, initial + extensionHours);
+}
+
+/**
  * Calcula a data/hora prevista para o fim da estadia com base no check-in e nas horas totais (contratadas + extensões).
  */
 export function calculateExpectedCheckOut(
@@ -124,8 +137,7 @@ export function calculateExpectedCheckOut(
   extensions?: StayExtension[]
 ): Date {
   const startDate = normalizeDate(checkInAt);
-  const extensionHours = (extensions || []).reduce((acc, ext) => acc + (Number(ext.hours) || 0), 0);
-  const totalHours = Math.max(1, (Number(contractedHours) || 1) + extensionHours);
+  const totalHours = totalContractedHours({ contractedHours, extensions });
   return new Date(startDate.getTime() + totalHours * 3600 * 1000);
 }
 

@@ -26,7 +26,7 @@ import { formatCurrency } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
-import { calculateStayPricing, formatStayDuration, normalizeDate } from '@/lib/hospitality-calc';
+import { calculateStayPricing, formatStayDuration, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
 
 interface CheckOutDialogProps {
   open: boolean;
@@ -66,7 +66,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
   const checkInDate = normalizeDate(stay.checkInAt);
   const ratePerHour = stay.ratePerHourApplied || room?.ratePerHour || 0;
-  const contractedHours = Number(stay.contractedHours) || 1;
+  const contractedHours = totalContractedHours(stay);
 
   // Cálculo prévio no cliente (o servidor fará a validação final oficial)
   const pricing = calculateStayPricing({
