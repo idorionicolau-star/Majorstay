@@ -15,6 +15,7 @@ import {
   DollarSign,
   Calendar,
   MessageCircle,
+  QrCode,
 } from 'lucide-react';
 import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import { RoomFormDialog } from '@/components/rooms/room-form-dialog';
 import { RoomConsumptionDialog } from '@/components/rooms/room-consumption-dialog';
 import { BookingDialog } from '@/components/rooms/booking-dialog';
 import { BookingsListDialog } from '@/components/rooms/bookings-list-dialog';
+import { RoomQrDialog } from '@/components/rooms/room-qr-dialog';
 import type { Room, Stay, Booking } from '@/lib/types';
 
 type FilterTab = 'all' | 'free' | 'occupied' | 'overtime' | 'cleaning';
@@ -80,6 +82,15 @@ export default function RoomsPage() {
   // Modais de Reservas Antecipadas
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [bookingsListOpen, setBookingsListOpen] = useState(false);
+
+  // Modal de QR Code e Visor do Quarto
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [roomForQr, setRoomForQr] = useState<Room | null>(null);
+
+  const handleOpenQrDialog = (room: Room) => {
+    setRoomForQr(room);
+    setQrDialogOpen(true);
+  };
 
   const activeBookingsCount = useMemo(() => {
     return bookings.filter((b) => b.status === 'confirmed').length;
@@ -214,6 +225,22 @@ export default function RoomsPage() {
           >
             <Plus className="h-3.5 w-3.5 text-[#C58A2C]" />
             Nova Reserva
+          </Button>
+
+          {/* QR Code / Visor de Quartos */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (rooms.length > 0) {
+                handleOpenQrDialog(rooms[0]);
+              }
+            }}
+            className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0] font-semibold"
+            title="Ver e imprimir QR Code para as mesas de cabeceira dos quartos"
+          >
+            <QrCode className="h-3.5 w-3.5 text-[#C58A2C]" />
+            QR Codes Mesas
           </Button>
 
           {isManager && (
@@ -477,6 +504,7 @@ export default function RoomsPage() {
                 onCheckOut={handleOpenCheckOut}
                 onConsumption={handleOpenConsumption}
                 onEditRoom={handleOpenEditRoom}
+                onShowQrCode={handleOpenQrDialog}
               />
             );
           })}
@@ -539,6 +567,12 @@ export default function RoomsPage() {
         }}
         onCheckInFromBooking={handleCheckInFromBooking}
         onCancelBooking={cancelBooking}
+      />
+
+      <RoomQrDialog
+        open={qrDialogOpen}
+        onOpenChange={setQrDialogOpen}
+        room={roomForQr}
       />
     </div>
   );

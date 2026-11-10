@@ -14,6 +14,7 @@ import {
   User,
   Phone,
   Wine,
+  QrCode,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,7 @@ interface RoomCardProps {
   onCheckOut: (room: Room, stay: Stay) => void;
   onConsumption: (room: Room, stay: Stay) => void;
   onEditRoom: (room: Room) => void;
+  onShowQrCode?: (room: Room) => void;
 }
 
 function StayLiveSecondsCounter({
@@ -103,6 +105,7 @@ export function RoomCard({
   onCheckOut,
   onConsumption,
   onEditRoom,
+  onShowQrCode,
 }: RoomCardProps) {
   const { markRoomCleaned, updateRoom, deleteRoom } = useRooms();
   const { user } = useInventory();
@@ -223,40 +226,48 @@ export function RoomCard({
                 {statusTheme.badgeText}
               </Badge>
 
-              {isManager && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-[#FFFDF9] dark:bg-[#191E25] border-[#E5DFD6] dark:border-[#2C3440]">
-                    <DropdownMenuItem onClick={() => onEditRoom(room)} className="cursor-pointer">
-                      Editar Quarto
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 bg-[#FFFDF9] dark:bg-[#191E25] border-[#E5DFD6] dark:border-[#2C3440]">
+                  {onShowQrCode && (
+                    <DropdownMenuItem onClick={() => onShowQrCode(room)} className="cursor-pointer flex items-center gap-2">
+                      <QrCode className="h-4 w-4 text-[#C58A2C]" />
+                      <span>QR Code & Visor do Quarto</span>
                     </DropdownMenuItem>
-                    {isMaintenance ? (
-                      <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'free' })} className="cursor-pointer">
-                        Marcar como Ativo
+                  )}
+                  {isManager && (
+                    <>
+                      <DropdownMenuItem onClick={() => onEditRoom(room)} className="cursor-pointer">
+                        Editar Quarto
                       </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'maintenance' })} className="cursor-pointer">
-                        Colocar em Manutenção
+                      {isMaintenance ? (
+                        <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'free' })} className="cursor-pointer">
+                          Marcar como Ativo
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'maintenance' })} className="cursor-pointer">
+                          Colocar em Manutenção
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator className="bg-[#E5DFD6] dark:bg-[#382D26]" />
+                      <DropdownMenuItem
+                        className="text-rose-600 focus:text-rose-700 cursor-pointer"
+                        onClick={() => {
+                          if (confirm(`Tem a certeza que deseja eliminar o ${room.name}?`)) {
+                            deleteRoom(room.id);
+                          }
+                        }}
+                      >
+                        Eliminar Quarto
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator className="bg-[#E5DFD6] dark:bg-[#382D26]" />
-                    <DropdownMenuItem
-                      className="text-rose-600 focus:text-rose-700 cursor-pointer"
-                      onClick={() => {
-                        if (confirm(`Tem a certeza que deseja eliminar o ${room.name}?`)) {
-                          deleteRoom(room.id);
-                        }
-                      }}
-                    >
-                      Eliminar Quarto
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
