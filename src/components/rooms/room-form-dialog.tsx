@@ -116,10 +116,10 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
+      <DialogContent className="max-w-md rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+            <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
               <BedDouble className="w-5 h-5" />
             </div>
             <div>
@@ -144,7 +144,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Quarto 101 ou Suíte Presidencial"
-              className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+              className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
               required
             />
           </div>
@@ -155,12 +155,12 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               Categoria / Tipo
             </Label>
             <Select value={type} onValueChange={(val: RoomType) => setType(val)}>
-              <SelectTrigger id="roomType" className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714]">
+              <SelectTrigger id="roomType" className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418]">
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915]">
+              <SelectContent className="rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25]">
                 {ROOM_TYPES.map((t) => (
-                  <SelectItem key={t.id} value={t.id} className="text-xs font-medium focus:bg-[#FAF0E6] focus:text-[#BA5A1A]">
+                  <SelectItem key={t.id} value={t.id} className="text-xs font-medium focus:bg-[#FDF6E8] focus:text-[#C58A2C]">
                     {t.label}
                   </SelectItem>
                 ))}
@@ -184,7 +184,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                   value={ratePerHour}
                   onChange={(e) => setRatePerHour(Number(e.target.value))}
                   placeholder="300"
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   required
                 />
               </div>
@@ -201,7 +201,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 max="24"
                 value={minimumHours}
                 onChange={(e) => setMinimumHours(Number(e.target.value))}
-                className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
               />
             </div>
           </div>
@@ -221,7 +221,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 value={cleaningDurationMinutes}
                 onChange={(e) => setCleaningDurationMinutes(Number(e.target.value))}
                 placeholder="15"
-                className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
               />
             </div>
           </div>
@@ -237,7 +237,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Ar condicionado, frigobar, vista para o jardim..."
               rows={2}
-              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
             />
           </div>
 
@@ -247,13 +247,13 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
-              className="h-11 rounded-xl border-[#E5DFD6] dark:border-[#382D26] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
+              className="h-11 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="h-11 rounded-xl font-bold bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-md shadow-[#BA5A1A]/20 transition-all"
+              className="h-11 rounded-xl font-bold bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] hover:from-[#A87019] hover:to-[#B55E22] text-white shadow-md shadow-[#C58A2C]/20 transition-all"
               disabled={loading}
             >
               {loading ? 'A Guardar...' : roomToEdit ? 'Salvar Alterações' : 'Criar Quarto'}

@@ -79,7 +79,7 @@ export function BookingsListDialog({
         );
       case 'checked_in':
         return (
-          <Badge className="bg-[#FAF0E6] text-[#BA5A1A] dark:bg-[#34241B] dark:text-[#E88C4A] border border-[#F0D5C0] dark:border-[#523A2C] text-[10px] font-bold">
+          <Badge className="bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#34241B] dark:text-[#E88C4A] border border-[#F6E0B5] dark:border-[#523A2C] text-[10px] font-bold">
             Check-in Realizado
           </Badge>
         );
@@ -100,11 +100,11 @@ export function BookingsListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
-        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#382D26] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
+        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
@@ -120,7 +120,7 @@ export function BookingsListDialog({
             <Button
               size="sm"
               onClick={onNewBookingClick}
-              className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-sm flex items-center gap-1.5"
+              className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] hover:from-[#A87019] hover:to-[#B55E22] text-white shadow-sm flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
               Nova Reserva
@@ -137,7 +137,7 @@ export function BookingsListDialog({
                 placeholder="Pesquisar por hóspede, telefone ou quarto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
               />
             </div>
 
@@ -159,7 +159,7 @@ export function BookingsListDialog({
                     onClick={() => setStatusFilter(st)}
                     className={`whitespace-nowrap px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                       active
-                        ? 'bg-white dark:bg-[#1E1714] text-[#BA5A1A] shadow-sm'
+                        ? 'bg-white dark:bg-[#111418] text-[#C58A2C] shadow-sm'
                         : 'text-[#5C5346] dark:text-[#D4C8B8] hover:text-[#251D18]'
                     }`}
                   >
@@ -173,7 +173,7 @@ export function BookingsListDialog({
           {/* Lista de Reservas */}
           {filteredBookings.length === 0 ? (
             <div className="text-center py-12 text-[#827568] dark:text-[#B0A294] text-xs">
-              <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#BA5A1A]" />
+              <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#C58A2C]" />
               <p className="font-semibold text-sm text-[#251D18] dark:text-[#F5EFEB]">
                 Nenhuma reserva encontrada
               </p>
@@ -198,7 +198,7 @@ export function BookingsListDialog({
                 return (
                   <div
                     key={b.id}
-                    className="p-3.5 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#BA5A1A]/40 transition-all"
+                    className="p-3.5 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#C58A2C]/40 transition-all"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -213,7 +213,7 @@ export function BookingsListDialog({
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-[#827568] dark:text-[#B0A294]">
                         <span className="flex items-center gap-1 font-mono">
-                          <Phone className="w-3.5 h-3.5 text-[#BA5A1A]" />
+                          <Phone className="w-3.5 h-3.5 text-[#C58A2C]" />
                           {b.clientPhone}
                         </span>
                         <span className="flex items-center gap-1">
@@ -254,7 +254,7 @@ export function BookingsListDialog({
                         <Button
                           size="sm"
                           onClick={() => onCheckInFromBooking(b)}
-                          className="h-9 px-3 text-xs rounded-xl font-bold bg-[#BA5A1A] hover:bg-[#9C4811] text-white shadow-sm gap-1"
+                          className="h-9 px-3 text-xs rounded-xl font-bold bg-[#C58A2C] hover:bg-[#A87019] text-white shadow-sm gap-1"
                         >
                           <LogIn className="w-3.5 h-3.5" />
                           Check-in
@@ -281,12 +281,12 @@ export function BookingsListDialog({
           )}
         </div>
 
-        <DialogFooter className="p-3 border-t border-[#E5DFD6] dark:border-[#382D26] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
+        <DialogFooter className="p-3 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl border-[#E5DFD6] dark:border-[#382D26]"
+            className="rounded-xl border-[#E5DFD6] dark:border-[#2C3440]"
           >
             Fechar
           </Button>

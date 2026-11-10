@@ -18,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         {...(defaultValue !== undefined ? { defaultValue: hideDefault ? "" : defaultValue } : {})}
         placeholder={placeholder ?? (hideValue || hideDefault ? "0" : undefined)}
         className={cn(
-          "flex h-10 sm:h-12 w-full rounded-xl sm:rounded-2xl border border-input bg-transparent px-4 sm:px-5 py-3 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary transition-all",
+          "flex h-10 w-full rounded-xl border border-input bg-transparent px-3.5 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary transition-all",
           className
         )}
         ref={ref}

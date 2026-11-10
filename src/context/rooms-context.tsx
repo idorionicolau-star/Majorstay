@@ -746,10 +746,23 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     if (!companyId) throw new Error('Empresa não selecionada');
     const bookingsRef = collection(db, `companies/${companyId}/bookings`);
-    const docRef = await addDoc(bookingsRef, {
-      ...data,
+    const cleanPayload: Record<string, any> = {
+      clientName: data.clientName || 'Hóspede Particular',
+      clientPhone: data.clientPhone || '',
+      roomId: data.roomId || '',
+      roomName: data.roomName || 'A atribuir na chegada',
+      checkInDate: data.checkInDate,
+      durationHours: Number(data.durationHours) || 2,
+      isOvernight: Boolean(data.isOvernight),
+      depositAmount: Number(data.depositAmount) || 0,
+      totalEstimated: Number(data.totalEstimated) || 0,
+      status: data.status || 'confirmed',
+      notes: data.notes || '',
+      createdBy: data.createdBy || user?.id || 'admin',
+      createdByName: data.createdByName || user?.username || 'Recepção',
       createdAt: serverTimestamp(),
-    });
+    };
+    const docRef = await addDoc(bookingsRef, cleanPayload);
     newBooking.id = docRef.id;
     return newBooking;
   };

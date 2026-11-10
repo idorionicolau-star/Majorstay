@@ -189,11 +189,11 @@ export function RoomConsumptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
-        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#382D26] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
+        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
                 <Wine className="w-5 h-5" />
               </div>
               <div>
@@ -205,7 +205,7 @@ export function RoomConsumptionDialog({
                 </p>
               </div>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FAF0E6] dark:bg-[#34241B] text-[#BA5A1A] border border-[#F0D5C0] dark:border-[#523A2C]">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FDF6E8] dark:bg-[#34241B] text-[#C58A2C] border border-[#F6E0B5] dark:border-[#523A2C]">
               {stay.clientName || 'Hóspede Particular'}
             </span>
           </div>
@@ -216,14 +216,14 @@ export function RoomConsumptionDialog({
             <TabsList className="grid grid-cols-2 mb-4 bg-[#F2ECE1] dark:bg-[#2A211B] p-1 rounded-xl h-11">
               <TabsTrigger
                 value="add"
-                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#BA5A1A] data-[state=active]:shadow-sm"
+                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#C58A2C] data-[state=active]:shadow-sm"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Lançar do Bar / Stock
               </TabsTrigger>
               <TabsTrigger
                 value="tab"
-                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#BA5A1A] data-[state=active]:shadow-sm"
+                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#C58A2C] data-[state=active]:shadow-sm"
               >
                 <Receipt className="h-3.5 w-3.5" />
                 Comanda ({consumptions.length})
@@ -244,7 +244,7 @@ export function RoomConsumptionDialog({
                   placeholder="Pesquisar bebidas, petiscos, água..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                 />
               </div>
 
@@ -259,8 +259,8 @@ export function RoomConsumptionDialog({
                       onClick={() => setSelectedCategory(cat)}
                       className={`h-7 text-xs px-3 rounded-full shrink-0 font-medium transition-all ${
                         active
-                          ? 'bg-[#BA5A1A] text-white shadow-sm'
-                          : 'border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
+                          ? 'bg-[#C58A2C] text-white shadow-sm'
+                          : 'border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
                       }`}
                     >
                       {cat === 'all' ? 'Todos' : cat}
@@ -277,7 +277,7 @@ export function RoomConsumptionDialog({
                   return (
                     <div
                       key={item.id || item.name}
-                      className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] flex items-center justify-between gap-3 hover:border-[#BA5A1A]/40 transition-colors shadow-sm"
+                      className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] flex items-center justify-between gap-3 hover:border-[#C58A2C]/40 transition-colors shadow-sm"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -288,7 +288,7 @@ export function RoomConsumptionDialog({
                             {item.category}
                           </span>
                         </div>
-                        <p className="text-xs font-extrabold text-[#BA5A1A] dark:text-[#E88C4A] mt-0.5">
+                        <p className="text-xs font-extrabold text-[#C58A2C] dark:text-[#E88C4A] mt-0.5">
                           {formatCurrency(item.price)}
                           {item.stock !== null && (
                             <span className="text-[10px] font-normal text-[#827568] dark:text-[#B0A294] ml-1.5">
@@ -300,7 +300,7 @@ export function RoomConsumptionDialog({
 
                       {/* Seletor de Quantidade e Botão Adicionar */}
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center border border-[#E5DFD6] dark:border-[#382D26] rounded-xl overflow-hidden bg-[#FAF7F2] dark:bg-[#261E1A]">
+                        <div className="flex items-center border border-[#E5DFD6] dark:border-[#2C3440] rounded-xl overflow-hidden bg-[#FAF7F2] dark:bg-[#261E1A]">
                           <button
                             type="button"
                             className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
@@ -323,7 +323,7 @@ export function RoomConsumptionDialog({
 
                         <Button
                           size="sm"
-                          className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] hover:from-[#A44E16] hover:to-[#B55E22] text-white shadow-sm gap-1"
+                          className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] hover:from-[#A87019] hover:to-[#B55E22] text-white shadow-sm gap-1"
                           onClick={() => handleAddConsumption(item)}
                           disabled={loading}
                         >
@@ -337,7 +337,7 @@ export function RoomConsumptionDialog({
               </div>
 
               {/* Lançamento Rápido Personalizado */}
-              <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#261E1A] rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] space-y-2">
+              <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#261E1A] rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] space-y-2">
                 <p className="text-xs font-bold text-[#251D18] dark:text-[#F5EFEB] flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
                   Outro Item / Lançamento Manual na Conta
@@ -347,7 +347,7 @@ export function RoomConsumptionDialog({
                     placeholder="Descrição (ex: Porção Batata, Gelo...)"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    className="col-span-5 h-9 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                    className="col-span-5 h-9 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   />
                   <Input
                     type="number"
@@ -355,7 +355,7 @@ export function RoomConsumptionDialog({
                     placeholder="Qtd"
                     value={customQuantity}
                     onChange={(e) => setCustomQuantity(Number(e.target.value))}
-                    className="col-span-2 h-9 text-xs text-center rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                    className="col-span-2 h-9 text-xs text-center rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   />
                   <Input
                     type="number"
@@ -364,7 +364,7 @@ export function RoomConsumptionDialog({
                     placeholder="Valor MT"
                     value={customPrice}
                     onChange={(e) => setCustomPrice(Number(e.target.value))}
-                    className="col-span-3 h-9 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                    className="col-span-3 h-9 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   />
                   <Button
                     type="submit"
@@ -382,7 +382,7 @@ export function RoomConsumptionDialog({
             <TabsContent value="tab" className="space-y-3 m-0">
               {consumptions.length === 0 ? (
                 <div className="text-center py-10 text-[#827568] dark:text-[#B0A294] text-xs">
-                  <Receipt className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#BA5A1A]" />
+                  <Receipt className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#C58A2C]" />
                   <p className="font-semibold">Nenhum consumo ou produto lançado nesta estadia ainda.</p>
                   <p className="text-[11px] mt-1 text-[#A69B93]">Use a aba "Lançar do Bar" para adicionar itens à conta do hóspede.</p>
                 </div>
@@ -391,7 +391,7 @@ export function RoomConsumptionDialog({
                   {consumptions.map((c) => (
                     <div
                       key={c.id}
-                      className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] flex items-center justify-between text-xs shadow-sm"
+                      className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] flex items-center justify-between text-xs shadow-sm"
                     >
                       <div>
                         <p className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
@@ -403,7 +403,7 @@ export function RoomConsumptionDialog({
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="font-extrabold text-sm text-[#BA5A1A] dark:text-[#E88C4A]">
+                        <span className="font-extrabold text-sm text-[#C58A2C] dark:text-[#E88C4A]">
                           {formatCurrency(c.totalPrice)}
                         </span>
                         <button
@@ -422,10 +422,10 @@ export function RoomConsumptionDialog({
               )}
 
               {/* Totalizador da Comanda */}
-              <div className="p-4 bg-[#FAF0E6]/80 dark:bg-[#2A201A] rounded-2xl border border-[#F0D5C0] dark:border-[#4A382C] space-y-1">
+              <div className="p-4 bg-[#FDF6E8]/80 dark:bg-[#1E242D] rounded-2xl border border-[#F6E0B5] dark:border-[#4A382C] space-y-1">
                 <div className="flex justify-between items-center text-xs text-[#827568] dark:text-[#B0A294]">
                   <span>Subtotal Consumos do Bar ({consumptions.length} {consumptions.length === 1 ? 'item' : 'itens'}):</span>
-                  <span className="font-extrabold text-base text-[#BA5A1A] dark:text-[#E88C4A]">
+                  <span className="font-extrabold text-base text-[#C58A2C] dark:text-[#E88C4A]">
                     {formatCurrency(consumptionsTotal)}
                   </span>
                 </div>
@@ -437,7 +437,7 @@ export function RoomConsumptionDialog({
           </Tabs>
         </div>
 
-        <DialogFooter className="p-4 border-t border-[#E5DFD6] dark:border-[#382D26] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
+        <DialogFooter className="p-4 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
           <Button
             type="button"
             className="w-full sm:w-auto h-10 rounded-xl font-bold bg-[#251D18] dark:bg-[#F5EFEB] text-white dark:text-[#251D18] hover:bg-[#3D2E25]"

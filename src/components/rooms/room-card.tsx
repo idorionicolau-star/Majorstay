@@ -28,7 +28,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatCurrency } from '@/lib/utils';
 import type { Room, Stay } from '@/lib/types';
-import { computeStayRealtimeStatus, formatStayDuration, formatTimeRemaining, normalizeDate } from '@/lib/hospitality-calc';
+import {
+  computeStayRealtimeStatus,
+  formatStayDuration,
+  formatTimeRemaining,
+  formatDurationSeconds,
+  formatTimeRemainingSeconds,
+  normalizeDate,
+} from '@/lib/hospitality-calc';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 
@@ -40,6 +47,52 @@ interface RoomCardProps {
   onCheckOut: (room: Room, stay: Stay) => void;
   onConsumption: (room: Room, stay: Stay) => void;
   onEditRoom: (room: Room) => void;
+}
+
+function StayLiveSecondsCounter({
+  checkInAt,
+  expectedCheckOut,
+  graceMinutes = 10,
+}: {
+  checkInAt: any;
+  expectedCheckOut: Date;
+  graceMinutes?: number;
+}) {
+  const [now, setNow] = React.useState<number>(() => Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const checkInMs = normalizeDate(checkInAt).getTime();
+  const elapsedSeconds = Math.max(0, Math.floor((now - checkInMs) / 1000));
+  const expectedMs = normalizeDate(expectedCheckOut).getTime();
+  const diffSeconds = Math.floor((expectedMs - now) / 1000);
+
+  const status = formatTimeRemainingSeconds(diffSeconds, graceMinutes);
+
+  return (
+    <div className="flex items-center justify-between gap-2 text-[11px] font-mono tabular-nums">
+      <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 truncate">
+        <Clock className="h-3 w-3 text-stone-400 shrink-0" />
+        Decorrido: <strong className="text-stone-800 dark:text-stone-200">{formatDurationSeconds(elapsedSeconds)}</strong>
+      </span>
+      <span
+        className={`font-bold shrink-0 ${
+          status.isOvertime
+            ? 'text-rose-600 dark:text-rose-400'
+            : status.isGrace
+            ? 'text-amber-600 dark:text-amber-400'
+            : 'text-[#C58A2C] dark:text-[#E0852E]'
+        }`}
+      >
+        {status.text}
+      </span>
+    </div>
+  );
 }
 
 export function RoomCard({
@@ -95,12 +148,12 @@ export function RoomCard({
       }
     : isOccupied
     ? {
-        cardBorder: 'border-[#F0D8C8] dark:border-[#4D2E1C] shadow-[0_4px_16px_rgba(186,90,26,0.06)]',
-        topAccent: 'bg-[#BA5A1A]',
-        badgeClass: 'bg-[#FAF0E6] text-[#BA5A1A] dark:bg-[#341F14] dark:text-[#F3B080] border border-[#F0D5C0] dark:border-[#54301D]',
+        cardBorder: 'border-[#F0D8C8] dark:border-[#423418] shadow-[0_4px_16px_rgba(186,90,26,0.06)]',
+        topAccent: 'bg-[#C58A2C]',
+        badgeClass: 'bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#282012] dark:text-[#E8BF72] border border-[#F6E0B5] dark:border-[#54301D]',
         badgeText: 'Ocupado',
         Icon: BedDouble,
-        progressClass: '[&>div]:bg-[#BA5A1A]',
+        progressClass: '[&>div]:bg-[#C58A2C]',
       }
     : isCleaning
     ? {
@@ -113,7 +166,7 @@ export function RoomCard({
       }
     : isMaintenance
     ? {
-        cardBorder: 'border-[#E5DFD6] dark:border-[#382D26] opacity-75',
+        cardBorder: 'border-[#E5DFD6] dark:border-[#2C3440] opacity-75',
         topAccent: 'bg-[#A69B93]',
         badgeClass: 'bg-[#EFEBE4] text-[#7A726C] dark:bg-[#2A221E] dark:text-[#A69B93] border border-[#DDD6CC] dark:border-[#3D322C]',
         badgeText: 'Manutenção',
@@ -139,7 +192,7 @@ export function RoomCard({
   const StatusIcon = statusTheme.Icon;
 
   return (
-    <Card className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[#FFFDF9] dark:bg-[#201915] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${statusTheme.cardBorder}`}>
+    <Card className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[#FFFDF9] dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${statusTheme.cardBorder}`}>
       {/* Faixa superior nobre com a cor do estado */}
       <div className={`h-1.5 w-full ${statusTheme.topAccent}`} />
 
@@ -153,7 +206,7 @@ export function RoomCard({
                   {room.name}
                 </h3>
                 {room.type && (
-                  <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0 h-4 border-[#E5DFD6] dark:border-[#382D26] text-stone-600 dark:text-stone-300 bg-[#F8F5EE] dark:bg-[#2A201A] shrink-0">
+                  <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0 h-4 border-[#E5DFD6] dark:border-[#2C3440] text-stone-600 dark:text-stone-300 bg-[#F8F5EE] dark:bg-[#1E242D] shrink-0">
                     {room.type}
                   </Badge>
                 )}
@@ -177,7 +230,7 @@ export function RoomCard({
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-[#FFFDF9] dark:bg-[#201915] border-[#E5DFD6] dark:border-[#382D26]">
+                  <DropdownMenuContent align="end" className="w-48 bg-[#FFFDF9] dark:bg-[#191E25] border-[#E5DFD6] dark:border-[#2C3440]">
                     <DropdownMenuItem onClick={() => onEditRoom(room)} className="cursor-pointer">
                       Editar Quarto
                     </DropdownMenuItem>
@@ -209,7 +262,7 @@ export function RoomCard({
 
           {/* Conteúdo Conforme o Estado */}
           {(isOccupied || isOvertime) && stay && realtime && (
-            <div className="mt-3 p-3 rounded-xl bg-[#F8F5EE] dark:bg-[#261D19] border border-[#EBE3D5] dark:border-[#382B24] space-y-2 text-xs">
+            <div className="mt-3 p-3 rounded-xl bg-[#F8F5EE] dark:bg-[#1E242D] border border-[#EBE3D5] dark:border-[#382B24] space-y-2 text-xs">
               {/* Informações do Hóspede */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <span className="font-bold text-stone-900 dark:text-stone-100 truncate flex items-center gap-1.5 min-w-0">
@@ -255,15 +308,11 @@ export function RoomCard({
 
               {/* Barra de Progresso e Alerta de Tempo */}
               <div className="space-y-1 pt-1">
-                <div className="flex items-center justify-between gap-2 text-[11px]">
-                  <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 truncate">
-                    <Clock className="h-3 w-3 text-stone-400 shrink-0" />
-                    Decorrido: <strong className="text-stone-800 dark:text-stone-200">{formatStayDuration(elapsedMinutes)}</strong>
-                  </span>
-                  <span className={`font-bold shrink-0 ${isOvertime ? 'text-rose-600 dark:text-rose-400' : 'text-[#BA5A1A] dark:text-[#E0852E]'}`}>
-                    {formatTimeRemaining(realtime.minutesRemainingOrOverdue)}
-                  </span>
-                </div>
+                <StayLiveSecondsCounter
+                  checkInAt={stay.checkInAt}
+                  expectedCheckOut={realtime.expectedCheckOut}
+                  graceMinutes={10}
+                />
                 <Progress
                   value={progressPercent}
                   className={`h-1.5 bg-[#EAE4D9] dark:bg-[#382D26] ${statusTheme.progressClass}`}
@@ -309,7 +358,7 @@ export function RoomCard({
         <div className="pt-2">
           {isFree && (
             <Button
-              className="w-full bg-[#BA5A1A] hover:bg-[#9C4811] text-white font-bold h-10 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all"
+              className="w-full bg-[#C58A2C] hover:bg-[#A87019] text-white font-bold h-10 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all"
               onClick={() => onCheckIn(room)}
             >
               <Plus className="h-4 w-4" />
@@ -332,11 +381,11 @@ export function RoomCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-[11px] font-semibold border-[#E5DFD6] dark:border-[#382D26] bg-[#FAF7F2] dark:bg-[#251D18] text-stone-700 dark:text-stone-200 hover:bg-[#F1EDE5] dark:hover:bg-[#302520] rounded-xl flex items-center justify-center gap-1 px-1"
+                className="h-9 text-[11px] font-semibold border-[#E5DFD6] dark:border-[#2C3440] bg-[#FAF7F2] dark:bg-[#251D18] text-stone-700 dark:text-stone-200 hover:bg-[#F1EDE5] dark:hover:bg-[#302520] rounded-xl flex items-center justify-center gap-1 px-1"
                 onClick={() => onExtend(room, stay)}
                 title="Prorrogar tempo da estadia"
               >
-                <Clock className="h-3 w-3 text-[#BA5A1A]" />
+                <Clock className="h-3 w-3 text-[#C58A2C]" />
                 +1h
               </Button>
               <Button
@@ -365,7 +414,7 @@ export function RoomCard({
           {isMaintenance && (
             <Button
               variant="outline"
-              className="w-full h-10 text-xs font-semibold rounded-xl border-[#E5DFD6] dark:border-[#382D26]"
+              className="w-full h-10 text-xs font-semibold rounded-xl border-[#E5DFD6] dark:border-[#2C3440]"
               onClick={() => updateRoom(room.id, { status: 'free' })}
             >
               Reativar Quarto

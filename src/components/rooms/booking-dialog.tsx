@@ -88,7 +88,7 @@ export function BookingDialog({
       const bookingData: Omit<Booking, 'id' | 'createdAt'> = {
         clientName: clientName.trim(),
         clientPhone: clientPhone.trim(),
-        roomId: selectedRoomId === 'auto' ? undefined : selectedRoomId,
+        roomId: selectedRoomId && selectedRoomId !== 'auto' ? selectedRoomId : '',
         roomName: selectedRoom ? selectedRoom.name : 'A atribuir na chegada',
         checkInDate: new Date(checkInDate),
         durationHours,
@@ -139,10 +139,10 @@ export function BookingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FAF0E6] dark:bg-[#34241B] border border-[#F0D5C0] dark:border-[#523A2C] flex items-center justify-center text-[#BA5A1A]">
+            <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
@@ -169,7 +169,7 @@ export function BookingDialog({
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   placeholder="Ex: Carlos Sitoe"
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   required
                 />
               </div>
@@ -185,7 +185,7 @@ export function BookingDialog({
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
                   placeholder="84 / 82 / 85 / 86..."
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   required
                 />
               </div>
@@ -199,10 +199,10 @@ export function BookingDialog({
                 Quarto Pretendido
               </Label>
               <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
-                <SelectTrigger className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714]">
+                <SelectTrigger className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418]">
                   <SelectValue placeholder="Selecione o quarto..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915]">
+                <SelectContent className="rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25]">
                   <SelectItem value="auto" className="text-xs font-medium">
                     A atribuir na chegada
                   </SelectItem>
@@ -225,7 +225,7 @@ export function BookingDialog({
                   type="datetime-local"
                   value={checkInDate}
                   onChange={(e) => setCheckInDate(e.target.value)}
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                   required
                 />
               </div>
@@ -247,8 +247,8 @@ export function BookingDialog({
                     onClick={() => handlePresetSelect(p)}
                     className={`h-9 px-2 text-xs rounded-xl font-bold transition-all ${
                       active
-                        ? 'bg-gradient-to-r from-[#BA5A1A] to-[#C86A2B] text-white shadow-sm'
-                        : 'border border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
+                        ? 'bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] text-white shadow-sm'
+                        : 'border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
                     }`}
                   >
                     {p.label}
@@ -273,16 +273,16 @@ export function BookingDialog({
                   value={depositAmount || ''}
                   onChange={(e) => setDepositAmount(Number(e.target.value) || 0)}
                   placeholder="0 (sem sinal)"
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                 />
               </div>
             </div>
 
             {/* Resumo da Reserva */}
-            <div className="p-3 bg-[#FAF0E6]/70 dark:bg-[#2A201A] rounded-2xl border border-[#F0D5C0] dark:border-[#4A382C] flex flex-col justify-center text-xs">
+            <div className="p-3 bg-[#FDF6E8]/70 dark:bg-[#1E242D] rounded-2xl border border-[#F6E0B5] dark:border-[#4A382C] flex flex-col justify-center text-xs">
               <div className="flex justify-between items-center text-[#827568] dark:text-[#B0A294]">
                 <span>Estimativa Total:</span>
-                <strong className="text-sm text-[#BA5A1A] dark:text-[#E88C4A]">
+                <strong className="text-sm text-[#C58A2C] dark:text-[#E88C4A]">
                   {estimatedTotal} MT
                 </strong>
               </div>
@@ -305,7 +305,7 @@ export function BookingDialog({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Hóspede ligou a pedir quarto silencioso com vista para a piscina..."
               rows={2}
-              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#382D26] bg-white dark:bg-[#1E1714] focus-visible:ring-[#BA5A1A]"
+              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
             />
           </div>
         </div>
@@ -316,7 +316,7 @@ export function BookingDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="w-full sm:w-auto h-11 rounded-xl border-[#E5DFD6] dark:border-[#382D26] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
+            className="w-full sm:w-auto h-11 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
           >
             Cancelar
           </Button>
@@ -326,7 +326,7 @@ export function BookingDialog({
             variant="outline"
             onClick={() => handleSave(false)}
             disabled={loading}
-            className="w-full sm:w-auto h-11 rounded-xl border-[#E5DFD6] dark:border-[#382D26] font-semibold"
+            className="w-full sm:w-auto h-11 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] font-semibold"
           >
             Salvar Reserva
           </Button>

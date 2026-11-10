@@ -35,7 +35,7 @@ export function MajorStayMark({
       <defs>
         {/* Gradiente Terracota Hotelaria */}
         <linearGradient id="ms-terracotta" x1="12" y1="12" x2="108" y2="108" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#BA5A1A" />
+          <stop offset="0%" stopColor="#C58A2C" />
           <stop offset="55%" stopColor="#A04812" />
           <stop offset="100%" stopColor="#6E2D07" />
         </linearGradient>
@@ -189,7 +189,7 @@ export function MajorStayLogo({
       <div className={cn('flex flex-col justify-center leading-none', !horizontal && 'items-center mt-1')}>
         <div className={cn('font-headline font-extrabold tracking-tight flex items-baseline', titleSize)}>
           <span className="text-[#251D18] dark:text-[#F5EFEB] tracking-[0.06em]">MAJOR</span>
-          <span className="bg-gradient-to-r from-[#BA5A1A] via-[#DF9E42] to-[#BA5A1A] bg-clip-text text-transparent ml-1 font-black">
+          <span className="bg-gradient-to-r from-[#C58A2C] via-[#DF9E42] to-[#C58A2C] bg-clip-text text-transparent ml-1 font-black">
             STAY
           </span>
         </div>

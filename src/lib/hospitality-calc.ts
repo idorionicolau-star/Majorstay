@@ -202,3 +202,54 @@ export function formatTimeRemaining(minutesDiff: number, graceMinutes: number = 
   }
   return `Excedido há ${formatStayDuration(Math.abs(minutesDiff))}`;
 }
+
+/**
+ * Formata duração com precisão de segundos no formato hh:mm:ss ou mm:ss.
+ */
+export function formatDurationSeconds(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = s % 60;
+  if (hours === 0) {
+    return `${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+  }
+  return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+}
+
+/**
+ * Mensagem em tempo real com precisão de segundos para o cronómetro dos quartos.
+ */
+export function formatTimeRemainingSeconds(
+  diffSeconds: number,
+  graceMinutes: number = 10
+): { text: string; isGrace: boolean; isOvertime: boolean } {
+  const graceSeconds = graceMinutes * 60;
+
+  if (diffSeconds > 0) {
+    return {
+      text: `Restam ${formatDurationSeconds(diffSeconds)}`,
+      isGrace: false,
+      isOvertime: false,
+    };
+  }
+
+  // Período de compensação / tolerância de 10 min
+  if (diffSeconds <= 0 && diffSeconds >= -graceSeconds) {
+    const graceLeft = graceSeconds + diffSeconds;
+    return {
+      text: `Compensação: ${formatDurationSeconds(graceLeft)}`,
+      isGrace: true,
+      isOvertime: false,
+    };
+  }
+
+  // Tempo excedido após a compensação
+  const overtimeSeconds = Math.abs(diffSeconds) - graceSeconds;
+  return {
+    text: `Excedido há ${formatDurationSeconds(overtimeSeconds)}`,
+    isGrace: false,
+    isOvertime: true,
+  };
+}
+

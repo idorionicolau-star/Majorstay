@@ -165,13 +165,13 @@ export default function SalesPage() {
                 onChange={(event) => setNameFilter(event.target.value)}
                 className="w-full sm:max-w-xs shadow-sm h-12 text-sm bg-background/50"
               />
-                            <div className="flex items-center gap-1.5 bg-[#FAF7F2] dark:bg-[#201915] p-1.5 rounded-xl border border-[#E5DFD6] dark:border-[#382D26] w-full sm:w-auto overflow-x-auto no-scrollbar">
+                            <div className="flex items-center gap-1.5 bg-[#FAF7F2] dark:bg-[#191E25] p-1.5 rounded-xl border border-[#E5DFD6] dark:border-[#2C3440] w-full sm:w-auto overflow-x-auto no-scrollbar">
                 <button
                   type="button"
                   onClick={() => setCategoryFilter('all')}
                   className={cn(
                     "whitespace-nowrap shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
-                    categoryFilter === 'all' ? "bg-[#BA5A1A] text-white shadow-sm font-bold" : "text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]",
+                    categoryFilter === 'all' ? "bg-[#C58A2C] text-white shadow-sm font-bold" : "text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]",
                     ""
                   )}
                 >
@@ -182,7 +182,7 @@ export default function SalesPage() {
                   onClick={() => setCategoryFilter('rooms')}
                   className={cn(
                     "whitespace-nowrap shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1",
-                    categoryFilter === 'rooms' ? "bg-[#BA5A1A] text-white shadow-sm font-bold" : "text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]"
+                    categoryFilter === 'rooms' ? "bg-[#C58A2C] text-white shadow-sm font-bold" : "text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]"
                   )}
                 >
                   <span>🛏️</span>

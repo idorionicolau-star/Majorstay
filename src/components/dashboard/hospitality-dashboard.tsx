@@ -59,9 +59,9 @@ function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
       hoverBorder: "hover:border-[#488C64]/60",
     },
     occupied: {
-      badgeBg: "bg-[#FAF0E6] text-[#BA5A1A] dark:bg-[#341F14] dark:text-[#F3B080]",
-      textCol: "text-[#BA5A1A] dark:text-[#F3B080]",
-      hoverBorder: "hover:border-[#BA5A1A]/60",
+      badgeBg: "bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#282012] dark:text-[#E8BF72]",
+      textCol: "text-[#C58A2C] dark:text-[#E8BF72]",
+      hoverBorder: "hover:border-[#C58A2C]/60",
     },
     overtime: {
       badgeBg: "bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2]",
@@ -79,7 +79,7 @@ function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
     <Link
       href="/rooms"
       className={cn(
-        "group rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "group rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
         toneConfig.hoverBorder
       )}
     >
@@ -142,7 +142,7 @@ export function HospitalityDashboard() {
 
   if (!canView("rooms")) {
     return (
-      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] p-8 text-center shadow-sm">
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-8 text-center shadow-sm">
         <Lock strokeWidth={1.5} className="h-8 w-8 text-stone-400" />
         <p className="max-w-md text-sm text-stone-600 dark:text-stone-300 font-medium">
           Não tem permissão para aceder à gestão de quartos. Solicite acesso ao Administrador ou Dono.
@@ -156,17 +156,17 @@ export function HospitalityDashboard() {
       <div className="flex flex-col gap-4" aria-busy="true">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#261D19] border border-[#E5DFD6]/60 dark:border-[#382D26]/60" />
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#1E242D] border border-[#E5DFD6]/60 dark:border-[#2C3440]/60" />
           ))}
         </div>
-        <div className="h-44 animate-pulse rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#261D19] border border-[#E5DFD6]/60 dark:border-[#382D26]/60" />
+        <div className="h-44 animate-pulse rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#1E242D] border border-[#E5DFD6]/60 dark:border-[#2C3440]/60" />
       </div>
     );
   }
 
   if (stats.total === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] p-10 text-center shadow-sm max-w-xl mx-auto my-8">
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-10 text-center shadow-sm max-w-xl mx-auto my-8">
         <div className="p-4 rounded-full bg-primary/10 text-primary">
           <BedDouble strokeWidth={1.8} className="h-10 w-10" />
         </div>
@@ -180,7 +180,7 @@ export function HospitalityDashboard() {
         </div>
         <Link
           href="/rooms"
-          className="rounded-xl bg-[#BA5A1A] hover:bg-[#9C4811] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all flex items-center gap-2"
+          className="rounded-xl bg-[#C58A2C] hover:bg-[#A87019] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all flex items-center gap-2"
         >
           Configurar Quartos
           <ArrowRight className="h-4 w-4" />
@@ -199,7 +199,7 @@ export function HospitalityDashboard() {
           </SectionTitle>
           <Link
             href="/rooms/checkin"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#BA5A1A] hover:bg-[#9C4811] text-white text-xs font-bold shadow-xs transition-all shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C58A2C] hover:bg-[#A87019] text-white text-xs font-bold shadow-xs transition-all shrink-0"
           >
             <Key className="w-3.5 h-3.5" />
             Novo Check-in
@@ -265,13 +265,13 @@ export function HospitalityDashboard() {
             Estadias Abertas
           </SectionTitle>
           {rows.length > 0 && (
-            <div className="text-xs text-stone-500 dark:text-stone-400 bg-[#FFFDF9] dark:bg-[#201915] border border-[#E5DFD6] dark:border-[#382D26] px-3 py-1 rounded-full shadow-sm">
+            <div className="text-xs text-stone-500 dark:text-stone-400 bg-[#FFFDF9] dark:bg-[#191E25] border border-[#E5DFD6] dark:border-[#2C3440] px-3 py-1 rounded-full shadow-sm">
               A receber agora: <b className="text-stone-900 dark:text-stone-100 font-bold">{formatCurrency(toReceive)}</b>
             </div>
           )}
         </div>
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] p-6 text-center text-xs text-stone-500 shadow-sm">
+          <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-6 text-center text-xs text-stone-500 shadow-sm">
             Nenhum quarto com estadia ativa neste momento.
           </div>
         ) : (
@@ -281,10 +281,10 @@ export function HospitalityDashboard() {
                 key={stay.id}
                 href="/rooms"
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-2xl border bg-[#FFFDF9] dark:bg-[#201915] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+                  "flex items-center justify-between gap-3 rounded-2xl border bg-[#FFFDF9] dark:bg-[#191E25] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
                   realtime.isOvertime
                     ? "border-[#FBD5D0] dark:border-[#5C2323]"
-                    : "border-[#E5DFD6] dark:border-[#382D26] hover:border-[#BA5A1A]/40"
+                    : "border-[#E5DFD6] dark:border-[#2C3440] hover:border-[#C58A2C]/40"
                 )}
               >
                 <div className="min-w-0 flex-1">
@@ -305,7 +305,7 @@ export function HospitalityDashboard() {
                   <p
                     className={cn(
                       "text-xs font-bold mt-1",
-                      realtime.isOvertime ? "text-[#C53030] dark:text-[#FEB2B2]" : "text-[#BA5A1A] dark:text-[#E0852E]"
+                      realtime.isOvertime ? "text-[#C53030] dark:text-[#FEB2B2]" : "text-[#C58A2C] dark:text-[#E0852E]"
                     )}
                   >
                     {formatTimeRemaining(realtime.minutesRemainingOrOverdue)}
@@ -336,7 +336,7 @@ export function HospitalityDashboard() {
             <SectionTitle subtitle="Total arrecadado hoje no fecho de turno">
               Hoje no Caixa
             </SectionTitle>
-            <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] p-5 shadow-sm">
+            <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-5 shadow-sm">
               <div className="flex items-baseline justify-between">
                 <div>
                   <p className="text-3xl font-headline font-black text-stone-900 dark:text-stone-100">
@@ -353,8 +353,8 @@ export function HospitalityDashboard() {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#E5DFD6] dark:border-[#382D26] pt-4">
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#1E1714] border border-[#E5DFD6] dark:border-[#382D26]">
+              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#E5DFD6] dark:border-[#2C3440] pt-4">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#111418] border border-[#E5DFD6] dark:border-[#2C3440]">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                     Quartos & Estadias
                   </p>
@@ -362,7 +362,7 @@ export function HospitalityDashboard() {
                     {formatCurrency(today.roomsTotal)}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#1E1714] border border-[#E5DFD6] dark:border-[#382D26]">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] dark:bg-[#111418] border border-[#E5DFD6] dark:border-[#2C3440]">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                     Lounge / Bar
                   </p>
@@ -379,7 +379,7 @@ export function HospitalityDashboard() {
             <SectionTitle subtitle="Evolução de receitas ao longo da semana">
               Últimos 7 Dias
             </SectionTitle>
-            <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#201915] p-5 shadow-sm flex flex-col justify-between">
+            <div className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-5 shadow-sm flex flex-col justify-between">
               <div className="flex h-36 items-end gap-2 pt-2">
                 {week.map((b) => (
                   <div key={b.key} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
@@ -388,7 +388,7 @@ export function HospitalityDashboard() {
                     </span>
                     <div className="flex w-full flex-1 items-end bg-[#FAF7F2] dark:bg-[#1A1411] rounded-t-lg overflow-hidden p-0.5">
                       <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-[#BA5A1A] to-[#DF9E42] transition-all duration-300"
+                        className="w-full rounded-t-md bg-gradient-to-t from-[#C58A2C] to-[#DF9E42] transition-all duration-300"
                         style={{ height: `${b.total > 0 ? Math.max(8, (b.total / weekMax) * 100) : 0}%` }}
                       />
                     </div>
