@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
 import type { StayConsumptionItem } from '@/lib/types';
+import { totalContractedHours } from '@/lib/hospitality-calc';
 
 interface AuthorizeResult {
   decoded: { uid: string; email?: string; name?: string; superAdmin?: boolean; companyId?: string };
@@ -254,7 +255,7 @@ export async function POST(req: Request) {
 
       // Recalcular totais no servidor
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.quantity * c.unitPrice), 0);
-      const stayHoursTotal = (Number(stayData.contractedHours) || 1) * (Number(stayData.ratePerHourApplied) || 0);
+      const stayHoursTotal = totalContractedHours(stayData) * (Number(stayData.ratePerHourApplied) || 0);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       transaction.update(stayRef, {

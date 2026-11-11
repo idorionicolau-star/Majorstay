@@ -208,6 +208,57 @@ describe('PARTE 1 — Consumos do Bar no Servidor', () => {
       expect(updatedStay.totalAmountDue).toBe(540); // 300 h + 240 bar
     });
 
+    
+    it('recalcula totalAmountDue considerando prorrogações: 1h contratada + 1h prorrogada a 300 MT/h, lançar consumo de 100 MT -> totalAmountDue = 700', async () => {
+      // Estadia com 1h contratada + 1h prorrogada (extensions)
+      fakeDatabase[`companies/${companyId}/stays/${stayId}`] = {
+        status: 'open',
+        roomName: 'Quarto 4',
+        roomId: 'room-4',
+        contractedHours: 1,
+        extensions: [
+          { hours: 1, addedAt: new Date().toISOString(), addedBy: 'user-admin' },
+        ],
+        ratePerHourApplied: 300,
+        consumptions: [],
+        totalAmountDue: 600,
+      };
+
+      // Produto a 100 MT
+      const snackId = 'prod-snack-100';
+      fakeDatabase[`companies/${companyId}/products/${snackId}`] = {
+        name: 'Snack Batatas',
+        price: 100,
+        stock: 5,
+        location: 'Bar Principal',
+      };
+
+      const req = new Request('http://localhost/api/stays/consumption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyId,
+          stayId,
+          action: 'add',
+          items: [
+            {
+              productId: snackId,
+              quantity: 1,
+            },
+          ],
+        }),
+      });
+
+      const res = await POST(req);
+      const json = await res.json();
+      expect(res.status).toBe(200);
+      expect(json.success).toBe(true);
+
+      const updatedStay = fakeDatabase[`companies/${companyId}/stays/${stayId}`];
+      // 1h contratada + 1h prorrogada = 2h * 300 = 600 MT + 100 MT consumo = 700 MT!
+      expect(updatedStay.totalAmountDue).toBe(700);
+    });
+
     it('abate o stock do produto no catálogo e gera movimento de saída', async () => {
       const req = new Request('http://localhost/api/stays/consumption', {
         method: 'POST',

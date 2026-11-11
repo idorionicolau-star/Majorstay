@@ -495,8 +495,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       };
       const updatedExtensions = [...(currentStay.extensions || []), ext];
       const newExpected = calculateExpectedCheckOut(currentStay.checkInAt, currentStay.contractedHours, updatedExtensions);
-      const totalContractedHours = currentStay.contractedHours + updatedExtensions.reduce((s, e) => s + e.hours, 0);
-      const newTotalDue = totalContractedHours * currentStay.ratePerHourApplied;
+      const consumptionsTotal = (currentStay.consumptions || []).reduce((sum, c) => sum + (Number(c.totalPrice) || 0), 0);
+      const totalHours = totalContractedHours({ contractedHours: currentStay.contractedHours, extensions: updatedExtensions });
+      const newTotalDue = (totalHours * (currentStay.ratePerHourApplied || 0)) + consumptionsTotal;
 
       updateGuestStay(stayId, {
         extensions: updatedExtensions,
@@ -528,8 +529,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     const updatedExtensions = [...(stayData.extensions || []), ext];
     const newExpected = calculateExpectedCheckOut(stayData.checkInAt, stayData.contractedHours, updatedExtensions);
-    const totalContractedHours = stayData.contractedHours + updatedExtensions.reduce((s, e) => s + e.hours, 0);
-    const newTotalDue = totalContractedHours * stayData.ratePerHourApplied;
+    const consumptionsTotal = (stayData.consumptions || []).reduce((sum, c) => sum + (Number(c.totalPrice) || 0), 0);
+    const totalHours = totalContractedHours({ contractedHours: stayData.contractedHours, extensions: updatedExtensions });
+    const newTotalDue = (totalHours * (stayData.ratePerHourApplied || 0)) + consumptionsTotal;
 
     await updateDoc(stayRef, {
       extensions: updatedExtensions,
@@ -640,7 +642,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       };
       const updatedConsumptions = [...(currentStay.consumptions || []), newConsumption];
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-      const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+      const stayHoursTotal = totalContractedHours(currentStay) * (currentStay.ratePerHourApplied || 0);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       updateGuestStay(stayId, {
@@ -710,7 +712,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       const addedTotal = newConsumptions.reduce((sum, c) => sum + c.totalPrice, 0);
       const updatedConsumptions = [...(currentStay.consumptions || []), ...newConsumptions];
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-      const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+      const stayHoursTotal = totalContractedHours(currentStay) * (currentStay.ratePerHourApplied || 0);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       updateGuestStay(stayId, {
@@ -751,7 +753,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     if (isGuest) {
       const updatedConsumptions = (currentStay.consumptions || []).filter((c) => c.id !== consumptionId);
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-      const stayHoursTotal = (currentStay.contractedHours || 1) * (currentStay.ratePerHourApplied || 0);
+      const stayHoursTotal = totalContractedHours(currentStay) * (currentStay.ratePerHourApplied || 0);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       updateGuestStay(stayId, {
