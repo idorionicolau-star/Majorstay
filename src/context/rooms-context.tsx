@@ -35,7 +35,8 @@ import {
 import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { calculateExpectedCheckOut, computeStayRealtimeStatus,
-  computeRoomCleaningStatus } from '@/lib/hospitality-calc';
+  computeRoomCleaningStatus,
+  totalContractedHours } from '@/lib/hospitality-calc';
 import { formatCurrency } from '@/lib/utils';
 
 export interface RoomStats {
