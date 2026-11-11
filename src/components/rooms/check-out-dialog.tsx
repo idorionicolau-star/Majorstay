@@ -122,7 +122,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[536px] max-h-[94vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl p-0 overflow-hidden text-slate-800 dark:text-slate-100">
+      <DialogContent className="max-w-[536px] max-h-[90dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl p-0 text-slate-800 dark:text-slate-100">
         {/* Top Fresh Pastel Accent Gradient */}
         <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
 

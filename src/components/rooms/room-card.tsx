@@ -15,6 +15,7 @@ import {
   Phone,
   Wine,
   QrCode,
+  KeyRound,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -254,6 +255,7 @@ export function RoomCard({
   const progressPercent = Math.min(100, Math.round((elapsedMinutes / totalContractedMinutes) * 100));
 
   const StatusIcon = statusTheme.Icon;
+  const stayPin = stay?.accessPin || (stay?.id ? String(Math.abs(stay.id.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0)) % 9000 + 1000) : '1234');
 
   return (
     <Card className={cn(
@@ -289,6 +291,18 @@ export function RoomCard({
                 <StatusIcon className="h-3.5 w-3.5" />
                 {statusTheme.badgeText}
               </Badge>
+
+              {onShowQrCode && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onShowQrCode(room)}
+                  title="Ver QR Code e PIN do Quarto"
+                  className="h-8 w-8 text-[#007bb9] hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-full shrink-0"
+                >
+                  <QrCode className="h-4 w-4" />
+                </Button>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -350,6 +364,17 @@ export function RoomCard({
                     {stay.clientPhone}
                   </span>
                 )}
+              </div>
+
+              {/* PIN de Acesso ao Quarto */}
+              <div className="flex items-center justify-between bg-blue-100/70 dark:bg-blue-950/70 px-3 py-1.5 rounded-xl border border-blue-200/90 dark:border-blue-900/60 font-medium">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#006194] dark:text-sky-300">
+                  <KeyRound className="h-3.5 w-3.5 text-[#007bb9]" />
+                  PIN do QR Code:
+                </span>
+                <span className="font-mono font-black text-sm tracking-widest bg-white dark:bg-slate-900 px-2.5 py-0.5 rounded-lg border border-blue-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-2xs">
+                  {stayPin}
+                </span>
               </div>
 
               {/* Horários de Entrada e Saída Prevista */}
