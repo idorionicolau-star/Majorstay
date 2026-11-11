@@ -143,15 +143,15 @@ export async function POST(req: Request) {
             resolvedUnitPrice = catalogPrice;
             resolvedProductName = prodData.name || resolvedProductName || 'Produto do Bar';
 
-            // Abate de stock com suporte a multi-localização e tolerância para stock insuficiente
+            // Abate de stock com tolerância para stock insuficiente (apenas no registo do produto indicado)
             const currentStock = Number(prodData.stock) || 0;
             let newStock = currentStock - qty;
 
             if (currentStock < qty) {
-              newStock = Math.max(0, currentStock === 0 ? 0 : 0);
+              newStock = 0;
               const diff = qty - Math.max(0, currentStock);
               underStockNotes.push(
-                `Stock insuficiente em "${resolvedProductName}": stock era ${currentStock}, pedido ${qty}. Abatido até 0 (diferença de ${diff} MTn/un em falta)`
+                `Stock insuficiente em "${resolvedProductName}": stock era ${currentStock}, pedido ${qty}. Abatido até 0 (diferença de ${diff} unidades em falta)`
               );
             }
 
