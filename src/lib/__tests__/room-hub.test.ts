@@ -11,7 +11,7 @@ vi.mock('@/lib/firebase-admin', () => {
     }),
     collection: (path: string) => {
       let limitCount = 100;
-      let whereClauses: [string, string, any][] = [];
+      const whereClauses: [string, string, any][] = [];
 
       const builder: any = {
         where: (field: string, op: string, val: any) => {

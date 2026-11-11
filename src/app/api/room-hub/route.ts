@@ -127,7 +127,7 @@ export async function GET(req: Request) {
     }
 
     // 4. Produtos do bar (sem filtro 'active', excluindo deletedAt e preço <= 0, deduplicados por nome)
-    let barProducts: { id: string; name: string; price: number; category?: string }[] = [];
+    const barProducts: { id: string; name: string; price: number; category?: string }[] = [];
     try {
       const prodSnap = await db
         .collection(`companies/${companyId}/products`)
