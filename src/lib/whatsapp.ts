@@ -46,7 +46,7 @@ export function openWhatsApp(phone: string, message: string): void {
  * Mensagem elegante para Confirmação de Reserva Antecipada
  */
 export function buildBookingWhatsAppMessage(booking: Booking, hotelName?: string): string {
-  const brand = hotelName || 'MajorStay Lodge & Quartos';
+  const brand = hotelName?.trim() || 'Alojamento Turístico';
   const checkInDateObj = normalizeDate(booking.checkInDate);
   const formattedDate = checkInDateObj.toLocaleDateString('pt-MZ', {
     weekday: 'short',
@@ -85,7 +85,7 @@ export function buildBookingWhatsAppMessage(booking: Booking, hotelName?: string
 
   msg += `\n📍 *Receção:* Por favor, informe-nos com antecedência se houver algum atraso ou alteração no seu horário de chegada.\n\n`;
   msg += `Aguardamos por si com o máximo conforto e discrição! ✨\n`;
-  msg += `_Enviado via ${brand}_`;
+  msg += `_A Equipa do ${brand}_`;
 
   return msg;
 }
@@ -98,7 +98,7 @@ export function buildStayReceiptWhatsAppMessage(
   room?: Room | null,
   hotelName?: string
 ): string {
-  const brand = hotelName || 'MajorStay';
+  const brand = hotelName?.trim() || 'Alojamento Turístico';
   const roomName = stay.roomName || room?.name || 'Quarto';
   const client = stay.clientName || 'Hóspede Particular';
 
@@ -138,7 +138,7 @@ export function buildStayReceiptWhatsAppMessage(
   msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
   msg += `Esperamos vê-lo(a) novamente em breve! Tenha um excelente dia. ✨\n`;
-  msg += `_Processado por ${brand}_`;
+  msg += `_A Equipa do ${brand}_`;
 
   return msg;
 }

@@ -135,7 +135,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
         }
     };
 
-    doc.setProperties({ title: `${title} ${m.number || ''}`.trim(), author: company?.name || 'MajorStockX', creator: 'MajorStockX' });
+    doc.setProperties({ title: `${title} ${m.number || ''}`.trim(), author: company?.name || 'Alojamento Turístico', creator: company?.name || 'Sistema de Hotelaria' });
 
     // ondas da "Maré": as do topo; o rodapé usa-as espelhadas e mais baixas
     type Path = DecorPath;
@@ -185,7 +185,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
         font('bold', theme.header === 'minimal' ? 12 : 15);
         setText(color);
         const nx = align === 'center' ? W / 2 : x;
-        doc.text(company?.name || 'MajorStockX', nx, top + 6, { maxWidth: maxW, align });
+        doc.text(company?.name || 'Alojamento Turístico', nx, top + 6, { maxWidth: maxW, align });
         font('normal', 8.5);
         setText(sub);
         let cy = top + 11;
@@ -269,7 +269,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
             setDraw(sub); doc.setLineWidth(0.3); doc.line(M, 67, M + 70, 67);
             let ty = 14;
             if (logo) { const s = fit(logo, 30, 14); setFill([255, 255, 255]); doc.roundedRect(R - s.w - 1.5, 10.5, s.w + 3, s.h + 3, 1.5, 1.5, 'F'); doc.addImage(logo.data, 'JPEG', R - s.w, 12, s.w, s.h); ty = 12 + s.h + 5; }
-            font('bold', 12); setText(on); doc.text(company?.name || 'MajorStockX', R, ty + 2, { align: 'right' });
+            font('bold', 12); setText(on); doc.text(company?.name || 'Alojamento Turístico', R, ty + 2, { align: 'right' });
             font('normal', 7.5); setText(sub);
             companyLines.forEach((l, i) => doc.text(doc.splitTextToSize(l, 70)[0], R, ty + 6.5 + i * 3.6, { align: 'right' }));
             font('normal', 10); setText(on); doc.text(totalLabelTop, R, 55, { align: 'right' });
@@ -333,7 +333,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
                 for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) doc.circle(M + 1 + c * 2.8, 13 + r * 2.8, 0.75, 'F');
                 tx = M + 11;
             }
-            font('bold', 16); setText(on); doc.text(doc.splitTextToSize((company?.name || 'MajorStockX').toUpperCase(), 100 - (tx - M))[0], tx, 17.5);
+            font('bold', 16); setText(on); doc.text(doc.splitTextToSize((company?.name || 'Alojamento Turístico').toUpperCase(), 100 - (tx - M))[0], tx, 17.5);
             if (company?.address) { font('normal', 7); setText(sub); doc.text(doc.splitTextToSize(company.address.toUpperCase(), 90 - (tx - M))[0], tx, 21.5, { charSpace: 0.3 }); }
             const cx = W - 66;
             font('bold', 9); setText(on); doc.text('CONTACTOS', cx, 16);
@@ -372,7 +372,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
             meta.forEach(([k, v], i) => { doc.text(k, M, 61 + i * 5); doc.text(`:  ${v}`, M + 28, 61 + i * 5); });
             let ty = 20;
             if (logo) { const s = fit(logo, 30, 14); setFill([255, 255, 255]); doc.roundedRect(R - s.w - 1.5, 9.5, s.w + 3, s.h + 3, 1.5, 1.5, 'F'); doc.addImage(logo.data, 'JPEG', R - s.w, 11, s.w, s.h); ty = 11 + s.h + 7; }
-            font('bold', 14); setText(tint(accent, 0.62)); doc.text(doc.splitTextToSize((company?.name || 'MajorStockX').toUpperCase(), 92)[0], R, ty, { align: 'right' });
+            font('bold', 14); setText(tint(accent, 0.62)); doc.text(doc.splitTextToSize((company?.name || 'Alojamento Turístico').toUpperCase(), 92)[0], R, ty, { align: 'right' });
             font('normal', 7.5); setText(tint(accent, 0.72));
             companyLines.forEach((l, i) => doc.text(doc.splitTextToSize(l, 80)[0], R, ty + 5.5 + i * 3.6, { align: 'right' }));
             font('normal', 15); setText(on); doc.text(totalLabelTop, R, 58, { align: 'right' });
@@ -385,7 +385,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
             if (logo) { const s = fit(logo, 30, 14); doc.addImage(logo.data, 'JPEG', cx - s.w / 2, 8, s.w, s.h); }
             else { setFill(accent); doc.circle(cx, 15, 6.5, 'F'); font('bold', 9); setText(on); doc.text(initials, cx, 16.6, { align: 'center' }); }
             font('bold', 12.5); setText(dark);
-            const nameL = doc.splitTextToSize(company?.name || 'MajorStockX', 46).slice(0, 2) as string[];
+            const nameL = doc.splitTextToSize(company?.name || 'Alojamento Turístico', 46).slice(0, 2) as string[];
             nameL.forEach((l, i) => doc.text(l, cx, 29 + i * 5, { align: 'center' }));
             if (company?.taxId) { font('normal', 6.5); setText(grey); doc.text(`NUIT ${company.taxId}`, cx, 29 + nameL.length * 5, { align: 'center', charSpace: 0.6 }); }
             const mx = M + 50;
@@ -439,7 +439,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
                 font('bold', 8); setText(on); doc.text(initials, hx, hy + 1.4, { align: 'center' });
                 tx = M + 15;
             }
-            font('bold', 14); setText(ink); doc.text(doc.splitTextToSize((company?.name || 'MajorStockX').toUpperCase(), 92 - (tx - M))[0], tx, 21);
+            font('bold', 14); setText(ink); doc.text(doc.splitTextToSize((company?.name || 'Alojamento Turístico').toUpperCase(), 92 - (tx - M))[0], tx, 21);
             if (company?.address) { font('normal', 7.5); setText(grey); doc.text(doc.splitTextToSize(company.address, 80 - (tx - M))[0], tx, 25.5, { charSpace: 0.3 }); }
             font('bold', 19); setText(ink); spacedRight(titleU, R, 39, 2.6);
             font('normal', 9); setText(accent); doc.text(`N.º ${m.number || '—'}`, R, 44.5, { align: 'right' });
@@ -478,7 +478,7 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
                 doc.rect(M, 12, 6, 6); doc.rect(M + 3, 15, 6, 6);
                 tx = M + 13;
             }
-            font('bold', 13.5); setText([255, 255, 255]); doc.text(doc.splitTextToSize((company?.name || 'MajorStockX').toUpperCase(), 76 - (tx - M))[0], tx, 17);
+            font('bold', 13.5); setText([255, 255, 255]); doc.text(doc.splitTextToSize((company?.name || 'Alojamento Turístico').toUpperCase(), 76 - (tx - M))[0], tx, 17);
             if (company?.address) { font('normal', 7.5); setText([214, 224, 236]); doc.text(doc.splitTextToSize(company.address, 70 - (tx - M))[0], tx, 21.5); }
             const x0 = 128;
             font('bold', 17); setText(accent); doc.text(titleU, x0, 21);
@@ -855,7 +855,8 @@ export async function renderDocPDF(m: DocModel, company: Company | null): Promis
 
     // ================= rodapé e marca de água em todas as páginas =================
     const pages = (doc as unknown as { getNumberOfPages(): number }).getNumberOfPages();
-    const footer = st.footerNote?.trim() || `${company?.name || 'MajorStockX'} © ${new Date().getFullYear()} · Processado por computador (MajorStockX)`;
+    const hotelName = company?.name?.trim() || 'Alojamento Turístico';
+    const footer = st.footerNote?.trim() || `${hotelName} © ${new Date().getFullYear()} · Processado por computador`;
     const thanks = 'Obrigado pela preferência!';
     for (let i = 1; i <= pages; i++) {
         doc.setPage(i);
