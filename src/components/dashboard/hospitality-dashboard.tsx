@@ -20,6 +20,7 @@ import { useInventory } from "@/context/inventory-context";
 import {
   calculateStayPricing,
   computeStayRealtimeStatus,
+  computeRoomCleaningStatus,
   formatTimeRemaining,
   formatTimeRemainingSeconds,
   normalizeDate,
@@ -147,7 +148,7 @@ function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
 }
 
 export function HospitalityDashboard() {
-  const { openStays, stats, loading } = useRooms();
+  const { rooms, openStays, stats, loading } = useRooms();
   const { user, sales, canView } = useInventory();
   const isManager = user?.role === "Admin" || user?.role === "Dono";
 
@@ -187,6 +188,19 @@ export function HospitalityDashboard() {
   const week = useMemo(() => lastDays(sales || [], now, 7), [sales, now]);
   const weekMax = Math.max(1, ...week.map((b) => b.total));
   const toReceive = rows.reduce((t, r) => t + r.pricing.totalAmountDue, 0);
+
+  const delayedCleaningCount = useMemo(() => {
+    return (rooms || []).filter((r) => {
+      if (r.status !== 'cleaning' || !r.cleaningStartedAt) return false;
+      const cStatus = computeRoomCleaningStatus({
+        cleaningStartedAt: r.cleaningStartedAt,
+        cleaningDurationMinutes: r.cleaningDurationMinutes,
+        now,
+      });
+      return cStatus?.isDelayed;
+    }).length;
+  }, [rooms, now]);
+
 
   if (!canView("rooms")) {
     return (
@@ -311,17 +325,31 @@ export function HospitalityDashboard() {
             {stats.cleaning > 0 && (
               <Link
                 href="/rooms"
-                className="flex items-center gap-3 rounded-2xl border border-[#F6E0B5] dark:border-[#4E3917] bg-[#FFFBF0] dark:bg-[#2A2012] p-4 text-xs font-bold text-[#975A16] dark:text-[#ECC94B] shadow-sm hover:opacity-95 transition-all"
+                className={cn(
+                  "flex items-center gap-3 rounded-2xl border p-4 text-xs font-bold shadow-sm hover:opacity-95 transition-all",
+                  delayedCleaningCount > 0
+                    ? "border-amber-300 dark:border-amber-800 bg-amber-50/90 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200"
+                    : "border-[#F6E0B5] dark:border-[#4E3917] bg-[#FFFBF0] dark:bg-[#2A2012] text-[#975A16] dark:text-[#ECC94B]"
+                )}
               >
-                <div className="p-2 rounded-xl bg-[#DF9E42]/15 shrink-0">
-                  <Sparkles className="h-5 w-5 text-[#DF9E42]" />
+                <div className={cn("p-2 rounded-xl shrink-0", delayedCleaningCount > 0 ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" : "bg-[#DF9E42]/15 text-[#DF9E42]")}>
+                  <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold">
-                    {plural(stats.cleaning, "quarto a aguardar limpeza", "quartos a aguardar limpeza")}
-                  </p>
-                  <p className="text-[11px] font-normal text-[#975A16]/80 mt-0.5">
-                    Libertar para novos hóspedes após higienização.
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold">
+                      {plural(stats.cleaning, "quarto a aguardar limpeza", "quartos a aguardar limpeza")}
+                    </p>
+                    {delayedCleaningCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">
+                        {delayedCleaningCount} ATRASADO{delayedCleaningCount > 1 ? 'S' : ''}
+                      </span>
+                    )}
+                  </div>
+                  <p className={cn("text-[11px] font-normal mt-0.5", delayedCleaningCount > 0 ? "text-amber-700 dark:text-amber-300 font-semibold" : "text-[#975A16]/80")}>
+                    {delayedCleaningCount > 0
+                      ? `${delayedCleaningCount} quarto(s) excederam o tempo limite de higienização. Toque para verificar.`
+                      : "Libertar para novos hóspedes após higienização."}
                   </p>
                 </div>
               </Link>

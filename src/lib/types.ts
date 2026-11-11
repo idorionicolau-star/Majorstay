@@ -52,6 +52,8 @@ export type NotificationSettings = {
   emails?: NotificationEmail[];
   /** Hora (Maputo) do relatório do fim do dia: uma de REPORT_TIMES; sem valor = 21:30 */
   endOfDayTime?: string;
+  /** Tolerância em minutos para alerta aos gestores de limpeza atrasada (por defeito: 15) */
+  cleaningAlertMinutes?: number;
 };
 
 export type Company = {
@@ -566,6 +568,7 @@ export type Room = {
   ratePerHour: number; // Preço por hora em MT
   minimumHours: number; // Mínimo de horas (padrão: 1)
   cleaningDurationMinutes?: number; // Duração estimada da limpeza (minutos)
+  cleaningStartedAt?: string | any; // Timestamp do início da higienização atual
   active: boolean;
   status: RoomStatus;
   currentStayId?: string; // ID da estadia ativa (quando occupied ou overtime)
@@ -633,6 +636,7 @@ export type HospitalityAuditAction =
   | 'cancel_stay'
   | 'edit_stay'
   | 'rate_change'
+  | 'cleaning_delay'
   | 'delete_stay';
 
 export type HospitalityAuditLog = {

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, cn } from '@/lib/utils';
+import { computeRoomCleaningStatus } from '@/lib/hospitality-calc';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { RoomCard } from '@/components/rooms/room-card';
@@ -56,6 +57,18 @@ export default function RoomsPage() {
 
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const delayedCleaningCount = useMemo(() => {
+    return rooms.filter((r) => {
+      if (r.status !== 'cleaning' || !r.cleaningStartedAt) return false;
+      const cStatus = computeRoomCleaningStatus({
+        cleaningStartedAt: r.cleaningStartedAt,
+        cleaningDurationMinutes: r.cleaningDurationMinutes,
+      });
+      return cStatus?.isDelayed;
+    }).length;
+  }, [rooms]);
+
 
   // Modais de Estadia e Quartos
   const [checkInOpen, setCheckInOpen] = useState(false);
@@ -365,9 +378,16 @@ export default function RoomsPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Limpeza</p>
-              <p className="text-2xl font-black text-sky-700 dark:text-sky-300">
-                {stats.cleaning}
-              </p>
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <p className="text-2xl font-black text-sky-700 dark:text-sky-300">
+                  {stats.cleaning}
+                </p>
+                {delayedCleaningCount > 0 && (
+                  <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 animate-pulse">
+                    ({delayedCleaningCount} atrasado{delayedCleaningCount > 1 ? 's' : ''})
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -464,6 +484,11 @@ export default function RoomsPage() {
           >
             <Sparkles className="h-3.5 w-3.5 text-sky-600" />
             Limpeza ({stats.cleaning})
+            {delayedCleaningCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[9px] font-black bg-amber-500 text-white rounded-full leading-none animate-pulse">
+                {delayedCleaningCount}
+              </span>
+            )}
           </Button>
         </div>
 

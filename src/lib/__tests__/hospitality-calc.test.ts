@@ -9,6 +9,7 @@ import {
   formatStayDuration,
   formatTimeRemaining,
   totalContractedHours,
+  computeRoomCleaningStatus,
 } from '../hospitality-calc';
 
 describe('hospitality-calc', () => {
@@ -333,4 +334,94 @@ describe('hospitality-calc', () => {
       expect(pricing.overtimeHours).toBe(0);
     });
   });
+
+  describe('computeRoomCleaningStatus (Monitorização de Higienização de Quartos)', () => {
+    const baseStart = new Date('2026-11-08T10:00:00Z');
+
+    it('retorna null se cleaningStartedAt for nulo ou indefinido', () => {
+      expect(computeRoomCleaningStatus({ cleaningStartedAt: null })).toBeNull();
+      expect(computeRoomCleaningStatus({ cleaningStartedAt: undefined })).toBeNull();
+    });
+
+    it('calcula o tempo decorrido e respeita o padrão de 15 minutos', () => {
+      // 10 minutos decorridos -> dentro do padrão de 15 min
+      const now = new Date(baseStart.getTime() + 10 * 60 * 1000);
+      const status = computeRoomCleaningStatus({
+        cleaningStartedAt: baseStart,
+        now,
+      });
+
+      expect(status).not.toBeNull();
+      expect(status?.isCleaning).toBe(true);
+      expect(status?.isDelayed).toBe(false);
+      expect(status?.durationMinutes).toBe(10);
+      expect(status?.durationSeconds).toBe(600);
+      expect(status?.maxMinutes).toBe(15);
+      expect(status?.overdueMinutes).toBe(0);
+      expect(status?.overdueSeconds).toBe(0);
+    });
+
+    it('marca isDelayed como false exatamente aos 15 minutos', () => {
+      const now = new Date(baseStart.getTime() + 15 * 60 * 1000);
+      const status = computeRoomCleaningStatus({
+        cleaningStartedAt: baseStart,
+        now,
+      });
+
+      expect(status?.isDelayed).toBe(false);
+      expect(status?.durationMinutes).toBe(15);
+      expect(status?.overdueMinutes).toBe(0);
+    });
+
+    it('marca isDelayed como true quando ultrapassa 15 minutos (ex: 18 min)', () => {
+      const now = new Date(baseStart.getTime() + 18 * 60 * 1000);
+      const status = computeRoomCleaningStatus({
+        cleaningStartedAt: baseStart,
+        now,
+      });
+
+      expect(status?.isDelayed).toBe(true);
+      expect(status?.durationMinutes).toBe(18);
+      expect(status?.maxMinutes).toBe(15);
+      expect(status?.overdueMinutes).toBe(3);
+      expect(status?.overdueSeconds).toBe(180);
+    });
+
+    it('respeita duração configurada personalizada por quarto (ex: 25 min)', () => {
+      const now = new Date(baseStart.getTime() + 20 * 60 * 1000);
+      const status = computeRoomCleaningStatus({
+        cleaningStartedAt: baseStart,
+        cleaningDurationMinutes: 25,
+        now,
+      });
+
+      expect(status?.isDelayed).toBe(false);
+      expect(status?.maxMinutes).toBe(25);
+
+      // Aos 26 min deve ficar atrasado
+      const nowDelayed = new Date(baseStart.getTime() + 26 * 60 * 1000);
+      const statusDelayed = computeRoomCleaningStatus({
+        cleaningStartedAt: baseStart,
+        cleaningDurationMinutes: 25,
+        now: nowDelayed,
+      });
+
+      expect(statusDelayed?.isDelayed).toBe(true);
+      expect(statusDelayed?.overdueMinutes).toBe(1);
+    });
+
+    it('respeita tolerância global da empresa se o quarto não tiver valor próprio', () => {
+      const now = new Date(baseStart.getTime() + 22 * 60 * 1000);
+      const status = computeRoomCleaningStatus({
+        cleaningStartedAt: baseStart,
+        companyAlertMinutes: 20,
+        now,
+      });
+
+      expect(status?.isDelayed).toBe(true);
+      expect(status?.maxMinutes).toBe(20);
+      expect(status?.overdueMinutes).toBe(2);
+    });
+  });
+
 });

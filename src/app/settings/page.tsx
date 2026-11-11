@@ -265,6 +265,7 @@ export default function SettingsPage() {
     emailTips: true,
     notificationSettings: {
       endOfDayTime: reportTime(undefined) as ReportTime,
+      cleaningAlertMinutes: 15,
       emails: [] as {
         email: string;
         onSale: boolean;
@@ -330,6 +331,7 @@ export default function SettingsPage() {
         emailTips: companyData.emailTips !== false,
         notificationSettings: {
           endOfDayTime: reportTime(companyData.notificationSettings?.endOfDayTime),
+          cleaningAlertMinutes: companyData.notificationSettings?.cleaningAlertMinutes ?? 15,
           emails: companyData.notificationSettings?.emails || (
             companyData.notificationSettings?.email ? [{
               email: companyData.notificationSettings.email,

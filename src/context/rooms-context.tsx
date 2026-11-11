@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback, useRef } from 'react';
 import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem, Booking, BookingStatus } from '@/lib/types';
 import {
   isGuestCompany,
@@ -34,7 +34,8 @@ import {
 } from 'firebase/firestore';
 import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
-import { calculateExpectedCheckOut, computeStayRealtimeStatus } from '@/lib/hospitality-calc';
+import { calculateExpectedCheckOut, computeStayRealtimeStatus,
+  computeRoomCleaningStatus } from '@/lib/hospitality-calc';
 import { formatCurrency } from '@/lib/utils';
 
 export interface RoomStats {
@@ -108,14 +109,14 @@ interface RoomsContextType {
 const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
 
 export function RoomsProvider({ children }: { children: ReactNode }) {
-  const { companyId, user, canView } = useInventory();
+  const { companyId, user, canView, notifyManagers, companyData } = useInventory();
   const canRooms = !!user && canView('rooms');
 
   const [rawRooms, setRawRooms] = useState<Room[]>([]);
   const [stays, setStays] = useState<Stay[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
 
   const isGuest = isGuestCompany(companyId);
 
@@ -218,6 +219,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
   // Mapeamento dinâmico de status dos quartos (excedido vs ocupado)
   const openStays = useMemo(() => stays.filter((s) => s.status === 'open'), [stays]);
 
+
+
+
   const rooms = useMemo(() => {
     const now = new Date();
     return rawRooms.map((room) => {
@@ -239,6 +243,42 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       return room;
     });
   }, [rawRooms, openStays]);
+
+  // Monitorização proativa de higienização de quartos (Alerta aos Administradores e Dono)
+  const alertedCleaningsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!rooms || rooms.length === 0) return;
+
+    const companyAlertMin = companyData?.notificationSettings?.cleaningAlertMinutes;
+
+    rooms.forEach((room) => {
+      if (room.status !== 'cleaning' || !room.cleaningStartedAt) return;
+
+      const cleaningStatus = computeRoomCleaningStatus({
+        cleaningStartedAt: room.cleaningStartedAt,
+        cleaningDurationMinutes: room.cleaningDurationMinutes,
+        companyAlertMinutes: companyAlertMin,
+      });
+
+      if (!cleaningStatus?.isDelayed) return;
+
+      const startedMs = cleaningStatus.startedAt.getTime();
+      const dedupeKey = `cleaning-delay-${room.id}-${startedMs}`;
+
+      if (alertedCleaningsRef.current.has(dedupeKey)) return;
+      alertedCleaningsRef.current.add(dedupeKey);
+
+      notifyManagers?.({
+        title: `⚠️ Alerta de Higienização: ${room.name}`,
+        body: `O ${room.name} está em higienização há mais de ${cleaningStatus.maxMinutes} min (${cleaningStatus.durationMinutes} min decorridos). Verifique com a equipa de limpeza.`,
+        link: '/rooms',
+        type: 'cleaning_delay',
+        dedupeId: dedupeKey,
+        always: true,
+      });
+    });
+  }, [rooms, companyData, notifyManagers, tick]);
 
   // Estatísticas do painel
   const stats = useMemo<RoomStats>(() => {
@@ -309,15 +349,22 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
   // 2. Atualizar Quarto
   const updateRoom = async (id: string, data: Partial<Room>): Promise<void> => {
+    const payload: Partial<Room> = { ...data };
+    if (data.status === 'cleaning' && data.cleaningStartedAt === undefined) {
+      payload.cleaningStartedAt = isGuest ? new Date().toISOString() : serverTimestamp();
+    } else if (data.status && data.status !== 'cleaning') {
+      payload.cleaningStartedAt = isGuest ? undefined : null;
+    }
+
     if (isGuest) {
-      updateGuestRoom(id, data);
+      updateGuestRoom(id, payload);
       toast({ title: 'Quarto atualizado' });
       return;
     }
     if (!companyId) return;
     const roomDoc = doc(db, `companies/${companyId}/rooms/${id}`);
     await updateDoc(roomDoc, {
-      ...data,
+      ...payload,
       updatedAt: serverTimestamp(),
     });
     toast({ title: 'Quarto atualizado' });
@@ -545,6 +592,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       updateGuestRoom(roomId, {
         status: 'free',
         currentStayId: undefined,
+        cleaningStartedAt: undefined,
       });
       toast({ title: 'Quarto limpo e disponível para novo hóspede!' });
       return;
@@ -555,6 +603,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     await updateDoc(roomRef, {
       status: 'free',
       currentStayId: null,
+      cleaningStartedAt: null,
       updatedAt: serverTimestamp(),
     });
     toast({ title: 'Quarto limpo e disponível para novo hóspede!' });

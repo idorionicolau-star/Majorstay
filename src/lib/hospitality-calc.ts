@@ -270,3 +270,46 @@ export function formatTimeRemainingSeconds(
   };
 }
 
+export interface RoomCleaningStatus {
+  isCleaning: boolean;
+  isDelayed: boolean;
+  durationSeconds: number;
+  durationMinutes: number;
+  maxMinutes: number;
+  overdueMinutes: number;
+  overdueSeconds: number;
+  startedAt: Date;
+}
+
+/**
+ * Calcula o estado da higienização de um quarto e se excedeu o tempo configurado (ou padrão de 15 min).
+ */
+export function computeRoomCleaningStatus(params: {
+  cleaningStartedAt: any;
+  cleaningDurationMinutes?: number;
+  companyAlertMinutes?: number;
+  now?: any;
+}): RoomCleaningStatus | null {
+  if (!params.cleaningStartedAt) return null;
+  const startedAt = normalizeDate(params.cleaningStartedAt);
+  const nowDate = normalizeDate(params.now);
+  const maxMinutes = Math.max(1, Math.floor(params.cleaningDurationMinutes || params.companyAlertMinutes || 15));
+  const diffMs = Math.max(0, nowDate.getTime() - startedAt.getTime());
+  const durationSeconds = Math.floor(diffMs / 1000);
+  const durationMinutes = Math.floor(diffMs / 60000);
+  const maxSeconds = maxMinutes * 60;
+  const isDelayed = durationSeconds > maxSeconds;
+  const overdueSeconds = isDelayed ? durationSeconds - maxSeconds : 0;
+  const overdueMinutes = Math.floor(overdueSeconds / 60);
+
+  return {
+    isCleaning: true,
+    isDelayed,
+    durationSeconds,
+    durationMinutes,
+    maxMinutes,
+    overdueMinutes,
+    overdueSeconds,
+    startedAt,
+  };
+}

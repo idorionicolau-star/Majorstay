@@ -949,6 +949,7 @@ export const INITIAL_GUEST_ROOMS: Room[] = [
     ratePerHour: 250,
     minimumHours: 1,
     cleaningDurationMinutes: 15,
+    cleaningStartedAt: new Date(Date.now() - 18 * 60 * 1000).toISOString(),
     active: true,
     status: "cleaning",
     createdAt: new Date().toISOString(),
@@ -1112,6 +1113,7 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
     updateGuestRoom(room.id, {
       status: nextStatus,
       currentStayId: undefined,
+      cleaningStartedAt: nextStatus === 'cleaning' ? now.toISOString() : undefined,
     });
   }
 

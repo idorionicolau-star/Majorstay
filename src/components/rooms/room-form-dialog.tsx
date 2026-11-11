@@ -87,7 +87,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           type,
           ratePerHour,
           minimumHours: Math.max(1, minimumHours),
-          cleaningDurationMinutes: Math.max(5, cleaningDurationMinutes),
+          cleaningDurationMinutes: Math.max(1, cleaningDurationMinutes || 15),
           notes: notes.trim(),
         });
       } else {
@@ -96,7 +96,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           type,
           ratePerHour,
           minimumHours: Math.max(1, minimumHours),
-          cleaningDurationMinutes: Math.max(5, cleaningDurationMinutes),
+          cleaningDurationMinutes: Math.max(1, cleaningDurationMinutes || 15),
           active: true,
           notes: notes.trim(),
         });
@@ -209,11 +209,11 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
             </div>
           </div>
 
-          {/* Tempo de Limpeza Estimado */}
+          {/* Tempo de Limpeza Estimado & Alerta aos Administradores */}
           <div className="space-y-1.5">
             <Label htmlFor="cleaningMin" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
               <Sparkles className="w-3.5 h-3.5 text-sky-500" />
-              Tempo Estimado de Limpeza (minutos)
+              Tempo Limite de Limpeza (minutos)
             </Label>
             <Input
               id="cleaningMin"
@@ -225,6 +225,9 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               placeholder="15"
               className="h-10 text-xs font-semibold rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 focus-visible:ring-[#007bb9]"
             />
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              Alerta automático: a administração é notificada se a higienização exceder este tempo (padrão 15 min).
+            </p>
           </div>
 
           {/* Notas */}

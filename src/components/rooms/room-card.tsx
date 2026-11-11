@@ -31,6 +31,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import type { Room, Stay } from '@/lib/types';
 import {
   computeStayRealtimeStatus,
+  computeRoomCleaningStatus,
   formatDurationSeconds,
   formatTimeRemainingSeconds,
   normalizeDate,
@@ -96,6 +97,47 @@ export function StayLiveSecondsCounter({
   );
 }
 
+
+export function CleaningLiveSecondsCounter({
+  cleaningStartedAt,
+  maxMinutes = 15,
+}: {
+  cleaningStartedAt: any;
+  maxMinutes?: number;
+}) {
+  const [now, setNow] = React.useState<number>(() => Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const startedMs = normalizeDate(cleaningStartedAt).getTime();
+  const elapsedSeconds = Math.max(0, Math.floor((now - startedMs) / 1000));
+  const maxSeconds = Math.max(1, maxMinutes) * 60;
+  const isDelayed = elapsedSeconds > maxSeconds;
+  const overdueSeconds = isDelayed ? elapsedSeconds - maxSeconds : 0;
+
+  return (
+    <div className="flex items-center justify-between gap-2 text-[11px] font-mono tabular-nums">
+      <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
+        <Sparkles className={cn("h-3 w-3 shrink-0", isDelayed ? "text-amber-500" : "text-sky-500")} />
+        Decorrido: <strong className={cn("font-extrabold", isDelayed ? "text-amber-700 dark:text-amber-300" : "text-slate-800 dark:text-slate-200")}>{formatDurationSeconds(elapsedSeconds)}</strong>
+      </span>
+      <span
+        className={cn(
+          'font-extrabold shrink-0',
+          isDelayed ? 'text-amber-600 dark:text-amber-400' : 'text-sky-600 dark:text-sky-400'
+        )}
+      >
+        {isDelayed ? `+${formatDurationSeconds(overdueSeconds)} atraso` : `Limite: ${maxMinutes}m`}
+      </span>
+    </div>
+  );
+}
+
 export function RoomCard({
   room,
   stay,
@@ -107,7 +149,7 @@ export function RoomCard({
   onShowQrCode,
 }: RoomCardProps) {
   const { markRoomCleaned, updateRoom, deleteRoom } = useRooms();
-  const { user } = useInventory();
+  const { user, companyData } = useInventory();
   const isManager = user?.role === 'Admin' || user?.role === 'Dono';
 
   const realtime = stay
@@ -128,6 +170,17 @@ export function RoomCard({
   const isMaintenance = room.status === 'maintenance';
 
   const isGrace = Boolean(realtime?.isGracePeriod);
+
+  const cleaningStatus = isCleaning
+    ? computeRoomCleaningStatus({
+        cleaningStartedAt: room.cleaningStartedAt,
+        cleaningDurationMinutes: room.cleaningDurationMinutes,
+        companyAlertMinutes: companyData?.notificationSettings?.cleaningAlertMinutes,
+        now: new Date(),
+      })
+    : null;
+
+  const isCleaningDelayed = Boolean(isCleaning && cleaningStatus?.isDelayed);
 
   // Configuração semântica Stitch para cada estado
   const statusTheme = isOvertime
@@ -156,6 +209,15 @@ export function RoomCard({
         badgeText: 'Ocupado',
         Icon: BedDouble,
         progressClass: '[&>div]:bg-[#007bb9]',
+      }
+    : isCleaningDelayed
+    ? {
+        cardBorder: 'border-amber-300 dark:border-amber-900/70 shadow-[0_4px_20px_rgba(245,158,11,0.12)]',
+        topAccent: 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500',
+        badgeClass: 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800',
+        badgeText: `Limpeza Atrasada (+${cleaningStatus?.overdueMinutes || 0}m)`,
+        Icon: AlertTriangle,
+        progressClass: '[&>div]:bg-amber-500',
       }
     : isCleaning
     ? {
@@ -340,15 +402,61 @@ export function RoomCard({
             </div>
           )}
 
-          {isCleaning && (
-            <div className="mt-3.5 p-3.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900/50 text-xs text-sky-800 dark:text-sky-300 flex items-center gap-3">
-              <Sparkles className="h-5 w-5 text-sky-500 shrink-0" />
-              <div>
-                <p className="font-bold">Higienização e Troca de Roupa</p>
-                <p className="text-[11px] text-sky-600 dark:text-sky-400 mt-0.5 font-medium">
-                  Tempo estimado: {room.cleaningDurationMinutes || 15} minutos.
-                </p>
+          {isCleaningDelayed && cleaningStatus && (
+            <div className="mt-3.5 p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 rounded-xl bg-amber-100 dark:bg-amber-900/50 shrink-0 text-amber-700 dark:text-amber-300">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-extrabold text-amber-900 dark:text-amber-100">Limpeza Atrasada</p>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 leading-snug">
+                    Excedeu o limite de {cleaningStatus.maxMinutes} min em +{cleaningStatus.overdueMinutes} min. Notificação enviada à gerência.
+                  </p>
+                </div>
               </div>
+              <CleaningLiveSecondsCounter
+                cleaningStartedAt={room.cleaningStartedAt}
+                maxMinutes={cleaningStatus.maxMinutes}
+              />
+              <Progress
+                value={100}
+                className="h-1.5 bg-amber-200/80 dark:bg-amber-900/50 [&>div]:bg-amber-500"
+              />
+            </div>
+          )}
+
+          {isCleaning && !isCleaningDelayed && (
+            <div className="mt-3.5 p-3.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900/50 text-xs text-sky-800 dark:text-sky-300 space-y-2">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-xl bg-sky-100 dark:bg-sky-900/50 shrink-0 text-sky-600 dark:text-sky-300">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-bold text-sky-900 dark:text-sky-100">Higienização e Troca de Roupa</p>
+                  <p className="text-[11px] text-sky-600 dark:text-sky-400">
+                    Limite: {room.cleaningDurationMinutes || 15} minutos.
+                  </p>
+                </div>
+              </div>
+              {room.cleaningStartedAt ? (
+                <>
+                  <CleaningLiveSecondsCounter
+                    cleaningStartedAt={room.cleaningStartedAt}
+                    maxMinutes={cleaningStatus?.maxMinutes || room.cleaningDurationMinutes || 15}
+                  />
+                  <Progress
+                    value={cleaningStatus ? Math.min(100, Math.round((cleaningStatus.durationSeconds / (cleaningStatus.maxMinutes * 60)) * 100)) : 20}
+                    className="h-1.5 bg-sky-200/80 dark:bg-sky-900/50 [&>div]:bg-sky-500"
+                  />
+                </>
+              ) : null}
             </div>
           )}
 
@@ -417,7 +525,17 @@ export function RoomCard({
             </div>
           )}
 
-          {isCleaning && (
+          {isCleaningDelayed && (
+            <Button
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-extrabold h-11 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
+              onClick={() => markRoomCleaned(room.id)}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Concluir Limpeza (Libertar)
+            </Button>
+          )}
+
+          {isCleaning && !isCleaningDelayed && (
             <Button
               className="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold h-11 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
               onClick={() => markRoomCleaned(room.id)}

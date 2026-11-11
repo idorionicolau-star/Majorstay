@@ -184,11 +184,12 @@ export async function POST(req: Request) {
         notes: notes ? `${stayData.notes ? stayData.notes + ' | ' : ''}${notes}` : (stayData.notes || ''),
       });
 
-      // 4. Atualizar status do quarto (cleaning ou free)
+      // 4. Atualizar status do quarto (cleaning ou free) e marcar início da higienização
       const validNextStatus = roomNextStatus === 'free' ? 'free' : 'cleaning';
       transaction.update(roomRef, {
         status: validNextStatus,
         currentStayId: null,
+        cleaningStartedAt: validNextStatus === 'cleaning' ? admin.firestore.FieldValue.serverTimestamp() : null,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
