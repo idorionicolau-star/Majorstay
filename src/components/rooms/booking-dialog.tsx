@@ -19,11 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Clock, User, Phone, Coins, Sparkles, MessageCircle } from 'lucide-react';
+import { Calendar, Clock, User, Phone, Coins, MessageCircle, BedDouble } from 'lucide-react';
 import type { Room, Booking } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
 import { toast } from '@/hooks/use-toast';
 import { buildBookingWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface BookingDialogProps {
   open: boolean;
@@ -139,76 +140,78 @@ export function BookingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl p-6">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
-              <Calendar className="w-5 h-5" />
+      <DialogContent className="max-w-[536px] max-h-[94vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl p-0 overflow-hidden text-slate-800 dark:text-slate-100">
+        {/* Faixa superior pastel nobre */}
+        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
+
+        <DialogHeader className="px-7 pt-5 pb-3 flex flex-row items-center justify-between space-y-0 text-left">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
+              <Calendar className="w-6 h-6" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-bold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">
+              <DialogTitle className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Nova Reserva Antecipada
               </DialogTitle>
-              <p className="text-xs text-[#827568] dark:text-[#B0A294]">
-                Registe reservas por chamada ou WhatsApp com envio de confirmação direta
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Registo de reservas por chamada ou WhatsApp com envio direto
               </p>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 pt-2">
-          {/* Dados do Hóspede */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="px-7 py-3 space-y-4">
+          {/* Dados do Hóspede - Ícones nas labels para NUNCA sobrepor o texto */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
-                Nome do Hóspede *
+              <Label htmlFor="resClientName" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                Nome do Hóspede <span className="text-[#fd761a]">*</span>
               </Label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
-                <Input
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Ex: Carlos Sitoe"
-                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
-                  required
-                />
-              </div>
+              <Input
+                id="resClientName"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Ex: Carlos Mondlane"
+                className="text-xs font-semibold rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10 focus-visible:ring-[#007bb9]"
+                required
+              />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
-                Contacto / WhatsApp *
+              <Label htmlFor="resClientPhone" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                Contacto / WhatsApp <span className="text-[#fd761a]">*</span>
               </Label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
-                <Input
-                  value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="84 / 82 / 85 / 86..."
-                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
-                  required
-                />
-              </div>
+              <Input
+                id="resClientPhone"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="84 / 82 / 85 / 86..."
+                className="text-xs font-semibold rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10 focus-visible:ring-[#007bb9]"
+                required
+              />
             </div>
           </div>
 
           {/* Quarto e Data de Entrada */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
+              <Label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                <BedDouble className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 Quarto Pretendido
               </Label>
               <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
-                <SelectTrigger className="h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418]">
+                <SelectTrigger className="h-10 text-xs font-medium rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                   <SelectValue placeholder="Selecione o quarto..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25]">
+                <SelectContent className="rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-[#191E25] shadow-xl">
                   <SelectItem value="auto" className="text-xs font-medium">
                     A atribuir na chegada
                   </SelectItem>
                   {rooms.map((r) => (
                     <SelectItem key={r.id} value={r.id} className="text-xs font-medium">
-                      {r.name} ({r.type || 'Standard'}) — {r.ratePerHour} MT/h
+                      {r.name} ({r.type || 'Standard'}) — {formatCurrency(r.ratePerHour)}/h
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -216,25 +219,25 @@ export function BookingDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
-                Data e Hora de Chegada Prevista *
+              <Label htmlFor="resCheckInDate" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                Data e Chegada Prevista <span className="text-[#fd761a]">*</span>
               </Label>
-              <div className="relative">
-                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
-                <Input
-                  type="datetime-local"
-                  value={checkInDate}
-                  onChange={(e) => setCheckInDate(e.target.value)}
-                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
-                  required
-                />
-              </div>
+              <Input
+                id="resCheckInDate"
+                type="datetime-local"
+                value={checkInDate}
+                onChange={(e) => setCheckInDate(e.target.value)}
+                className="text-xs font-semibold rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10 focus-visible:ring-[#007bb9]"
+                required
+              />
             </div>
           </div>
 
-          {/* Duração Pretendida */}
+          {/* Duração Pretendida - Pílulas táteis Stitch 3 */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
+            <Label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+              <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               Permanência Contratada
             </Label>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -245,11 +248,12 @@ export function BookingDialog({
                     key={p.label}
                     type="button"
                     onClick={() => handlePresetSelect(p)}
-                    className={`h-9 px-2 text-xs rounded-xl font-bold transition-all ${
+                    className={cn(
+                      'py-2.5 px-2 text-xs font-bold rounded-2xl transition-all flex items-center justify-center active:scale-95 shadow-xs',
                       active
-                        ? 'bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] text-white shadow-sm'
-                        : 'border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
-                    }`}
+                        ? 'bg-[#007bb9] text-white shadow-md ring-2 ring-[#007bb9]/20 hover:bg-[#006194]'
+                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-blue-200 hover:bg-blue-50/40'
+                    )}
                   >
                     {p.label}
                   </button>
@@ -258,38 +262,37 @@ export function BookingDialog({
             </div>
           </div>
 
-          {/* Sinal / Depósito Antecipado */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Sinal / Depósito Antecipado & Estimativa */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-center">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
+              <Label htmlFor="resDeposit" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                <Coins className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 Sinal / Depósito Pago (MT)
               </Label>
-              <div className="relative">
-                <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={depositAmount || ''}
-                  onChange={(e) => setDepositAmount(Number(e.target.value) || 0)}
-                  placeholder="0 (sem sinal)"
-                  className="!pl-11 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
-                />
-              </div>
+              <Input
+                id="resDeposit"
+                type="number"
+                min="0"
+                step="any"
+                value={depositAmount || ''}
+                onChange={(e) => setDepositAmount(Number(e.target.value) || 0)}
+                placeholder="0 (sem sinal)"
+                className="text-xs font-semibold rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10 focus-visible:ring-[#007bb9]"
+              />
             </div>
 
-            {/* Resumo da Reserva */}
-            <div className="p-3 bg-[#FDF6E8]/70 dark:bg-[#1E242D] rounded-2xl border border-[#F6E0B5] dark:border-[#4A382C] flex flex-col justify-center text-xs">
-              <div className="flex justify-between items-center text-[#827568] dark:text-[#B0A294]">
+            {/* Resumo da Reserva com Estilo Dourado/Azul Stitch */}
+            <div className="p-3.5 bg-gradient-to-br from-amber-50/80 to-amber-100/40 dark:from-amber-950/30 dark:to-slate-900 rounded-2xl border border-amber-200/80 dark:border-amber-800/40 flex flex-col justify-center text-xs shadow-xs">
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-medium">
                 <span>Estimativa Total:</span>
-                <strong className="text-sm text-[#C58A2C] dark:text-[#E88C4A]">
-                  {estimatedTotal} MT
+                <strong className="text-base font-extrabold text-[#007bb9] dark:text-sky-400">
+                  {formatCurrency(estimatedTotal)}
                 </strong>
               </div>
               {depositAmount > 0 && (
-                <div className="flex justify-between items-center text-[#245D3B] dark:text-[#64C28D] pt-1">
-                  <span>Sinal Pago:</span>
-                  <span className="font-bold">-{depositAmount} MT</span>
+                <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400 pt-1 border-t border-amber-200/50 dark:border-amber-900/40 mt-1 font-bold">
+                  <span>Sinal Adiantado:</span>
+                  <span>-{formatCurrency(depositAmount)}</span>
                 </div>
               )}
             </div>
@@ -297,26 +300,27 @@ export function BookingDialog({
 
           {/* Observações */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-[#5C5346] dark:text-[#D4C8B8]">
+            <Label htmlFor="resNotes" className="text-xs font-bold text-slate-700 dark:text-slate-200">
               Notas / Pedidos Especiais (opcional)
             </Label>
             <Textarea
+              id="resNotes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Hóspede ligou a pedir quarto silencioso com vista para a piscina..."
+              placeholder="Ex: Hóspede ligou a pedir quarto silencioso ou cama extra..."
               rows={2}
-              className="resize-none text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
+              className="resize-none text-xs rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus-visible:ring-[#007bb9]"
             />
           </div>
         </div>
 
-        <DialogFooter className="pt-4 flex-col sm:flex-row gap-2">
+        <DialogFooter className="px-7 py-4 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row gap-2.5 justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="w-full sm:w-auto h-11 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]"
+            className="w-full sm:w-auto h-11 rounded-full border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold px-5"
           >
             Cancelar
           </Button>
@@ -326,7 +330,7 @@ export function BookingDialog({
             variant="outline"
             onClick={() => handleSave(false)}
             disabled={loading}
-            className="w-full sm:w-auto h-11 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] font-semibold"
+            className="w-full sm:w-auto h-11 rounded-full border border-blue-200 dark:border-blue-900/60 text-[#007bb9] dark:text-sky-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 font-bold px-6 shadow-xs"
           >
             Salvar Reserva
           </Button>
@@ -335,7 +339,7 @@ export function BookingDialog({
             type="button"
             onClick={() => handleSave(true)}
             disabled={loading}
-            className="w-full sm:w-auto h-11 rounded-xl font-bold bg-[#245D3B] hover:bg-[#1C4A2F] text-white shadow-md shadow-[#245D3B]/20 flex items-center justify-center gap-1.5"
+            className="w-full sm:w-auto h-11 rounded-full font-bold bg-[#15803d] hover:bg-[#166534] text-white shadow-md shadow-emerald-500/20 px-6 flex items-center justify-center gap-2 active:scale-95"
           >
             <MessageCircle className="w-4 h-4 fill-current" />
             Salvar & WhatsApp

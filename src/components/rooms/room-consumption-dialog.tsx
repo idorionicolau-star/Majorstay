@@ -203,23 +203,26 @@ export function RoomConsumptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
-        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
-                <Wine className="w-5 h-5" />
+      <DialogContent className="max-w-xl max-h-[92vh] overflow-hidden flex flex-col p-0 rounded-3xl border border-blue-100/90 dark:border-slate-800 bg-white dark:bg-[#191E25] text-slate-800 dark:text-slate-100 shadow-2xl">
+        {/* Top Fresh Pastel Accent Gradient */}
+        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
+
+        <DialogHeader className="px-7 pt-5 pb-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
+                <Wine className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-bold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">
+                <DialogTitle className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
                   Bar & Consumos
                 </DialogTitle>
-                <p className="text-xs text-[#827568] dark:text-[#B0A294]">
-                  {stay.roomName || room?.name} • Bebidas, petiscos e serviços adicionais
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                  {stay.roomName || room?.name} • Bebidas, petiscos e comodidades
                 </p>
               </div>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FDF6E8] dark:bg-[#34241B] text-[#C58A2C] border border-[#F6E0B5] dark:border-[#523A2C]">
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 border border-blue-200/60 dark:border-blue-800/50 shrink-0">
               {stay.clientName || 'Hóspede Particular'}
             </span>
           </div>
@@ -227,22 +230,22 @@ export function RoomConsumptionDialog({
 
         <div className="flex-1 overflow-y-auto p-5 pt-3">
           <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid grid-cols-2 mb-4 bg-[#F2ECE1] dark:bg-[#2A211B] p-1 rounded-xl h-11">
+            <TabsList className="grid grid-cols-2 mb-4 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl h-11">
               <TabsTrigger
                 value="add"
-                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#C58A2C] data-[state=active]:shadow-sm"
+                className="text-xs font-bold gap-1.5 rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-[#191E25] data-[state=active]:text-[#007bb9] dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-sm"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Lançar do Bar / Stock
               </TabsTrigger>
               <TabsTrigger
                 value="tab"
-                className="text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-[#1E1714] data-[state=active]:text-[#C58A2C] data-[state=active]:shadow-sm"
+                className="text-xs font-bold gap-1.5 rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-[#191E25] data-[state=active]:text-[#007bb9] dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-sm"
               >
                 <Receipt className="h-3.5 w-3.5" />
                 Comanda ({consumptions.length})
                 {consumptionsTotal > 0 && (
-                  <span className="ml-1 text-[#245D3B] dark:text-[#64C28D] font-extrabold">
+                  <span className="ml-1 text-emerald-600 dark:text-emerald-400 font-extrabold">
                     ({formatCurrency(consumptionsTotal)})
                   </span>
                 )}
@@ -451,10 +454,10 @@ export function RoomConsumptionDialog({
           </Tabs>
         </div>
 
-        <DialogFooter className="p-4 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
+        <DialogFooter className="px-7 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
           <Button
             type="button"
-            className="w-full sm:w-auto h-10 rounded-xl font-bold bg-[#251D18] dark:bg-[#F5EFEB] text-white dark:text-[#251D18] hover:bg-[#3D2E25]"
+            className="w-full sm:w-auto h-11 px-7 rounded-full font-extrabold bg-[#007bb9] hover:bg-[#006194] text-white shadow-md shadow-blue-500/20 active:scale-95 transition-all"
             onClick={() => onOpenChange(false)}
           >
             Concluir Lançamentos

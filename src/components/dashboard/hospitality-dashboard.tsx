@@ -21,6 +21,7 @@ import {
   calculateStayPricing,
   computeStayRealtimeStatus,
   formatTimeRemaining,
+  formatTimeRemainingSeconds,
   normalizeDate,
   totalContractedHours,
 } from "@/lib/hospitality-calc";
@@ -33,6 +34,52 @@ const compact = (v: number) =>
 const hhmm = (d: Date) => d.toLocaleTimeString("pt-MZ", { hour: "2-digit", minute: "2-digit" });
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+function DashboardStayLiveBadge({
+  expectedCheckOut,
+  graceMinutes = 10,
+}: {
+  expectedCheckOut: Date;
+  graceMinutes?: number;
+}) {
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const expectedMs = normalizeDate(expectedCheckOut).getTime();
+  const diffSeconds = Math.floor((expectedMs - now) / 1000);
+  const status = formatTimeRemainingSeconds(diffSeconds, graceMinutes);
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono tabular-nums font-bold border shadow-2xs",
+        status.isOvertime
+          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/50"
+          : status.isGrace
+          ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300/80 dark:border-amber-900/50"
+          : "bg-blue-50 text-[#007bb9] dark:bg-blue-950/40 dark:text-sky-300 border-blue-200/60 dark:border-blue-900/50"
+      )}
+    >
+      <span
+        className={cn(
+          "w-1.5 h-1.5 rounded-full shrink-0",
+          status.isOvertime
+            ? "bg-rose-500 animate-ping"
+            : status.isGrace
+            ? "bg-amber-500 animate-ping"
+            : "bg-[#007bb9] animate-ping"
+        )}
+      />
+      {status.text}
+    </span>
+  );
+}
 
 function SectionTitle({ children, subtitle }: { children: React.ReactNode; subtitle?: string }) {
   return (
@@ -339,22 +386,7 @@ export function HospitalityDashboard() {
                     <span>Entrada {hhmm(normalizeDate(stay.checkInAt))} · Saída {hhmm(realtime.expectedCheckOut)}</span>
                   </div>
                   <div>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs",
-                        realtime.isOvertime
-                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/50"
-                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/50"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          realtime.isOvertime ? "bg-rose-500 animate-ping" : "bg-amber-500 animate-ping"
-                        )}
-                      />
-                      {formatTimeRemaining(realtime.minutesRemainingOrOverdue)}
-                    </span>
+                    <DashboardStayLiveBadge expectedCheckOut={realtime.expectedCheckOut} graceMinutes={10} />
                   </div>
                 </div>
                 <div className="shrink-0 text-right">

@@ -32,7 +32,7 @@ export function Sidebar() {
     const name = user?.username || hint?.name;
 
     return (
-        <aside className="hidden md:flex flex-col py-6 border-r border-[#E5DFD6] dark:border-[#382D26] bg-[#FFFDF9] dark:bg-[#1E1714] z-50 fixed inset-y-0 left-0 w-64 h-screen transition-all duration-300">
+        <aside className="hidden md:flex flex-col py-6 border-r border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-[#191E25]/95 backdrop-blur-md z-50 fixed inset-y-0 left-0 w-64 h-screen transition-all duration-300 shadow-soft-sm">
             {/* Logo Area */}
             <div className="h-14 w-full flex items-center px-5 mb-5 cursor-pointer hover:opacity-95 transition-opacity group">
                 <Link href="/dashboard" className="flex items-center w-full h-full">
@@ -45,7 +45,7 @@ export function Sidebar() {
                 {groups.map(group => (
                     <div key={group.id} className="flex flex-col gap-0.5">
                         {group.id !== 'inicio' && (
-                            <p className="px-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#8B7E74] dark:text-[#A69B93]">{group.label}</p>
+                            <p className="px-4 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{group.label}</p>
                         )}
                         {group.items.map(item => {
                             const active = isActive(item);
@@ -56,20 +56,24 @@ export function Sidebar() {
                                     data-tour={`nav:${item.href}`}
                                     onClick={() => window.dispatchEvent(new CustomEvent('navigation-start'))}
                                     className={cn(
-                                        "flex items-center gap-3 rounded-xl transition-all duration-200 group relative",
-                                        item.isSubItem ? "pl-11 pr-4 py-1.5 text-xs" : "px-4 py-2.5 text-sm",
+                                        "flex items-center gap-3 rounded-2xl transition-all duration-200 group relative",
+                                        item.isSubItem ? "pl-11 pr-4 py-1.5 text-xs" : "px-3.5 py-2.5 text-sm",
                                         active
-                                            ? "bg-primary/10 text-primary font-bold shadow-sm"
-                                            : "text-stone-600 dark:text-stone-300 hover:text-primary hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]"
+                                            ? "bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-blue-950/50 dark:to-indigo-950/30 text-[#006194] dark:text-sky-300 font-extrabold border border-blue-100/80 dark:border-blue-900/40 shadow-xs"
+                                            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-semibold"
                                     )}
                                 >
                                     {!item.isSubItem && (
-                                        <item.icon className={cn(
-                                            "h-5 w-5 shrink-0 transition-transform duration-200",
-                                            active ? "text-primary scale-110" : "group-hover:text-primary group-hover:scale-110"
-                                        )} />
+                                        <div className={cn(
+                                            "w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200",
+                                            active
+                                                ? "bg-[#007bb9] text-white shadow-sm"
+                                                : "bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950/50 group-hover:text-[#007bb9] dark:group-hover:text-sky-300"
+                                        )}>
+                                            <item.icon className="h-4 w-4" />
+                                        </div>
                                     )}
-                                    <span className="font-medium transition-colors duration-200">{item.title}</span>
+                                    <span className="transition-colors duration-200">{item.title}</span>
                                     {item.locked && <Lock className="ml-auto h-3.5 w-3.5 text-stone-400" aria-label="Não incluído no seu plano" />}
                                 </Link>
                             );
@@ -84,23 +88,23 @@ export function Sidebar() {
             <div className="flex flex-col mt-auto px-4 pt-4 pb-6 w-full">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E] cursor-pointer transition-colors group outline-none">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#BA5A1A] to-[#DF9E42] p-[2px] shrink-0">
-                                <div className="rounded-full w-full h-full bg-[#FFFDF9] dark:bg-[#1E1714] p-[1px] overflow-hidden">
+                        <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 cursor-pointer transition-all group outline-none shadow-xs">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#007bb9] via-sky-400 to-amber-400 p-[2px] shrink-0 shadow-xs">
+                                <div className="rounded-full w-full h-full bg-white dark:bg-[#191E25] p-[1px] overflow-hidden">
                                     {user?.profilePictureUrl ? (
-                                        <Image src={user.profilePictureUrl} alt="User" width={40} height={40} className="w-full h-full object-cover rounded-full" />
+                                        <Image src={user.profilePictureUrl} alt="User" width={36} height={36} className="w-full h-full object-cover rounded-full" />
                                     ) : (
-                                        <div className="w-full h-full bg-[#EFEBE4] dark:bg-[#2A221E] flex items-center justify-center text-xs font-bold text-stone-600 dark:text-stone-300">
+                                        <div className="w-full h-full bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-xs font-black text-[#007bb9] dark:text-sky-300">
                                             {name?.charAt(0) || 'U'}
                                         </div>
                                     )}
                                 </div>
                             </div>
-                            <div className="flex flex-col overflow-hidden text-left">
-                                <span className="text-sm font-bold text-stone-800 dark:text-stone-100 truncate group-hover:text-primary transition-colors">
+                            <div className="flex flex-col overflow-hidden text-left min-w-0">
+                                <span className="text-xs font-extrabold text-slate-900 dark:text-white truncate group-hover:text-[#007bb9] transition-colors">
                                     {name || 'Utilizador'}
                                 </span>
-                                <span className="text-xs text-stone-400 truncate">
+                                <span className="text-[10px] text-slate-400 truncate font-medium">
                                     {firebaseUser?.email || user?.email || hint?.email || ''}
                                 </span>
                             </div>

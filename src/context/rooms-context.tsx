@@ -745,9 +745,11 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const cleanPayload: Record<string, any> = {
       clientName: data.clientName || 'Hóspede Particular',
       clientPhone: data.clientPhone || '',
-      roomId: data.roomId || '',
+      roomId: (data.roomId && data.roomId !== 'auto') ? data.roomId : '',
       roomName: data.roomName || 'A atribuir na chegada',
-      checkInDate: data.checkInDate,
+      checkInDate: (data.checkInDate instanceof Date && !isNaN(data.checkInDate.getTime()))
+        ? data.checkInDate
+        : new Date(data.checkInDate || Date.now()),
       durationHours: Number(data.durationHours) || 2,
       isOvernight: Boolean(data.isOvernight),
       depositAmount: Number(data.depositAmount) || 0,
@@ -758,6 +760,13 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       createdByName: data.createdByName || user?.username || 'Recepção',
       createdAt: serverTimestamp(),
     };
+
+    // Defesa absoluta contra valores undefined no Firestore
+    for (const key of Object.keys(cleanPayload)) {
+      if (cleanPayload[key] === undefined) {
+        cleanPayload[key] = '';
+      }
+    }
     const docRef = await addDoc(bookingsRef, cleanPayload);
     newBooking.id = docRef.id;
     return newBooking;

@@ -27,12 +27,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import type { Room, Stay } from '@/lib/types';
 import {
   computeStayRealtimeStatus,
-  formatStayDuration,
-  formatTimeRemaining,
   formatDurationSeconds,
   formatTimeRemainingSeconds,
   normalizeDate,
@@ -51,7 +49,7 @@ interface RoomCardProps {
   onShowQrCode?: (room: Room) => void;
 }
 
-function StayLiveSecondsCounter({
+export function StayLiveSecondsCounter({
   checkInAt,
   expectedCheckOut,
   graceMinutes = 10,
@@ -78,18 +76,19 @@ function StayLiveSecondsCounter({
 
   return (
     <div className="flex items-center justify-between gap-2 text-[11px] font-mono tabular-nums">
-      <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 truncate">
-        <Clock className="h-3 w-3 text-stone-400 shrink-0" />
-        Decorrido: <strong className="text-stone-800 dark:text-stone-200">{formatDurationSeconds(elapsedSeconds)}</strong>
+      <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
+        <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+        Decorrido: <strong className="text-slate-800 dark:text-slate-200 font-extrabold">{formatDurationSeconds(elapsedSeconds)}</strong>
       </span>
       <span
-        className={`font-bold shrink-0 ${
+        className={cn(
+          'font-extrabold shrink-0',
           status.isOvertime
             ? 'text-rose-600 dark:text-rose-400'
             : status.isGrace
             ? 'text-amber-600 dark:text-amber-400'
-            : 'text-[#C58A2C] dark:text-[#E0852E]'
-        }`}
+            : 'text-[#007bb9] dark:text-sky-400'
+        )}
       >
         {status.text}
       </span>
@@ -130,59 +129,59 @@ export function RoomCard({
 
   const isGrace = Boolean(realtime?.isGracePeriod);
 
-  // Configuração semântica de hotelaria para cada estado
+  // Configuração semântica Stitch para cada estado
   const statusTheme = isOvertime
     ? {
-        cardBorder: 'border-[#F8D2CC] dark:border-[#5E2727] shadow-[0_4px_16px_rgba(197,48,48,0.08)]',
-        topAccent: 'bg-[#C53030]',
-        badgeClass: 'bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2] border border-[#FBD5D0] dark:border-[#5C2323]',
+        cardBorder: 'border-rose-200 dark:border-rose-900/60 shadow-[0_4px_20px_rgba(244,63,94,0.08)]',
+        topAccent: 'bg-gradient-to-r from-rose-500 to-red-600',
+        badgeClass: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800',
         badgeText: 'Tempo Excedido',
         Icon: AlertTriangle,
-        progressClass: '[&>div]:bg-[#C53030]',
+        progressClass: '[&>div]:bg-rose-500',
       }
     : isGrace
     ? {
-        cardBorder: 'border-[#F6E0B5] dark:border-[#4E3917] shadow-[0_4px_16px_rgba(223,158,66,0.06)]',
-        topAccent: 'bg-[#DF9E42]',
-        badgeClass: 'bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B] border border-[#F6E0B5] dark:border-[#4E3917]',
+        cardBorder: 'border-amber-200 dark:border-amber-900/60 shadow-[0_4px_20px_rgba(245,158,11,0.08)]',
+        topAccent: 'bg-gradient-to-r from-amber-400 to-amber-500',
+        badgeClass: 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800',
         badgeText: 'Compensação (10 min)',
         Icon: Clock,
-        progressClass: '[&>div]:bg-[#DF9E42]',
+        progressClass: '[&>div]:bg-amber-500',
       }
     : isOccupied
     ? {
-        cardBorder: 'border-[#F0D8C8] dark:border-[#423418] shadow-[0_4px_16px_rgba(186,90,26,0.06)]',
-        topAccent: 'bg-[#C58A2C]',
-        badgeClass: 'bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#282012] dark:text-[#E8BF72] border border-[#F6E0B5] dark:border-[#54301D]',
+        cardBorder: 'border-blue-200/80 dark:border-blue-900/50 shadow-card hover:border-blue-300',
+        topAccent: 'bg-gradient-to-r from-[#0091da] to-[#007bb9]',
+        badgeClass: 'bg-blue-50 text-[#007bb9] dark:bg-blue-950/50 dark:text-sky-300 border border-blue-200/80 dark:border-blue-800',
         badgeText: 'Ocupado',
         Icon: BedDouble,
-        progressClass: '[&>div]:bg-[#C58A2C]',
+        progressClass: '[&>div]:bg-[#007bb9]',
       }
     : isCleaning
     ? {
-        cardBorder: 'border-[#F5E2BD] dark:border-[#4E3917] shadow-[0_4px_16px_rgba(223,158,66,0.06)]',
-        topAccent: 'bg-[#DF9E42]',
-        badgeClass: 'bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B] border border-[#F6E0B5] dark:border-[#4E3917]',
+        cardBorder: 'border-sky-200 dark:border-sky-900/50 shadow-card',
+        topAccent: 'bg-gradient-to-r from-sky-400 to-blue-500',
+        badgeClass: 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800',
         badgeText: 'Em Limpeza',
         Icon: Sparkles,
-        progressClass: '[&>div]:bg-[#DF9E42]',
+        progressClass: '[&>div]:bg-sky-500',
       }
     : isMaintenance
     ? {
-        cardBorder: 'border-[#E5DFD6] dark:border-[#2C3440] opacity-75',
-        topAccent: 'bg-[#A69B93]',
-        badgeClass: 'bg-[#EFEBE4] text-[#7A726C] dark:bg-[#2A221E] dark:text-[#A69B93] border border-[#DDD6CC] dark:border-[#3D322C]',
+        cardBorder: 'border-slate-200 dark:border-slate-800 opacity-75',
+        topAccent: 'bg-slate-400',
+        badgeClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700',
         badgeText: 'Manutenção',
         Icon: Wrench,
-        progressClass: '[&>div]:bg-[#A69B93]',
+        progressClass: '[&>div]:bg-slate-400',
       }
     : {
-        cardBorder: 'border-[#D6E8DB] dark:border-[#2C4835] shadow-[0_4px_16px_rgba(72,140,100,0.05)]',
-        topAccent: 'bg-[#488C64]',
-        badgeClass: 'bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3023] dark:text-[#8CD9A9] border border-[#CDE5D5] dark:border-[#284934]',
+        cardBorder: 'border-emerald-200/80 dark:border-emerald-900/50 shadow-card hover:border-emerald-300',
+        topAccent: 'bg-gradient-to-r from-emerald-400 to-teal-500',
+        badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800',
         badgeText: 'Livre',
         Icon: CheckCircle2,
-        progressClass: '[&>div]:bg-[#488C64]',
+        progressClass: '[&>div]:bg-emerald-500',
       };
 
   // Progresso do tempo da estadia
@@ -195,67 +194,70 @@ export function RoomCard({
   const StatusIcon = statusTheme.Icon;
 
   return (
-    <Card className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-[#FFFDF9] dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${statusTheme.cardBorder}`}>
+    <Card className={cn(
+      'relative flex flex-col justify-between overflow-hidden rounded-3xl border bg-white dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft-hover',
+      statusTheme.cardBorder
+    )}>
       {/* Faixa superior nobre com a cor do estado */}
-      <div className={`h-1.5 w-full ${statusTheme.topAccent}`} />
+      <div className={cn('h-1.5 w-full', statusTheme.topAccent)} />
 
-      <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-3">
+      <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
         {/* Cabeçalho do Cartão: Quarto, Tipo e Badge */}
         <div>
           <div className="flex items-start justify-between gap-2 min-w-0">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="font-headline font-bold text-base sm:text-lg text-[#251D18] dark:text-[#F5EFEB] leading-tight whitespace-nowrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
                   {room.name}
                 </h3>
                 {room.type && (
-                  <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0 h-4 border-[#E5DFD6] dark:border-[#2C3440] text-stone-600 dark:text-stone-300 bg-[#F8F5EE] dark:bg-[#1E242D] shrink-0">
+                  <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 h-5 rounded-full border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 shrink-0">
                     {room.type}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 font-medium truncate">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold truncate">
                 {formatCurrency(room.ratePerHour)}/hora (mín. {room.minimumHours || 1}h)
               </p>
             </div>
 
             {/* Badge de Estado e Menu */}
-            <div className="flex items-center gap-1 shrink-0">
-              <Badge className={`text-xs font-bold px-2 py-0.5 flex items-center gap-1 rounded-full shadow-none whitespace-nowrap ${statusTheme.badgeClass}`}>
-                <StatusIcon className="h-3 w-3" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Badge className={cn('text-xs font-bold px-2.5 py-0.5 flex items-center gap-1.5 rounded-full shadow-none whitespace-nowrap', statusTheme.badgeClass)}>
+                <StatusIcon className="h-3.5 w-3.5" />
                 {statusTheme.badgeText}
               </Badge>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52 bg-[#FFFDF9] dark:bg-[#191E25] border-[#E5DFD6] dark:border-[#2C3440]">
+                <DropdownMenuContent align="end" className="w-52 rounded-2xl bg-white dark:bg-[#191E25] border-slate-200 dark:border-slate-800 shadow-xl">
                   {onShowQrCode && (
-                    <DropdownMenuItem onClick={() => onShowQrCode(room)} className="cursor-pointer flex items-center gap-2">
-                      <QrCode className="h-4 w-4 text-[#C58A2C]" />
+                    <DropdownMenuItem onClick={() => onShowQrCode(room)} className="cursor-pointer flex items-center gap-2 rounded-xl">
+                      <QrCode className="h-4 w-4 text-[#007bb9]" />
                       <span>QR Code & Visor do Quarto</span>
                     </DropdownMenuItem>
                   )}
                   {isManager && (
                     <>
-                      <DropdownMenuItem onClick={() => onEditRoom(room)} className="cursor-pointer">
+                      <DropdownMenuItem onClick={() => onEditRoom(room)} className="cursor-pointer rounded-xl">
                         Editar Quarto
                       </DropdownMenuItem>
                       {isMaintenance ? (
-                        <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'free' })} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'free' })} className="cursor-pointer rounded-xl">
                           Marcar como Ativo
                         </DropdownMenuItem>
                       ) : (
-                        <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'maintenance' })} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => updateRoom(room.id, { status: 'maintenance' })} className="cursor-pointer rounded-xl">
                           Colocar em Manutenção
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuSeparator className="bg-[#E5DFD6] dark:bg-[#382D26]" />
+                      <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-800" />
                       <DropdownMenuItem
-                        className="text-rose-600 focus:text-rose-700 cursor-pointer"
+                        className="text-rose-600 focus:text-rose-700 cursor-pointer rounded-xl"
                         onClick={() => {
                           if (confirm(`Tem a certeza que deseja eliminar o ${room.name}?`)) {
                             deleteRoom(room.id);
@@ -273,32 +275,32 @@ export function RoomCard({
 
           {/* Conteúdo Conforme o Estado */}
           {(isOccupied || isOvertime) && stay && realtime && (
-            <div className="mt-3 p-3 rounded-xl bg-[#F8F5EE] dark:bg-[#1E242D] border border-[#EBE3D5] dark:border-[#382B24] space-y-2 text-xs">
+            <div className="mt-3.5 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5 text-xs">
               {/* Informações do Hóspede */}
               <div className="flex items-center justify-between gap-2 min-w-0">
-                <span className="font-bold text-stone-900 dark:text-stone-100 truncate flex items-center gap-1.5 min-w-0">
-                  <User className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="font-bold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5 min-w-0">
+                  <User className="h-3.5 w-3.5 text-[#007bb9] shrink-0" />
                   <span className="truncate">{stay.clientName || 'Hóspede Particular'}</span>
                 </span>
                 {stay.clientPhone && (
-                  <span className="text-stone-500 dark:text-stone-400 flex items-center gap-1 font-mono text-[11px] shrink-0">
-                    <Phone className="h-3 w-3 text-stone-400" />
+                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono text-[11px] shrink-0 font-medium">
+                    <Phone className="h-3 w-3 text-slate-400" />
                     {stay.clientPhone}
                   </span>
                 )}
               </div>
 
               {/* Horários de Entrada e Saída Prevista */}
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#EBE3D5] dark:border-[#382B24] text-stone-600 dark:text-stone-300">
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-slate-600 dark:text-slate-300">
                 <div>
-                  <span className="text-[10px] uppercase font-semibold text-stone-400 block tracking-wider">Entrada:</span>
-                  <span className="font-medium text-stone-900 dark:text-stone-100">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Entrada:</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
                     {normalizeDate(stay.checkInAt).toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-semibold text-stone-400 block tracking-wider">Saída Prevista:</span>
-                  <span className={`font-bold ${isOvertime ? 'text-rose-600 dark:text-rose-400' : 'text-stone-900 dark:text-stone-100'}`}>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Saída Prevista:</span>
+                  <span className={cn('font-bold', isOvertime ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100')}>
                     {realtime.expectedCheckOut.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -306,19 +308,19 @@ export function RoomCard({
 
               {/* Resumo de Consumos do Bar se houver */}
               {(stay.consumptions && stay.consumptions.length > 0) ? (
-                <div className="flex items-center justify-between text-[11px] bg-[#FFFBF0] dark:bg-[#2E2214] text-[#975A16] dark:text-[#ECC94B] p-2 rounded-lg border border-[#F6E0B5] dark:border-[#4E3917]">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Wine className="h-3.5 w-3.5 text-[#DF9E42]" />
+                <div className="flex items-center justify-between text-[11px] bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 p-2.5 rounded-xl border border-amber-200/70 dark:border-amber-800/50">
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <Wine className="h-3.5 w-3.5 text-amber-600" />
                     Consumos Bar ({stay.consumptions.length})
                   </span>
-                  <span className="font-bold">
+                  <span className="font-extrabold">
                     +{formatCurrency(stay.consumptions.reduce((s, c) => s + (Number(c.totalPrice) || 0), 0))}
                   </span>
                 </div>
               ) : null}
 
-              {/* Barra de Progresso e Alerta de Tempo */}
-              <div className="space-y-1 pt-1">
+              {/* Conta-Segundos em Tempo Real e Barra de Progresso */}
+              <div className="space-y-1.5 pt-1">
                 <StayLiveSecondsCounter
                   checkInAt={stay.checkInAt}
                   expectedCheckOut={realtime.expectedCheckOut}
@@ -326,12 +328,12 @@ export function RoomCard({
                 />
                 <Progress
                   value={progressPercent}
-                  className={`h-1.5 bg-[#EAE4D9] dark:bg-[#382D26] ${statusTheme.progressClass}`}
+                  className={cn('h-1.5 bg-slate-200/80 dark:bg-slate-800', statusTheme.progressClass)}
                 />
               </div>
 
               {isOvertime && (
-                <div className="text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-[#FDF0EE] dark:bg-[#381616] p-1.5 rounded-md text-center border border-[#FBD5D0] dark:border-[#5C2323]">
+                <div className="text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 p-2 rounded-xl text-center border border-rose-200 dark:border-rose-900/50">
                   Tempo excedido · Hora adicional a faturar no check-out
                 </div>
               )}
@@ -339,11 +341,11 @@ export function RoomCard({
           )}
 
           {isCleaning && (
-            <div className="mt-3 p-3 rounded-xl bg-[#FFFBF0] dark:bg-[#2A2012] border border-[#F6E0B5] dark:border-[#4E3917] text-xs text-[#975A16] dark:text-[#ECC94B] flex items-center gap-2.5">
-              <Sparkles className="h-5 w-5 text-[#DF9E42] shrink-0" />
+            <div className="mt-3.5 p-3.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900/50 text-xs text-sky-800 dark:text-sky-300 flex items-center gap-3">
+              <Sparkles className="h-5 w-5 text-sky-500 shrink-0" />
               <div>
                 <p className="font-bold">Higienização e Troca de Roupa</p>
-                <p className="text-[11px] text-[#A66D24] dark:text-[#D5B038] mt-0.5">
+                <p className="text-[11px] text-sky-600 dark:text-sky-400 mt-0.5 font-medium">
                   Tempo estimado: {room.cleaningDurationMinutes || 15} minutos.
                 </p>
               </div>
@@ -351,16 +353,16 @@ export function RoomCard({
           )}
 
           {isFree && (
-            <div className="mt-3 p-3 rounded-xl bg-[#EDF6F0] dark:bg-[#1C3023] border border-[#CDE5D5] dark:border-[#284934] text-xs text-[#245D3B] dark:text-[#8CD9A9] flex items-center gap-2.5">
-              <CheckCircle2 className="h-5 w-5 text-[#488C64] shrink-0" />
-              <span className="font-medium">Quarto pronto e higienizado para receber hóspede.</span>
+            <div className="mt-3.5 p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+              <span className="font-semibold">Quarto pronto e higienizado para receber hóspede.</span>
             </div>
           )}
 
           {isMaintenance && (
-            <div className="mt-3 p-3 rounded-xl bg-[#EFEBE4] dark:bg-[#2A221E] text-xs text-stone-600 dark:text-stone-300 border border-[#DDD6CC] dark:border-[#3D322C] flex items-center gap-2.5">
-              <Wrench className="h-4 w-4 text-stone-500 shrink-0" />
-              <span>Temporariamente indisponível para manutenção.</span>
+            <div className="mt-3.5 p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+              <Wrench className="h-4 w-4 text-slate-500 shrink-0" />
+              <span className="font-medium">Temporariamente indisponível para manutenção.</span>
             </div>
           )}
         </div>
@@ -369,7 +371,7 @@ export function RoomCard({
         <div className="pt-2">
           {isFree && (
             <Button
-              className="w-full bg-[#C58A2C] hover:bg-[#A87019] text-white font-bold h-10 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all"
+              className="w-full bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold h-11 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
               onClick={() => onCheckIn(room)}
             >
               <Plus className="h-4 w-4" />
@@ -378,35 +380,38 @@ export function RoomCard({
           )}
 
           {(isOccupied || isOvertime) && stay && (
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-[11px] font-semibold border-[#DF9E42] text-[#975A16] dark:text-[#ECC94B] bg-[#FFFBF0] dark:bg-[#2A2012] hover:bg-[#FDF0D5] rounded-xl flex items-center justify-center gap-1 px-1"
+                className="h-10 text-xs font-bold border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-2xl flex items-center justify-center gap-1.5 px-2 active:scale-95 transition-all"
                 onClick={() => onConsumption(room, stay)}
                 title="Lançar consumo do bar/restaurante"
               >
-                <Wine className="h-3 w-3 text-[#DF9E42]" />
+                <Wine className="h-3.5 w-3.5 text-amber-600" />
                 + Bar
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-[11px] font-semibold border-[#E5DFD6] dark:border-[#2C3440] bg-[#FAF7F2] dark:bg-[#251D18] text-stone-700 dark:text-stone-200 hover:bg-[#F1EDE5] dark:hover:bg-[#302520] rounded-xl flex items-center justify-center gap-1 px-1"
+                className="h-10 text-xs font-bold border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl flex items-center justify-center gap-1.5 px-2 active:scale-95 transition-all"
                 onClick={() => onExtend(room, stay)}
                 title="Prorrogar tempo da estadia"
               >
-                <Clock className="h-3 w-3 text-[#C58A2C]" />
+                <Clock className="h-3.5 w-3.5 text-[#007bb9]" />
                 +1h
               </Button>
               <Button
                 size="sm"
-                className={`h-9 text-[11px] font-bold text-white shadow-sm rounded-xl flex items-center justify-center gap-1 px-1 ${
-                  isOvertime ? 'bg-rose-600 hover:bg-rose-700' : 'bg-[#251D18] hover:bg-[#18120F] dark:bg-[#382D26] dark:hover:bg-[#4A3C33]'
-                }`}
+                className={cn(
+                  'h-10 text-xs font-extrabold text-white shadow-sm rounded-2xl flex items-center justify-center gap-1.5 px-2 active:scale-95 transition-all',
+                  isOvertime
+                    ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/20'
+                    : 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700'
+                )}
                 onClick={() => onCheckOut(room, stay)}
               >
-                <LogOut className="h-3 w-3" />
+                <LogOut className="h-3.5 w-3.5" />
                 Saída
               </Button>
             </div>
@@ -414,7 +419,7 @@ export function RoomCard({
 
           {isCleaning && (
             <Button
-              className="w-full bg-[#DF9E42] hover:bg-[#C97920] text-white font-bold h-10 rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all"
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold h-11 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
               onClick={() => markRoomCleaned(room.id)}
             >
               <Sparkles className="h-4 w-4" />
@@ -425,7 +430,7 @@ export function RoomCard({
           {isMaintenance && (
             <Button
               variant="outline"
-              className="w-full h-10 text-xs font-semibold rounded-xl border-[#E5DFD6] dark:border-[#2C3440]"
+              className="w-full h-11 text-xs font-bold rounded-2xl border-slate-200 dark:border-slate-800"
               onClick={() => updateRoom(room.id, { status: 'free' })}
             >
               Reativar Quarto

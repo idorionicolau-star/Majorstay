@@ -188,13 +188,13 @@ export function MajorStayLogo({
       <MajorStayMark size={markSize} />
       <div className={cn('flex flex-col justify-center leading-none', !horizontal && 'items-center mt-1')}>
         <div className={cn('font-headline font-extrabold tracking-tight flex items-baseline', titleSize)}>
-          <span className="text-[#251D18] dark:text-[#F5EFEB] tracking-[0.06em]">MAJOR</span>
-          <span className="bg-gradient-to-r from-[#C58A2C] via-[#DF9E42] to-[#C58A2C] bg-clip-text text-transparent ml-1 font-black">
+          <span className="text-slate-900 dark:text-white tracking-[0.06em]">MAJOR</span>
+          <span className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 bg-clip-text text-transparent ml-1 font-black">
             STAY
           </span>
         </div>
         {showTagline && (
-          <span className={cn('uppercase font-semibold text-[#8B7E74] dark:text-[#B5A89E] mt-1', badgeSize)}>
+          <span className={cn('uppercase font-extrabold text-slate-400 dark:text-slate-500 mt-1', badgeSize)}>
             Hospitality Suite
           </span>
         )}

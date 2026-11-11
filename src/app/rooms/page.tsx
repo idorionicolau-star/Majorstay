@@ -21,7 +21,7 @@ import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { RoomCard } from '@/components/rooms/room-card';
@@ -179,28 +179,32 @@ export default function RoomsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto">
-      {/* Cabeçalho Responsivo da Página em Estilo Hotel Boutique */}
+      {/* Cabeçalho Responsivo da Página em Estilo Stitch 2 */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-headline font-extrabold tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
               <BedDouble className="h-6 w-6" />
             </div>
-            <span>Quadro de Quartos & Suítes</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1 font-medium">
-            Gestão de estadias em tempo real, reservas antecipadas, cobrança por hora ou pernoita e controlo de caixa.
-          </p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
+                Quadro de Quartos & Suítes
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
+                Monitorização ao segundo, check-in tátil, reservas antecipadas e controlo de estadias.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Botões de Ação com Quebra Fluida */}
+        {/* Botões de Ação com Pílulas e Dourado/Azul Stitch */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={refreshRealtimeStatuses}
             title="Atualizar status dos quartos"
-            className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0]"
+            className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 font-medium px-3.5 shadow-xs active:scale-95 transition-all"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Atualizar
@@ -211,9 +215,9 @@ export default function RoomsPage() {
             variant="outline"
             size="sm"
             onClick={() => setBookingsListOpen(true)}
-            className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0] font-semibold"
+            className="h-10 text-xs gap-1.5 rounded-full border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
           >
-            <Calendar className="h-3.5 w-3.5 text-[#DF9E42]" />
+            <Calendar className="h-3.5 w-3.5 text-amber-600" />
             Reservas ({activeBookingsCount})
           </Button>
 
@@ -221,9 +225,9 @@ export default function RoomsPage() {
             variant="outline"
             size="sm"
             onClick={() => setBookingDialogOpen(true)}
-            className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0] font-semibold"
+            className="h-10 text-xs gap-1.5 rounded-full border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/30 text-[#007bb9] dark:text-sky-300 hover:bg-blue-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
           >
-            <Plus className="h-3.5 w-3.5 text-[#C58A2C]" />
+            <Plus className="h-3.5 w-3.5 text-[#007bb9]" />
             Nova Reserva
           </Button>
 
@@ -236,11 +240,11 @@ export default function RoomsPage() {
                 handleOpenQrDialog(rooms[0]);
               }
             }}
-            className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0] font-semibold"
+            className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
             title="Ver e imprimir QR Code para as mesas de cabeceira dos quartos"
           >
-            <QrCode className="h-3.5 w-3.5 text-[#C58A2C]" />
-            QR Codes Mesas
+            <QrCode className="h-3.5 w-3.5 text-slate-500" />
+            QR Mesas
           </Button>
 
           {isManager && (
@@ -248,9 +252,9 @@ export default function RoomsPage() {
               variant="outline"
               size="sm"
               onClick={handleOpenNewRoom}
-              className="h-10 text-xs gap-1.5 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-stone-700 dark:text-stone-200 hover:bg-[#F4EDE0] font-semibold"
+              className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
             >
-              <Plus className="h-3.5 w-3.5 text-primary" />
+              <Plus className="h-3.5 w-3.5 text-[#007bb9]" />
               Novo Quarto
             </Button>
           )}
@@ -258,7 +262,7 @@ export default function RoomsPage() {
           <Button
             size="sm"
             onClick={() => handleOpenCheckIn()}
-            className="h-10 text-xs gap-1.5 bg-[#C58A2C] hover:bg-[#A87019] text-white font-bold rounded-xl shadow-sm transition-all"
+            className="h-10 text-xs gap-2 bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold rounded-full px-5 shadow-sm active:scale-95 transition-all"
           >
             <Plus className="h-4 w-4" />
             Novo Check-in
@@ -266,24 +270,25 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Cartões de Indicadores Responsivos (KPIs do topo) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      {/* Indicadores Stitch 2 Lingora com Pílulas e Sombras Macias */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3.5">
         {/* Livres */}
         <div
           onClick={() => setActiveTab('free')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer shadow-sm min-w-0 ${
+          className={cn(
+            'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'free'
-              ? 'border-[#488C64] ring-2 ring-[#488C64]/20 bg-[#EDF6F0] dark:bg-[#1C3023]'
-              : 'border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] hover:border-[#488C64]/50'
-          }`}
+              ? 'border-emerald-300 ring-2 ring-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-950/40'
+              : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#191E25] hover:border-emerald-200'
+          )}
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3023] dark:text-[#8CD9A9] shrink-0">
-              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider truncate">Livres</p>
-              <p className="text-xl sm:text-2xl font-headline font-black text-[#245D3B] dark:text-[#8CD9A9]">
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Livres</p>
+              <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300">
                 {stats.free}
               </p>
             </div>
@@ -293,19 +298,20 @@ export default function RoomsPage() {
         {/* Ocupados */}
         <div
           onClick={() => setActiveTab('occupied')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer shadow-sm min-w-0 ${
+          className={cn(
+            'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'occupied'
-              ? 'border-[#C58A2C] ring-2 ring-[#C58A2C]/20 bg-[#FDF6E8] dark:bg-[#282012]'
-              : 'border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] hover:border-[#C58A2C]/50'
-          }`}
+              ? 'border-blue-300 ring-2 ring-[#007bb9]/20 bg-blue-50/70 dark:bg-blue-950/40'
+              : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#191E25] hover:border-blue-200'
+          )}
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#282012] dark:text-[#E8BF72] shrink-0">
-              <BedDouble className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 border border-blue-200/60 dark:border-blue-800/50 flex items-center justify-center shrink-0">
+              <BedDouble className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider truncate">Ocupados</p>
-              <p className="text-xl sm:text-2xl font-headline font-black text-[#C58A2C] dark:text-[#E8BF72]">
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Ocupados</p>
+              <p className="text-2xl font-black text-[#007bb9] dark:text-sky-400">
                 {stats.occupied}
               </p>
             </div>
@@ -315,19 +321,28 @@ export default function RoomsPage() {
         {/* Tempo Excedido */}
         <div
           onClick={() => setActiveTab('overtime')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer shadow-sm min-w-0 ${
+          className={cn(
+            'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'overtime'
-              ? 'border-[#C53030] ring-2 ring-[#C53030]/20 bg-[#FDF0EE] dark:bg-[#381616]'
-              : 'border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] hover:border-[#C53030]/50'
-          } `}
+              ? 'border-rose-300 ring-2 ring-rose-500/20 bg-rose-50/70 dark:bg-rose-950/40'
+              : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#191E25] hover:border-rose-200'
+          )}
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className={`p-2 sm:p-2.5 rounded-xl shrink-0 ${stats.overtime > 0 ? 'bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2]' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'}`}>
-              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border',
+              stats.overtime > 0
+                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/50'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+            )}>
+              <AlertTriangle className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider truncate">Excedidos</p>
-              <p className={`text-xl sm:text-2xl font-headline font-black ${stats.overtime > 0 ? 'text-[#C53030] dark:text-[#FEB2B2]' : 'text-stone-700 dark:text-stone-300'}`}>
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Excedidos</p>
+              <p className={cn(
+                'text-2xl font-black',
+                stats.overtime > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400'
+              )}>
                 {stats.overtime}
               </p>
             </div>
@@ -337,19 +352,20 @@ export default function RoomsPage() {
         {/* Em Limpeza */}
         <div
           onClick={() => setActiveTab('cleaning')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer shadow-sm min-w-0 ${
+          className={cn(
+            'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'cleaning'
-              ? 'border-[#DF9E42] ring-2 ring-[#DF9E42]/20 bg-[#FAF4E6] dark:bg-[#322510]'
-              : 'border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] hover:border-[#DF9E42]/50'
-          }`}
+              ? 'border-sky-300 ring-2 ring-sky-500/20 bg-sky-50/70 dark:bg-sky-950/40'
+              : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#191E25] hover:border-sky-200'
+          )}
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B] shrink-0">
-              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider truncate">Limpeza</p>
-              <p className="text-xl sm:text-2xl font-headline font-black text-[#975A16] dark:text-[#ECC94B]">
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Limpeza</p>
+              <p className="text-2xl font-black text-sky-700 dark:text-sky-300">
                 {stats.cleaning}
               </p>
             </div>
@@ -357,14 +373,14 @@ export default function RoomsPage() {
         </div>
 
         {/* Faturado Hoje */}
-        <div className="p-3.5 sm:p-4 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] shadow-sm col-span-2 sm:col-span-1 min-w-0">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-[#FFFBF0] text-[#C58A2C] dark:bg-[#2A2012] dark:text-[#DF9E42] shrink-0">
-              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+        <div className="p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#191E25] shadow-card col-span-2 sm:col-span-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50 flex items-center justify-center shrink-0">
+              <DollarSign className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider truncate">Faturado Hoje</p>
-              <p className="text-lg sm:text-xl font-headline font-black text-stone-900 dark:text-stone-100 truncate">
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Faturado Hoje</p>
+              <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
                 {formatCurrency(stats.revenueToday)}
               </p>
             </div>
@@ -372,18 +388,19 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Barra de Filtros e Pesquisa com Zero-Overlap */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-[#FFFDF9] dark:bg-[#191E25] p-2.5 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] shadow-sm">
-        {/* Abas Rápidas com No-Wrap */}
+      {/* Barra de Filtros e Pesquisa com Pílulas Suaves */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-[#191E25] p-2.5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-card">
+        {/* Abas Rápidas com Pílulas Stitch */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0 shrink-0">
           <Button
             size="sm"
             variant="ghost"
-            className={`whitespace-nowrap shrink-0 text-xs font-semibold h-9 rounded-xl transition-all ${
+            className={cn(
+              'whitespace-nowrap shrink-0 text-xs font-bold h-9 rounded-2xl transition-all px-3.5',
               activeTab === 'all'
-                ? 'bg-[#C58A2C] text-white hover:bg-[#C58A2C] shadow-sm font-bold'
-                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
-            }`}
+                ? 'bg-[#007bb9] text-white hover:bg-[#006194] shadow-sm'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            )}
             onClick={() => setActiveTab('all')}
           >
             Todos ({rooms.length})
@@ -392,68 +409,72 @@ export default function RoomsPage() {
           <Button
             size="sm"
             variant="ghost"
-            className={`whitespace-nowrap shrink-0 text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+            className={cn(
+              'whitespace-nowrap shrink-0 text-xs font-bold h-9 rounded-2xl gap-1.5 transition-all px-3.5',
               activeTab === 'free'
-                ? 'bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3023] dark:text-[#8CD9A9] font-bold border border-[#CDE5D5]'
-                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
-            }`}
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            )}
             onClick={() => setActiveTab('free')}
           >
-            <CheckCircle2 className="h-3.5 w-3.5 text-[#488C64]" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
             Livres ({stats.free})
           </Button>
 
           <Button
             size="sm"
             variant="ghost"
-            className={`whitespace-nowrap shrink-0 text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+            className={cn(
+              'whitespace-nowrap shrink-0 text-xs font-bold h-9 rounded-2xl gap-1.5 transition-all px-3.5',
               activeTab === 'occupied'
-                ? 'bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#282012] dark:text-[#E8BF72] font-bold border border-[#F6E0B5]'
-                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
-            }`}
+                ? 'bg-blue-50 text-[#007bb9] dark:bg-blue-950/60 dark:text-sky-300 border border-blue-200/80 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            )}
             onClick={() => setActiveTab('occupied')}
           >
-            <BedDouble className="h-3.5 w-3.5 text-[#C58A2C]" />
+            <BedDouble className="h-3.5 w-3.5 text-[#007bb9]" />
             Ocupados ({stats.occupied})
           </Button>
 
           <Button
             size="sm"
             variant="ghost"
-            className={`whitespace-nowrap shrink-0 text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+            className={cn(
+              'whitespace-nowrap shrink-0 text-xs font-bold h-9 rounded-2xl gap-1.5 transition-all px-3.5',
               activeTab === 'overtime'
-                ? 'bg-[#FDF0EE] text-[#C53030] dark:bg-[#381616] dark:text-[#FEB2B2] font-bold border border-[#FBD5D0]'
-                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
-            }`}
+                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/80 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            )}
             onClick={() => setActiveTab('overtime')}
           >
-            <AlertTriangle className="h-3.5 w-3.5 text-[#C53030]" />
+            <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
             Excedidos ({stats.overtime})
           </Button>
 
           <Button
             size="sm"
             variant="ghost"
-            className={`whitespace-nowrap shrink-0 text-xs font-semibold h-9 rounded-xl gap-1.5 transition-all ${
+            className={cn(
+              'whitespace-nowrap shrink-0 text-xs font-bold h-9 rounded-2xl gap-1.5 transition-all px-3.5',
               activeTab === 'cleaning'
-                ? 'bg-[#FAF4E6] text-[#975A16] dark:bg-[#322510] dark:text-[#ECC94B] font-bold border border-[#F6E0B5]'
-                : 'text-stone-600 dark:text-stone-300 hover:bg-[#F4EDE0] dark:hover:bg-[#2A221E]'
-            }`}
+                ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200/80 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            )}
             onClick={() => setActiveTab('cleaning')}
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
+            <Sparkles className="h-3.5 w-3.5 text-sky-600" />
             Limpeza ({stats.cleaning})
           </Button>
         </div>
 
-        {/* Campo de Pesquisa com Zero Overlap */}
+        {/* Campo de Pesquisa */}
         <div className="relative w-full md:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
           <Input
             placeholder="Pesquisar quarto ou hóspede..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-10 text-xs rounded-xl bg-[#FAF7F2] dark:bg-[#111418] border-[#E5DFD6] dark:border-[#2C3440] text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus-visible:ring-[#C58A2C]"
+            className="pl-10 h-10 text-xs rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-[#007bb9]"
           />
         </div>
       </div>

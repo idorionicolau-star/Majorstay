@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   Calendar,
   Clock,
-  User,
   Phone,
   Search,
   MessageCircle,
@@ -73,25 +72,25 @@ export function BookingsListDialog({
     switch (status) {
       case 'confirmed':
         return (
-          <Badge className="bg-[#EDF6F0] text-[#245D3B] dark:bg-[#1C3325] dark:text-[#64C28D] border border-[#CDE5D5] dark:border-[#2E543C] text-[10px] font-bold">
+          <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold rounded-full px-2.5 py-0.5 shadow-none">
             Confirmada
           </Badge>
         );
       case 'checked_in':
         return (
-          <Badge className="bg-[#FDF6E8] text-[#C58A2C] dark:bg-[#34241B] dark:text-[#E88C4A] border border-[#F6E0B5] dark:border-[#523A2C] text-[10px] font-bold">
-            Check-in Realizado
+          <Badge className="bg-sky-50 text-[#007bb9] dark:bg-sky-950/50 dark:text-sky-300 border border-blue-200/80 dark:border-blue-800 text-[10px] font-bold rounded-full px-2.5 py-0.5 shadow-none">
+            Check-in Feito
           </Badge>
         );
       case 'cancelled':
         return (
-          <Badge className="bg-[#FDF0EE] text-[#C53030] dark:bg-[#3A1E1E] dark:text-[#E56B6B] border border-[#FBD5D0] dark:border-[#602929] text-[10px] font-bold">
+          <Badge className="bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800 text-[10px] font-bold rounded-full px-2.5 py-0.5 shadow-none">
             Cancelada
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="text-[10px] font-bold">
+          <Badge variant="outline" className="text-[10px] font-bold rounded-full px-2.5 py-0.5">
             Pendente
           </Badge>
         );
@@ -100,18 +99,21 @@ export function BookingsListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] text-[#251D18] dark:text-[#F5EFEB] shadow-xl">
-        <DialogHeader className="p-5 pb-3 border-b border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/80 dark:bg-[#261E1A]/80">
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-hidden flex flex-col p-0 rounded-3xl border border-blue-100/90 dark:border-slate-800 bg-white dark:bg-[#191E25] text-slate-800 dark:text-slate-100 shadow-2xl">
+        {/* Faixa superior pastel nobre */}
+        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
+
+        <DialogHeader className="px-7 pt-5 pb-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#34241B] border border-[#F6E0B5] dark:border-[#523A2C] flex items-center justify-center text-[#C58A2C]">
-                <Calendar className="w-5 h-5" />
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
+                <Calendar className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-bold tracking-tight text-[#251D18] dark:text-[#F5EFEB]">
+                <DialogTitle className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
                   Reservas Antecipadas ({bookings.length})
                 </DialogTitle>
-                <p className="text-xs text-[#827568] dark:text-[#B0A294]">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Gestão de chamadas, pedidos prévios e confirmações por WhatsApp
                 </p>
               </div>
@@ -120,7 +122,7 @@ export function BookingsListDialog({
             <Button
               size="sm"
               onClick={onNewBookingClick}
-              className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] hover:from-[#A87019] hover:to-[#B55E22] text-white shadow-sm flex items-center gap-1.5"
+              className="h-10 px-4 text-xs font-bold rounded-full bg-[#007bb9] hover:bg-[#006194] text-white shadow-sm flex items-center gap-1.5 active:scale-95 transition-all"
             >
               <Plus className="w-4 h-4" />
               Nova Reserva
@@ -128,20 +130,20 @@ export function BookingsListDialog({
           </div>
         </DialogHeader>
 
-        <div className="p-4 space-y-3 flex-1 overflow-y-auto">
-          {/* Barra de Filtros e Busca com Zero Overlap */}
-          <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+        <div className="p-6 space-y-4 flex-1 overflow-y-auto">
+          {/* Barra de Filtros e Busca */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <Input
                 placeholder="Pesquisar por hóspede, telefone ou quarto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
+                className="pl-10 h-10 text-xs rounded-2xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 focus-visible:ring-[#007bb9]"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-[#F2ECE1] dark:bg-[#2A211B] p-1 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl shrink-0 overflow-x-auto no-scrollbar">
               {(['all', 'confirmed', 'checked_in', 'cancelled'] as const).map((st) => {
                 const label =
                   st === 'all'
@@ -157,10 +159,10 @@ export function BookingsListDialog({
                     key={st}
                     type="button"
                     onClick={() => setStatusFilter(st)}
-                    className={`whitespace-nowrap px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    className={`whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all ${
                       active
-                        ? 'bg-white dark:bg-[#111418] text-[#C58A2C] shadow-sm'
-                        : 'text-[#5C5346] dark:text-[#D4C8B8] hover:text-[#251D18]'
+                        ? 'bg-white dark:bg-[#191E25] text-[#007bb9] dark:text-sky-300 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {label}
@@ -172,17 +174,17 @@ export function BookingsListDialog({
 
           {/* Lista de Reservas */}
           {filteredBookings.length === 0 ? (
-            <div className="text-center py-12 text-[#827568] dark:text-[#B0A294] text-xs">
-              <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#C58A2C]" />
-              <p className="font-semibold text-sm text-[#251D18] dark:text-[#F5EFEB]">
+            <div className="text-center py-12 text-slate-400 text-xs">
+              <Calendar className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#007bb9]" />
+              <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
                 Nenhuma reserva encontrada
               </p>
-              <p className="text-[11px] mt-1">
+              <p className="text-[11px] mt-1 text-slate-400">
                 Toque em "Nova Reserva" para registar quando um cliente ligar ou agendar.
               </p>
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {filteredBookings.map((b) => {
                 const dateObj = normalizeDate(b.checkInDate);
                 const dateFormatted = dateObj.toLocaleDateString('pt-MZ', {
@@ -198,51 +200,51 @@ export function BookingsListDialog({
                 return (
                   <div
                     key={b.id}
-                    className="p-3.5 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#C58A2C]/40 transition-all"
+                    className="p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-blue-300 dark:hover:border-blue-800/60 transition-all"
                   >
-                    <div className="space-y-1 min-w-0 flex-1">
+                    <div className="space-y-1.5 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-sm text-[#251D18] dark:text-[#F5EFEB] truncate">
+                        <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
                           {b.clientName}
                         </span>
                         {getStatusBadge(b.status)}
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F2ECE1] dark:bg-[#2A211B] text-[#5C5346] dark:text-[#D4C8B8]">
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700">
                           {b.roomName || 'Quarto a Atribuir'}
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-[#827568] dark:text-[#B0A294]">
-                        <span className="flex items-center gap-1 font-mono">
-                          <Phone className="w-3.5 h-3.5 text-[#C58A2C]" />
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="flex items-center gap-1 font-mono text-slate-700 dark:text-slate-300 font-medium">
+                          <Phone className="w-3.5 h-3.5 text-[#007bb9]" />
                           {b.clientPhone}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-[#DF9E42]" />
+                        <span className="flex items-center gap-1 font-medium">
+                          <Clock className="w-3.5 h-3.5 text-amber-500" />
                           {dateFormatted} às {timeFormatted} ({b.isOvernight ? 'Pernoita' : `${b.durationHours}h`})
                         </span>
                         {b.depositAmount && b.depositAmount > 0 ? (
-                          <span className="flex items-center gap-1 font-bold text-[#245D3B] dark:text-[#64C28D]">
-                            <Coins className="w-3.5 h-3.5" />
+                          <span className="flex items-center gap-1 font-extrabold text-emerald-600 dark:text-emerald-400">
+                            <Coins className="w-3.5 h-3.5 text-amber-500" />
                             Sinal: {formatCurrency(b.depositAmount)}
                           </span>
                         ) : null}
                       </div>
 
                       {b.notes && (
-                        <p className="text-[11px] text-[#A69B93] italic line-clamp-1">
+                        <p className="text-[11px] text-slate-400 italic line-clamp-1">
                           "{b.notes}"
                         </p>
                       )}
                     </div>
 
                     {/* Ações Rápidas */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       {/* WhatsApp */}
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleWhatsApp(b)}
-                        className="h-9 px-2.5 text-xs rounded-xl border-[#CDE5D5] dark:border-[#2E543C] text-[#245D3B] dark:text-[#64C28D] bg-[#EDF6F0] dark:bg-[#1C3325] hover:bg-[#DDF0E2] font-semibold gap-1"
+                        className="h-9 px-3 text-xs rounded-full border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 font-bold gap-1 shadow-xs"
                         title="Enviar comprovativo de reserva por WhatsApp"
                       >
                         <MessageCircle className="w-3.5 h-3.5 fill-current" />
@@ -254,7 +256,7 @@ export function BookingsListDialog({
                         <Button
                           size="sm"
                           onClick={() => onCheckInFromBooking(b)}
-                          className="h-9 px-3 text-xs rounded-xl font-bold bg-[#C58A2C] hover:bg-[#A87019] text-white shadow-sm gap-1"
+                          className="h-9 px-3.5 text-xs rounded-full font-extrabold bg-[#007bb9] hover:bg-[#006194] text-white shadow-sm gap-1 active:scale-95 transition-all"
                         >
                           <LogIn className="w-3.5 h-3.5" />
                           Check-in
@@ -267,7 +269,7 @@ export function BookingsListDialog({
                           size="sm"
                           variant="ghost"
                           onClick={() => onCancelBooking(b.id)}
-                          className="h-9 w-9 p-0 rounded-xl text-[#C53030] hover:bg-[#FDF0EE] dark:hover:bg-[#3A1E1E]"
+                          className="h-9 w-9 p-0 rounded-full text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           title="Cancelar reserva"
                         >
                           <XCircle className="w-4 h-4" />
@@ -281,12 +283,12 @@ export function BookingsListDialog({
           )}
         </div>
 
-        <DialogFooter className="p-3 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-[#F8F5EE]/50 dark:bg-[#261E1A]/50">
+        <DialogFooter className="px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl border-[#E5DFD6] dark:border-[#2C3440]"
+            className="rounded-full border-slate-200 dark:border-slate-800 text-xs font-semibold px-5"
           >
             Fechar
           </Button>

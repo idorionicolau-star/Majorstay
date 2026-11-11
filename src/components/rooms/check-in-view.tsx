@@ -343,13 +343,13 @@ export function CheckInView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#F9F8F6] dark:bg-[#120D0A] min-h-screen text-neutral-800 dark:text-[#EFEBE4] pb-20">
+    <div className="flex-1 flex flex-col min-w-0 bg-[#f4f7fb] dark:bg-[#0b0f17] min-h-screen text-neutral-800 dark:text-[#EFEBE4] pb-20">
       {/* 1. CABEÇALHO ELEGANTE DA PÁGINA */}
-      <header className="px-4 sm:px-8 py-5 border-b border-[#EEECE6] dark:border-[#2C211B] bg-white/70 dark:bg-[#18120E]/80 backdrop-blur sticky top-0 z-20">
+      <header className="px-4 sm:px-8 py-5 border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-[#191E25]/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#FAEDE2] dark:bg-[#282012] text-[#C58A2C] dark:text-[#E8BF72] flex items-center justify-center shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 flex items-center justify-center shadow-xs">
                 <Key className="w-4 h-4" />
               </div>
               <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 font-headline">
@@ -363,7 +363,7 @@ export function CheckInView() {
 
           <div className="flex items-center gap-3 self-start md:self-auto">
             {/* Badge Status de Turno */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#191E25] border border-[#EEECE6] dark:border-[#2C3440] rounded-full shadow-xs">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 rounded-full shadow-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
                 Turno Atual <span className="text-neutral-300 dark:text-neutral-600">•</span> Caixa Operacional
@@ -373,7 +373,7 @@ export function CheckInView() {
             {/* Botão Voltar */}
             <Link
               href="/rooms"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#191E25] hover:bg-neutral-50 dark:hover:bg-[#2A211C] border border-[#EEECE6] dark:border-[#2C3440] text-neutral-700 dark:text-neutral-200 transition-colors text-xs font-semibold shadow-xs group"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#191E25] hover:bg-neutral-50 dark:hover:bg-[#2A211C] border border-slate-200/80 dark:border-slate-800 text-neutral-700 dark:text-neutral-200 transition-colors text-xs font-semibold shadow-xs group"
             >
               <ArrowLeft className="w-3.5 h-3.5 text-neutral-400 group-hover:-translate-x-0.5 transition-transform" />
               Voltar aos Quartos
@@ -388,17 +388,17 @@ export function CheckInView() {
           {/* COLUNA ESQUERDA: Formulário em 3 Passos (7 colunas) */}
           <div className="lg:col-span-7 space-y-6">
             {/* PASSO 1: Selecionar Quarto Livre */}
-            <section className="bg-white dark:bg-[#111418] border border-[#EEECE6] dark:border-[#2C3440] rounded-2xl p-6 shadow-xs">
+            <section className="bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FDF6E8] dark:bg-[#282012] text-[#C58A2C] dark:text-[#E8BF72] text-xs font-bold font-mono">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 text-xs font-bold font-mono">
                     1
                   </span>
                   <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
                     Selecionar Quarto Livre
                   </h2>
                 </div>
-                <span className="text-xs font-medium text-[#C58A2C] dark:text-[#E8BF72] bg-[#FDF6E8] dark:bg-[#282012] border border-[#F6E0B5] dark:border-[#523321] px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-medium text-[#007bb9] dark:text-sky-400 bg-[#FDF6E8] dark:bg-[#282012] border border-blue-200/60 dark:border-blue-800/50 px-2.5 py-0.5 rounded-full">
                   {freeRooms.length} {freeRooms.length === 1 ? 'Quarto Disponível' : 'Quartos Disponíveis'}
                 </span>
               </div>
@@ -414,7 +414,7 @@ export function CheckInView() {
                   </p>
                   <Link
                     href="/rooms"
-                    className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-[#C58A2C] text-white text-xs font-bold"
+                    className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-[#007bb9] text-white text-xs font-bold"
                   >
                     Ver Quadro Geral de Quartos
                   </Link>
@@ -431,8 +431,8 @@ export function CheckInView() {
                         onClick={() => handleSelectRoom(room)}
                         className={`text-left p-4 rounded-xl relative flex flex-col justify-between min-h-[135px] transition-all cursor-pointer shadow-xs ${
                           isSelected
-                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#291B14] ring-2 ring-[#C58A2C]/15'
-                            : 'border border-[#EEECE6] dark:border-[#2C3440] bg-white dark:bg-[#111418] hover:border-[#DDD6CC] dark:hover:border-[#4D3F36] hover:bg-[#FAF8F5] dark:hover:bg-[#251D18]'
+                            ? 'border-2 border-[#007bb9] bg-blue-50/40 dark:bg-blue-950/40 ring-2 ring-[#007bb9]/20'
+                            : 'border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#191E25] hover:border-[#DDD6CC] dark:hover:border-[#4D3F36] hover:bg-[#FAF8F5] dark:hover:bg-[#251D18]'
                         }`}
                       >
                         <div className="flex items-start justify-between w-full">
@@ -447,7 +447,7 @@ export function CheckInView() {
                           <div
                             className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
                               isSelected
-                                ? 'bg-[#C58A2C] text-white shadow-xs'
+                                ? 'bg-[#007bb9] text-white shadow-xs'
                                 : 'border border-neutral-300 dark:border-neutral-600 text-transparent'
                             }`}
                           >
@@ -469,7 +469,7 @@ export function CheckInView() {
                               </span>
                             ))}
                           </div>
-                          <div className="mt-2 text-xs font-bold text-[#C58A2C] dark:text-[#E8BF72] font-mono">
+                          <div className="mt-2 text-xs font-bold text-[#007bb9] dark:text-sky-400 font-mono">
                             {formatCurrency(room.ratePerHour)}/h
                           </div>
                         </div>
@@ -481,10 +481,10 @@ export function CheckInView() {
             </section>
 
             {/* PASSO 2: Modalidade & Duração */}
-            <section className="bg-white dark:bg-[#111418] border border-[#EEECE6] dark:border-[#2C3440] rounded-2xl p-6 shadow-xs">
+            <section className="bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FDF6E8] dark:bg-[#282012] text-[#C58A2C] dark:text-[#E8BF72] text-xs font-bold font-mono">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 text-xs font-bold font-mono">
                     2
                   </span>
                   <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
@@ -497,13 +497,13 @@ export function CheckInView() {
               </div>
 
               {/* Segmented Control Pill */}
-              <div className="p-1 bg-[#F4F2EC] dark:bg-[#251D18] rounded-xl flex items-center gap-1 mb-5">
+              <div className="p-1 bg-slate-100 dark:bg-slate-900 rounded-xl flex items-center gap-1 mb-5">
                 <button
                   type="button"
                   onClick={() => setStayMode('horas')}
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
                     stayMode === 'horas'
-                      ? 'bg-white dark:bg-[#111418] text-neutral-900 dark:text-neutral-100 shadow-xs'
+                      ? 'bg-white dark:bg-[#191E25] text-neutral-900 dark:text-neutral-100 shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900'
                   }`}
                 >
@@ -515,7 +515,7 @@ export function CheckInView() {
                   onClick={() => setStayMode('diaria')}
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
                     stayMode === 'diaria'
-                      ? 'bg-white dark:bg-[#111418] text-neutral-900 dark:text-neutral-100 shadow-xs'
+                      ? 'bg-white dark:bg-[#191E25] text-neutral-900 dark:text-neutral-100 shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900'
                   }`}
                 >
@@ -543,8 +543,8 @@ export function CheckInView() {
                           onClick={() => setContractedHours(preset.hours)}
                           className={`py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all ${
                             active
-                              ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#C58A2C] dark:text-[#E8BF72] shadow-xs'
-                              : 'border border-[#EEECE6] dark:border-[#2C3440] bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70'
+                              ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#007bb9] dark:text-sky-400 shadow-xs'
+                              : 'border border-slate-200/80 dark:border-slate-800 bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70'
                           }`}
                         >
                           {preset.label}
@@ -562,8 +562,8 @@ export function CheckInView() {
                           onClick={() => setContractedHours(preset.hours)}
                           className={`py-2.5 px-3 rounded-xl text-xs font-bold text-center transition-all ${
                             active
-                              ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#C58A2C] dark:text-[#E8BF72] shadow-xs'
-                              : 'border border-[#EEECE6] dark:border-[#2C3440] bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70'
+                              ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#007bb9] dark:text-sky-400 shadow-xs'
+                              : 'border border-slate-200/80 dark:border-slate-800 bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70'
                           }`}
                         >
                           {preset.label}
@@ -577,13 +577,13 @@ export function CheckInView() {
               {/* Previsão de Saída */}
               <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF9F6] dark:bg-[#18120F] border border-[#F0EDE6] dark:border-[#2C3440]">
                 <div className="flex items-center gap-2.5 text-xs text-neutral-600 dark:text-neutral-300">
-                  <span className="w-7 h-7 rounded-lg bg-white dark:bg-[#191E25] border border-[#EEECE6] dark:border-[#2C3440] flex items-center justify-center text-[#C58A2C]">
+                  <span className="w-7 h-7 rounded-lg bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 flex items-center justify-center text-[#C58A2C]">
                     <Clock className="w-4 h-4" />
                   </span>
                   <span>Saída prevista do quarto:</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="font-mono text-sm font-bold text-[#C58A2C] dark:text-[#E8BF72]">
+                  <span className="font-mono text-sm font-bold text-[#007bb9] dark:text-sky-400">
                     {expectedOutFormatted}
                   </span>
                 </div>
@@ -591,10 +591,10 @@ export function CheckInView() {
             </section>
 
             {/* PASSO 3: Identificação do Hóspede */}
-            <section className="bg-white dark:bg-[#111418] border border-[#EEECE6] dark:border-[#2C3440] rounded-2xl p-6 shadow-xs">
+            <section className="bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FDF6E8] dark:bg-[#282012] text-[#C58A2C] dark:text-[#E8BF72] text-xs font-bold font-mono">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 text-xs font-bold font-mono">
                     3
                   </span>
                   <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
@@ -605,7 +605,7 @@ export function CheckInView() {
                 <button
                   type="button"
                   onClick={handleFillBalcao}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#C58A2C] dark:text-[#E8BF72] bg-[#FDF6E8] dark:bg-[#282012] hover:bg-[#FBE7D4] px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#007bb9] dark:text-sky-400 bg-[#FDF6E8] dark:bg-[#282012] hover:bg-[#FBE7D4] px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   + Hóspede Balcão / Anônimo
@@ -658,8 +658,8 @@ export function CheckInView() {
                         onClick={() => setOccupantsCount(1)}
                         className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
                           occupantsCount === 1
-                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#C58A2C] dark:text-[#E8BF72] font-bold shadow-xs'
-                            : 'border border-[#EEECE6] dark:border-[#2C3440] bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100'
+                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#007bb9] dark:text-sky-400 font-bold shadow-xs'
+                            : 'border border-slate-200/80 dark:border-slate-800 bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100'
                         }`}
                       >
                         1 Pessoa
@@ -669,8 +669,8 @@ export function CheckInView() {
                         onClick={() => setOccupantsCount(2)}
                         className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
                           occupantsCount === 2
-                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#C58A2C] dark:text-[#E8BF72] font-bold shadow-xs'
-                            : 'border border-[#EEECE6] dark:border-[#2C3440] bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100'
+                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#007bb9] dark:text-sky-400 font-bold shadow-xs'
+                            : 'border border-slate-200/80 dark:border-slate-800 bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100'
                         }`}
                       >
                         2 Pessoas
@@ -704,9 +704,9 @@ export function CheckInView() {
 
           {/* COLUNA DIREITA: Ficha Operacional de Balcão & Fecho (5 colunas, sticky) */}
           <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
-            <div className="bg-white dark:bg-[#111418] border border-[#EEECE6] dark:border-[#2C3440] rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="bg-white dark:bg-[#191E25] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
               {/* Cabeçalho do Card */}
-              <div className="flex items-start justify-between pb-4 border-b border-[#EEECE6] dark:border-[#2C211B]">
+              <div className="flex items-start justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                     Ficha Operacional de Balcão
@@ -715,7 +715,7 @@ export function CheckInView() {
                     Resumo da Estadia
                   </h3>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FDF6E8] dark:bg-[#282012] text-[#C58A2C] dark:text-[#E8BF72] text-[11px] font-bold border border-[#F6E0B5] dark:border-[#523321]">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 text-[11px] font-bold border border-blue-200/60 dark:border-blue-800/50">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#C58A2C]"></span>
                   Entrada Imediata
                 </span>
@@ -767,7 +767,7 @@ export function CheckInView() {
                 </div>
 
                 {/* Total */}
-                <div className="pt-4 mt-3 border-t border-[#EEECE6] dark:border-[#2C211B] flex items-baseline justify-between">
+                <div className="pt-4 mt-3 border-t border-slate-200/80 dark:border-slate-800 flex items-baseline justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
                       Total a Pagar Agora
@@ -801,8 +801,8 @@ export function CheckInView() {
                         onClick={() => setPaymentMethod(method.id)}
                         className={`p-2.5 rounded-xl text-xs flex items-center gap-2 transition-all ${
                           active
-                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#C58A2C] dark:text-[#E8BF72] font-bold'
-                            : 'border border-[#EEECE6] dark:border-[#2C3440] bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100'
+                            ? 'border-2 border-[#C58A2C] bg-[#FDF9F5] dark:bg-[#2A1B14] text-[#007bb9] dark:text-sky-400 font-bold'
+                            : 'border border-slate-200/80 dark:border-slate-800 bg-[#FAF9F6] dark:bg-[#18120F] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100'
                         }`}
                       >
                         <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C58A2C]' : 'text-neutral-400'}`} />
@@ -833,7 +833,7 @@ export function CheckInView() {
                   <button
                     type="button"
                     onClick={handlePrintSlip}
-                    className="py-2.5 px-3 rounded-xl bg-white dark:bg-[#191E25] hover:bg-neutral-50 dark:hover:bg-[#2A211C] border border-[#EEECE6] dark:border-[#2C3440] text-neutral-700 dark:text-neutral-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                    className="py-2.5 px-3 rounded-xl bg-white dark:bg-[#191E25] hover:bg-neutral-50 dark:hover:bg-[#2A211C] border border-slate-200/80 dark:border-slate-800 text-neutral-700 dark:text-neutral-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
                   >
                     <Printer className="w-3.5 h-3.5 text-neutral-400" />
                     <span>Ficha Térmica</span>

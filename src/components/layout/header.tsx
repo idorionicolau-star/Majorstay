@@ -48,7 +48,7 @@ export function Header({ onSearchClick }: { onSearchClick: () => void }) {
   const pageTitle = getPageTitle();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/95 backdrop-blur px-4 dark:bg-[#1E1714]/95 sm:px-6 border-[#E5DFD6] dark:border-[#382D26]">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-white/80 dark:bg-[#191E25]/90 backdrop-blur-md px-4 sm:px-6 border-slate-200/80 dark:border-slate-800">
 
       {/* Theme Toggle for mobile (Left side) */}
       <div className="flex items-center gap-1 md:hidden">
@@ -86,12 +86,12 @@ export function Header({ onSearchClick }: { onSearchClick: () => void }) {
         <BackButton />
         <Button
           variant="outline"
-          className="relative w-full min-w-0 max-w-sm overflow-hidden px-4 py-2 h-11 justify-start items-center text-left font-normal bg-[#F1EDE5] text-stone-600 hover:bg-[#EAE4D9] border-[#E5DFD6] dark:bg-[#2A221E] dark:text-stone-300 dark:hover:bg-[#342A25] dark:border-[#382D26]"
+          className="relative w-full min-w-0 max-w-sm overflow-hidden px-4 py-2 h-10 rounded-2xl justify-start items-center text-left font-normal bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 border border-slate-200/70 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:border-slate-800 shadow-inner"
           onClick={onSearchClick}
         >
-          <Search className="mr-2 h-4 w-4" />
-          <span className="flex-1 truncate">Pesquisa Rápida</span>
-          <kbd className="pointer-events-none hidden h-6 shrink-0 select-none items-center gap-1 rounded border bg-[#E5DFD6] border-[#D8D0C5] px-1.5 font-mono text-[10px] font-medium text-stone-600 dark:bg-[#382D26] dark:border-[#4A3C33] dark:text-stone-300 lg:flex">
+          <Search className="mr-2.5 h-4 w-4 text-slate-400" />
+          <span className="flex-1 truncate text-xs font-semibold">Pesquisa Rápida</span>
+          <kbd className="pointer-events-none hidden h-6 shrink-0 select-none items-center gap-1 rounded-lg border bg-white border-slate-200 px-2 font-mono text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 lg:flex shadow-xs">
             Ctrl+K
           </kbd>
         </Button>

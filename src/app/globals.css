@@ -6,61 +6,58 @@
 
 @layer base {
   :root {
-    /* Paleta Nude / Hotelaria Boutique (Light Mode) */
-    --background: 38 33% 97%;
-    /* #FAF7F2 - Linho Nobre / Warm Alabaster */
-    --foreground: 24 25% 15%;
-    /* #251D18 - Espresso Profundo / Carvão Quente */
+    /* Paleta Stitch 2 & 3: Clean Ice Slate + Azul Cerúleo Real + Dourado Luxo (Light Mode) */
+    --background: 215 28% 97%;
+    /* #F4F7FB - Canvas Limpo e Moderno */
+    --foreground: 222 47% 11%;
+    /* #0F172A - Ardósia Nobre Nítida */
 
-    --card: 40 40% 99%;
-    /* #FFFDF9 - Marfim Suave / Pure Linen */
-    --card-foreground: 24 25% 15%;
+    --card: 0 0% 100%;
+    /* #FFFFFF - Branco Puro de Alta Definição */
+    --card-foreground: 222 47% 11%;
 
-    --popover: 40 40% 99%;
-    --popover-foreground: 24 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 38 68% 44%;
-    /* #C58A2C - Terracota Hotelaria Nobre */
-    --primary-foreground: 40 40% 99%;
+    --primary: 200 100% 36%;
+    /* #007BB9 - Azul Cerúleo Stitch */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 36 28% 93%;
-    /* #F1EDE5 - Areia Suave / Nude Claro */
-    --secondary-foreground: 24 25% 18%;
+    --secondary: 210 40% 96%;
+    /* #F1F5F9 */
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 36 24% 92%;
-    /* #EFEBE4 - Taupe Muted */
-    --muted-foreground: 28 12% 48%;
-    /* #7A726C - Taupe Quente Suave */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 38 45% 91%;
-    /* #F4EDE0 - Champagne Suave */
-    --accent-foreground: 26 72% 38%;
+    --accent: 38 92% 50%;
+    /* #F59E0B - Ouro Champagne Radiante */
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 72% 51%;
-    /* Rosa Carmim / Alerta Nobre */
-    --destructive-foreground: 40 40% 99%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 34 20% 88%;
-    /* #E5DFD6 - Borda Nude Discreta */
-    --input: 34 20% 88%;
-    --ring: 26 72% 43%;
+    --border: 214 32% 91%;
+    /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 200 100% 36%;
 
     /* Gráfico de Vendas e Faturação */
-    --sales-stroke: #C58A2C;
-    --sales-gradient-start: #DF9E42;
-    --sales-gradient-end: #C58A2C;
+    --sales-stroke: #007BB9;
+    --sales-gradient-start: #38BDF8;
+    --sales-gradient-end: #007BB9;
 
     /* Chart Colors - Hotelaria (Light Mode) */
-    --chart-1: 152 48% 38%;
-    /* Quartos Livres: Verde Sálvia Nobre */
-    --chart-2: 26 72% 43%;
-    /* Quartos Ocupados: Terracota Hotelaria */
-    --chart-3: 38 75% 52%;
-    /* Faturação / Caixa: Ouro Champagne */
-    --chart-4: 0 72% 51%;
-    /* Tempo Excedido: Carmim Suave */
-    --chart-5: 32 55% 50%;
-    /* Limpeza / Manutenção: Âmbar Areia */
+    --chart-1: 152 58% 38%;
+    /* Quartos Livres: Esmeralda Nobre */
+    --chart-2: 200 100% 36%;
+    /* Quartos Ocupados: Azul Stitch */
+    --chart-3: 38 92% 50%;
+    /* Faturação / Caixa: Ouro Radiante */
+    --chart-4: 0 84% 60%;
+    /* Tempo Excedido: Rosa Carmim */
+    --chart-5: 199 89% 48%;
+    /* Limpeza: Céu Pastel */
   }
 
   .dark {
