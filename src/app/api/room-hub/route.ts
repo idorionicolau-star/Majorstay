@@ -126,26 +126,35 @@ export async function GET(req: Request) {
       }
     }
 
-    // 4. Produtos do bar
+    // 4. Produtos do bar (sem filtro 'active', excluindo deletedAt e preço <= 0, deduplicados por nome)
     let barProducts: { id: string; name: string; price: number; category?: string }[] = [];
     try {
       const prodSnap = await db
         .collection(`companies/${companyId}/products`)
-        .where('active', '==', true)
-        .limit(30)
+        .limit(100)
         .get();
 
-      barProducts = prodSnap.docs
-        .map((docSnap) => {
-          const p = docSnap.data();
-          return {
-            id: docSnap.id,
-            name: p.name || 'Produto',
-            price: Number(p.price || p.salePrice || 0),
-            category: p.category || 'Bar',
-          };
-        })
-        .filter((p) => p.price > 0);
+      const seenNames = new Set<string>();
+      for (const docSnap of prodSnap.docs) {
+        const p = docSnap.data() || {};
+        if (p.deletedAt) continue;
+        const price = Number(p.price !== undefined ? p.price : (p.salePrice !== undefined ? p.salePrice : 0));
+        if (!Number.isFinite(price) || price <= 0) continue;
+
+        const name = (p.name || 'Produto').trim();
+        const normalizedName = name.toLowerCase();
+        if (seenNames.has(normalizedName)) continue;
+        seenNames.add(normalizedName);
+
+        barProducts.push({
+          id: docSnap.id,
+          name,
+          price,
+          category: p.category || 'Bar',
+        });
+
+        if (barProducts.length >= 30) break;
+      }
     } catch (e) {
       console.warn('Erro ao carregar produtos do bar:', e);
     }
@@ -163,8 +172,8 @@ export async function GET(req: Request) {
         name: companyData.name || 'MajorStay',
         phone: rawPhone,
         whatsapp: cleanWhatsapp || '258840000000',
-        wifiSsid: companyData.wifiSsid || `${companyData.name || 'MajorStay'}-Hóspedes`,
-        wifiPassword: companyData.wifiPassword || 'hospede123',
+        wifiSsid: companyData.wifiSsid ? String(companyData.wifiSsid).trim() : null,
+        wifiPassword: companyData.wifiPassword ? String(companyData.wifiPassword).trim() : null,
       },
       stay: activeStay,
       barProducts,

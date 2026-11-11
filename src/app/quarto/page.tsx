@@ -40,8 +40,8 @@ interface RoomHubData {
     name: string;
     phone: string;
     whatsapp: string;
-    wifiSsid: string;
-    wifiPassword?: string;
+    wifiSsid?: string | null;
+    wifiPassword?: string | null;
   };
   stay: {
     id: string;
@@ -417,30 +417,32 @@ function QuartoPortalContent() {
         )}
 
         {/* Card do Wi-Fi & Serviços Rápidos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#2A2118] text-[#C58A2C] flex items-center justify-center shrink-0">
-                <Wifi className="w-5 h-5" />
+        <div className={cn("grid gap-3", (hotel.wifiSsid && hotel.wifiPassword) ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
+          {hotel.wifiSsid && hotel.wifiPassword && (
+            <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#2A2118] text-[#C58A2C] flex items-center justify-center shrink-0">
+                  <Wifi className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Wi-Fi do Quarto</span>
+                  <p className="text-xs font-bold truncate text-stone-800 dark:text-stone-200">{hotel.wifiSsid}</p>
+                  <p className="text-[11px] font-mono text-stone-500 truncate">
+                    Senha: <strong className="text-stone-700 dark:text-stone-300">{hotel.wifiPassword}</strong>
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Wi-Fi do Quarto</span>
-                <p className="text-xs font-bold truncate text-stone-800 dark:text-stone-200">{hotel.wifiSsid}</p>
-                <p className="text-[11px] font-mono text-stone-500 truncate">
-                  Senha: <strong className="text-stone-700 dark:text-stone-300">{hotel.wifiPassword || 'hotel1234'}</strong>
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={copyWifiPassword}
-              className="h-9 w-9 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] shrink-0 text-stone-600 dark:text-stone-300"
-              title="Copiar senha"
-            >
-              {copiedWifi ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-            </Button>
-          </Card>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={copyWifiPassword}
+                className="h-9 w-9 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] shrink-0 text-stone-600 dark:text-stone-300"
+                title="Copiar senha"
+              >
+                {copiedWifi ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </Card>
+          )}
 
           <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
