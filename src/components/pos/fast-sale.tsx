@@ -298,7 +298,7 @@ export function FastSale() {
         toast({
             variant: missed.length && !done.length ? "destructive" : undefined,
             title: done.length ? `Juntei: ${done.join(", ")}` : "Não encontrei esse produto",
-            description: missed.length ? `Não encontrei: ${missed.join(", ")}. Disse: “${transcript}”.${missed.some((m) => /\d/.test(m)) ? " Pode dizer, por exemplo, «15 unidades de afiador» ou «cimento x 20»." : ""}` : undefined,
+            description: missed.length ? `Não encontrei: ${missed.join(", ")}. Disse: “${transcript}”.${missed.some((m) => /\d/.test(m)) ? " Pode dizer, por exemplo, «1 caixa de Corona» ou «Heineken x 6»." : ""}` : undefined,
         });
     };
 
@@ -524,7 +524,7 @@ export function FastSale() {
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={onSearchKey}
-                        placeholder="Ex.: bloco 15 x 200"
+                        placeholder="Ex.: Corona x 6 ou Heineken"
                         className="h-14 rounded-2xl pl-12 pr-10 text-lg sm:h-14 sm:pl-12 sm:pr-10 sm:text-lg"
                         autoComplete="off"
                         autoCorrect="off"
@@ -778,7 +778,7 @@ export function FastSale() {
                 <div className="mt-6 rounded-2xl border border-dashed p-5 text-sm text-muted-foreground">
                     <p className="font-medium text-foreground">Como vender em segundos</p>
                     <ul className="mt-2 list-disc space-y-1 pl-5">
-                        <li>Escreva <b>bloco 15 x 200</b> e Enter — já está no carrinho.</li>
+                        <li>Escreva <b>Corona x 6</b> ou <b>Heineken x 12</b> e Enter — já está no carrinho.</li>
                         <li>Ou escreva só o nome, Enter, e digite a quantidade.</li>
                         <li>Por defeito: pago na totalidade, em numerário, levado agora, com a data de hoje. Só mude o que for diferente.</li>
                         <li>Esqueceu-se de registar vendas? Mude a <b>data da venda</b> e registe-as agora.</li>

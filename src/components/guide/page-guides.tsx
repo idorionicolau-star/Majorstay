@@ -30,7 +30,7 @@ const PAGES: Guide[] = [
     {
         id: "pagina-vendas",
         path: "/sales",
-        title: "Histórico de Vendas",
+        title: "Histórico de Transações",
         steps: [
             { title: "Todas as vendas", body: <>Cada venda registada fica aqui, com a data, a hora, quem vendeu e o documento pronto a imprimir ou enviar.</> },
             { target: "sales-search", title: "Procurar", body: <>Escreva o nome do produto para ver só as vendas dele.</> },

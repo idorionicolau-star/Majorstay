@@ -71,7 +71,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   const planLocked = !!gatedFeature && !companyHas(authContext?.companyData, gatedFeature);
   const isAuthPage = pathname === '/login' || pathname === '/register';
   // páginas que qualquer pessoa pode ler, com ou sem conta (termos, privacidade)
-  const isPublicPage = pathname === '/termos' || pathname === '/privacidade';
+  const isPublicPage = pathname === '/termos' || pathname === '/privacidade' || pathname.startsWith('/quarto');
 
   const [openCommandMenu, setOpenCommandMenu] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);

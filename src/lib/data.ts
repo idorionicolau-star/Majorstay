@@ -21,7 +21,7 @@ export const mainNavItems: NavItem[] = [
   { title: 'Quartos', href: '/rooms', id: 'rooms', icon: BedDouble, group: 'inicio' },
   // Lounge (as vendas do bar)
   { title: 'Lounge & Bar', href: '/pos', id: 'sales', icon: Wine, group: 'vender' },
-  { title: 'Histórico de Vendas', href: '/sales', id: 'sales', icon: ShoppingCart, group: 'vender' },
+  { title: 'Histórico de Transações', href: '/sales', id: 'sales', icon: ShoppingCart, group: 'vender' },
   { title: 'Documentos', href: '/documents', id: 'sales', icon: FileText, group: 'vender' },
   // Bar
   // Produtos do Bar: o stock (Inventário), o Catálogo (preços), os Movimentos e as Perdas são abas da mesma secção

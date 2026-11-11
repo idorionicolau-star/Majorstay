@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Sidebar() {
-    const { user, logout, firebaseUser } = useContext(InventoryContext) || { user: null, logout: async () => { }, firebaseUser: null };
+    const { user, logout, firebaseUser, companyData } = useContext(InventoryContext) || { user: null, logout: async () => { }, firebaseUser: null, companyData: null };
 
     const { groups, isActive, simple, hiddenCount, setSimple } = useNavGroups();
     // a recarregar: o nome da última vez, em vez de "Utilizador"
@@ -36,7 +36,7 @@ export function Sidebar() {
             {/* Logo Area */}
             <div className="h-14 w-full flex items-center px-5 mb-5 cursor-pointer hover:opacity-95 transition-opacity group">
                 <Link href="/dashboard" className="flex items-center w-full h-full">
-                    <MajorStayLogo size="md" showTagline />
+                    <MajorStayLogo size="md" showTagline customLogoUrl={companyData?.logoUrl} customName={companyData?.name} />
                 </Link>
             </div>
 

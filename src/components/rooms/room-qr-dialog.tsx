@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, ExternalLink, Copy, Check, QrCode, Hotel, Sparkles } from 'lucide-react';
 import type { Room } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
+import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
 
 interface RoomQrDialogProps {
@@ -23,6 +24,8 @@ interface RoomQrDialogProps {
 
 export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
   const { companyId, companyData } = useInventory();
+  const { stays } = useRooms();
+  const currentStay = stays.find((s) => s.roomId === room?.id && s.status === 'open');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
@@ -168,6 +171,12 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
           <div class="room-name">${room.name}</div>
           <div class="room-type">${room.type ? `${room.type} Suite` : 'Acomodação'}</div>
           <img class="qr-img" src="${qrDataUrl}" alt="QR Code" />
+          ${currentStay ? `
+          <div style="margin: 14px 0; padding: 10px; background: #f0f9ff; border: 1.5px dashed #0284c7; border-radius: 12px; text-align: center;">
+            <span style="font-size: 10px; font-weight: 800; color: #0369a1; text-transform: uppercase; letter-spacing: 1px; display: block;">PIN de Acesso Confidencial</span>
+            <span style="font-size: 22px; font-weight: 900; letter-spacing: 6px; color: #0284c7; display: block; margin: 3px 0;">${currentStay.accessPin || '1234'}</span>
+            <span style="font-size: 9px; color: #64748b;">Introduza este PIN após ler o QR Code</span>
+          </div>` : ''}
           <p class="instructions">
             Aponte a câmara do telemóvel para aceder ao tempo de estadia, senha do Wi-Fi e pedidos de bar.
           </p>

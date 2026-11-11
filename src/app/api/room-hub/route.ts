@@ -44,6 +44,7 @@ export async function GET(req: Request) {
           expectedCheckOut: calculateExpectedCheckOut(stay.checkInAt, stay.contractedHours, stay.extensions).toISOString(),
           ratePerHour: stay.ratePerHourApplied || 300,
           graceMinutes: 10,
+          accessPin: stay.accessPin || '1234',
         } : {
           id: 'demo-stay-1',
           checkInAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
           expectedCheckOut: new Date(Date.now() + 75 * 60 * 1000).toISOString(),
           ratePerHour: 300,
           graceMinutes: 10,
+          accessPin: '1234',
         },
         barProducts: [
           { id: '1', name: 'Cerveja 2M 330ml', price: 120, category: 'Bebidas' },
@@ -98,6 +100,7 @@ export async function GET(req: Request) {
             expectedCheckOut: expCheckOut.toISOString(),
             ratePerHour: s.ratePerHourApplied || roomData.ratePerHour || 0,
             graceMinutes: 10,
+            accessPin: s.accessPin || String(Math.abs(stayDoc.id.split('').reduce((acc: number, char: string) => ((acc << 5) - acc) + char.charCodeAt(0), 0)) % 9000 + 1000),
           };
         }
       }

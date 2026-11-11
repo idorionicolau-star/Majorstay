@@ -164,18 +164,22 @@ interface MajorStayLogoProps {
   showTagline?: boolean;
   className?: string;
   horizontal?: boolean;
+  customLogoUrl?: string | null;
+  customName?: string | null;
 }
 
 /**
- * Logótipo Completo MajorStay:
- * Marca visual com tipografia de alta classe, adaptável para modo claro/escuro
- * e com hierarquia nítida (MAJOR em tom neutro refinado, STAY em terracota/ouro).
+ * Logótipo Completo MajorStay com Suporte a White-Label Dinâmico:
+ * Se a empresa tiver configurado um logótipo oficial (`customLogoUrl`) e nome próprio (`customName`),
+ * exibe a marca exclusiva do hotel. Se não tiver, mantém o emblema cerúleo MajorStay de forma impecável.
  */
 export function MajorStayLogo({
   size = 'md',
   showTagline = false,
   className,
   horizontal = true,
+  customLogoUrl,
+  customName,
 }: MajorStayLogoProps) {
   const markSize = {
     sm: 32,
@@ -198,6 +202,9 @@ export function MajorStayLogo({
     xl: 'text-sm tracking-widest',
   }[size];
 
+  const hasCustomLogo = !!customLogoUrl && customLogoUrl.trim().length > 0;
+  const displayName = customName?.trim() || '';
+
   return (
     <div
       className={cn(
@@ -206,17 +213,33 @@ export function MajorStayLogo({
         className
       )}
     >
-      <MajorStayMark size={markSize} />
-      <div className={cn('flex flex-col justify-center leading-none', !horizontal && 'items-center mt-1')}>
-        <div className={cn('font-headline font-extrabold tracking-tight flex items-baseline', titleSize)}>
-          <span className="text-slate-900 dark:text-white tracking-[0.06em]">MAJOR</span>
-          <span className="bg-gradient-to-r from-[#0284C7] via-[#007bb9] to-[#006194] bg-clip-text text-transparent ml-1 font-black">
-            STAY
-          </span>
-        </div>
+      {hasCustomLogo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={customLogoUrl}
+          alt={displayName || 'Logótipo do Hotel'}
+          style={{ width: markSize, height: markSize }}
+          className="rounded-xl object-contain shrink-0 shadow-sm border border-slate-200/50 dark:border-slate-800"
+        />
+      ) : (
+        <MajorStayMark size={markSize} />
+      )}
+      <div className={cn('flex flex-col justify-center leading-none min-w-0', !horizontal && 'items-center mt-1')}>
+        {displayName ? (
+          <div className={cn('font-headline font-extrabold tracking-tight truncate text-slate-900 dark:text-white', titleSize)}>
+            {displayName}
+          </div>
+        ) : (
+          <div className={cn('font-headline font-extrabold tracking-tight flex items-baseline', titleSize)}>
+            <span className="text-slate-900 dark:text-white tracking-[0.06em]">MAJOR</span>
+            <span className="bg-gradient-to-r from-[#0284C7] via-[#007bb9] to-[#006194] bg-clip-text text-transparent ml-1 font-black">
+              STAY
+            </span>
+          </div>
+        )}
         {showTagline && (
           <span className={cn('uppercase font-black text-[#007bb9] dark:text-sky-400 mt-1', badgeSize)}>
-            Hospitality Suite
+            {displayName ? 'Hotel & Suítes' : 'Hospitality Suite'}
           </span>
         )}
       </div>

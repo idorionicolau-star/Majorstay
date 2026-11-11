@@ -27,7 +27,7 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ onLinkClick }: MobileNavProps) {
-    const { user, logout, firebaseUser } = useContext(InventoryContext) || { user: null, logout: async () => { }, firebaseUser: null };
+    const { user, logout, firebaseUser, companyData } = useContext(InventoryContext) || { user: null, logout: async () => { }, firebaseUser: null, companyData: null };
 
     const handleLinkClick = () => {
         // Dispatch custom event for loading bar
@@ -41,7 +41,7 @@ export function MobileNav({ onLinkClick }: MobileNavProps) {
         <aside className="flex flex-col h-full bg-white dark:bg-[#191E25] border-r border-slate-200/80 dark:border-slate-800">
             <div className="flex h-20 items-center justify-center border-b border-slate-200/80 dark:border-slate-800 px-4">
                 <Link href="/dashboard" className="flex items-center justify-center" onClick={handleLinkClick}>
-                    <MajorStayLogo size="md" showTagline />
+                    <MajorStayLogo size="md" showTagline customLogoUrl={companyData?.logoUrl} customName={companyData?.name} />
                 </Link>
             </div>
             <nav className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto">

@@ -20,6 +20,8 @@ import {
   Hotel,
   ShieldCheck,
   Info,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +52,7 @@ interface RoomHubData {
     expectedCheckOut: string;
     ratePerHour: number;
     graceMinutes: number;
+    accessPin?: string;
   } | null;
   barProducts: {
     id: string;
@@ -71,6 +74,22 @@ function QuartoPortalContent() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [now, setNow] = useState<number>(Date.now());
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  useEffect(() => {
+    if (data?.stay?.id && data?.stay?.accessPin) {
+      const saved = sessionStorage.getItem(`ms_room_pin_${roomId}_${data.stay.id}`);
+      if (saved === data.stay.accessPin) {
+        setIsUnlocked(true);
+      } else {
+        setIsUnlocked(false);
+      }
+    } else {
+      setIsUnlocked(true);
+    }
+  }, [data?.stay?.id, data?.stay?.accessPin, roomId]);
 
   // Atualização do relógio a cada 10 segundos
   useEffect(() => {
@@ -251,6 +270,78 @@ function QuartoPortalContent() {
 
   const { room, hotel, stay, barProducts } = data;
   const isOccupied = room.status === 'occupied' || room.status === 'overtime' || Boolean(stay);
+
+  if (isOccupied && stay && stay.accessPin && !isUnlocked) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] dark:bg-[#111418] text-[#251D18] dark:text-[#F5EFEB] flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
+        <div className="w-full max-w-md bg-white dark:bg-[#191E25] rounded-3xl border border-blue-100 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#cce5ff] to-[#e0f2fe] dark:from-blue-950 dark:to-slate-900 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-[#007bb9] dark:text-sky-300 mx-auto shadow-sm">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#cce5ff] dark:bg-blue-950 text-[#006194] dark:text-sky-300 inline-block mb-2">
+              {room.name}
+            </span>
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Acesso Privado do Hóspede
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              Para sua total privacidade e segurança contra acessos indevidos, introduza o <b>PIN de 4 dígitos</b> do seu comprovativo de check-in.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (pinInput.trim() === stay.accessPin) {
+                sessionStorage.setItem(`ms_room_pin_${roomId}_${stay.id}`, pinInput.trim());
+                setIsUnlocked(true);
+                setPinError(false);
+              } else {
+                setPinError(true);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <input
+                type="password"
+                maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoFocus
+                value={pinInput}
+                onChange={(e) => {
+                  setPinInput(e.target.value);
+                  setPinError(false);
+                }}
+                placeholder="• • • •"
+                className="w-full text-center tracking-[1em] text-2xl font-black py-3.5 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-[#007bb9]"
+              />
+              {pinError && (
+                <p className="text-xs text-rose-500 font-semibold mt-2">
+                  PIN incorreto. Verifique o comprovativo ou consulte a recepção.
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              disabled={pinInput.trim().length < 4}
+              className="w-full h-12 rounded-2xl bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold text-sm shadow-md transition-all active:scale-95"
+            >
+              <Unlock className="w-4 h-4 mr-2" /> Desbloquear Painel do Quarto
+            </Button>
+          </form>
+
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
+            {hotel.name} · Sessão individual e confidencial
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] dark:bg-[#111418] text-[#251D18] dark:text-[#F5EFEB] flex flex-col font-sans selection:bg-[#C58A2C]/20">

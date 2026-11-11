@@ -400,6 +400,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const totalDue = contracted * data.ratePerHour;
     const targetRoom = rooms.find((r) => r.id === data.roomId);
     const roomName = data.roomName || targetRoom?.name || 'Quarto';
+    const accessPin = String(Math.floor(1000 + Math.random() * 9000));
 
     if (isGuest) {
       const stayId = `stay-${Date.now()}`;
@@ -412,6 +413,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         clientName: data.clientName || 'Hóspede Particular',
         clientPhone: data.clientPhone || '',
         clientDoc: data.clientDoc || '',
+        accessPin: accessPin,
         checkInAt: now.toISOString(),
         expectedCheckOutAt: expectedOut.toISOString(),
         contractedHours: contracted,

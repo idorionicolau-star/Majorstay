@@ -606,6 +606,7 @@ export type Stay = {
   clientName?: string;
   clientPhone?: string;
   clientDoc?: string; // BI / Passaporte
+  accessPin?: string; // PIN de 4 dígitos para acesso exclusivo do hóspede via QR Code
   checkInAt: string | any; // Timestamp do servidor (Firestore ou ISO)
   expectedCheckOutAt?: string | any;
   checkOutAt?: string | any;
