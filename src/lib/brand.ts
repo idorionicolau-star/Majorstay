@@ -17,11 +17,14 @@ export const BRAND = {
     email: 'contacto@majorstay.app',
   },
   colors: {
-    primary: '#ba5a1a', // Terracota Hotelaria Nobre
-    primaryHover: '#9c4811', // Terracota Profundo
+    primary: '#006194', // Azul Cerúleo Stitch 3
+    primaryHover: '#004f7a', // Azul Cerúleo Profundo
+    cerulean: '#0284C7', // Azul Céu Vibrante
+    sky: '#38BDF8', // Brilho Litoral
+    azureContainer: '#007bb9', // Contentor Primário
     gold: '#df9e42', // Ouro Champagne / Âmbar
-    darkBg: '#1e1714', // Ébano Amadeirado / Espresso
-    lightBg: '#faf7f2', // Linho Nobre / Warm Alabaster
-    nude: '#efebe4', // Areia / Taupe Suave
+    darkBg: '#001827', // Azul Noite Nobre
+    lightBg: '#f7f9fb', // Superfície Litoral
+    nude: '#eceef0', // Neutro Suave
   },
 } as const;

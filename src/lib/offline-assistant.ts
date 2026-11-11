@@ -2,7 +2,7 @@
  * Major Assistant — offline. Answers questions about the business from the data already on the
  * device (Firestore local cache). No internet, no API key, no cost, instant.
  */
-import type { Customer, Location, Order, Product, Production, Sale, StockMovement } from "@/lib/types";
+import type { Customer, Location, Order, Product, Production, Room, Sale, Stay, StockMovement } from "@/lib/types";
 import { analyzeBusiness, isLearning, rateLabel, runoutLabel, type Analysis } from "@/lib/business-analysis";
 import { searchProducts } from "@/lib/quick-stock";
 import { formatCurrency, normalizeString, plural } from "@/lib/utils";
@@ -17,15 +17,17 @@ export type AssistantData = {
     locations: Location[];
     companyName?: string;
     userName?: string;
+    rooms?: Room[];
+    stays?: Stay[];
 };
 
 export const ASSISTANT_SUGGESTIONS = [
-    "O que devo fazer hoje?",
-    "Alertas críticos",
-    "Vendas deste mês",
-    "O que vai esgotar?",
-    "Quem me deve dinheiro?",
-    "Stock de pavê",
+    "Quartos ocupados agora",
+    "Quartos a precisar de limpeza",
+    "Estadias com tempo excedido",
+    "Faturado hoje no alojamento",
+    "Produtos do bar a esgotar",
+    "Resumo do dia",
 ];
 
 const n = (s: string) => normalizeString(s || "").replace(/[?!.,;:]/g, " ").replace(/\s+/g, " ").trim();
@@ -49,6 +51,58 @@ export function answerOffline(question: string, data: AssistantData, cached?: An
         return `Olá${data.userName ? `, ${data.userName.split(" ")[0]}` : ""}! 👋 Trabalho **sem internet**, com os dados que já estão neste aparelho.\n\n${today(a)}\n\n${help()}`;
     }
     if (has(q, "ajuda", "o que podes", "o que sabes", "como funcionas", "comandos")) return help();
+
+    // ---------- hotel rooms / cleaning / occupancy ----------
+    if (data.rooms && has(q, "quarto", "suite", "ocupad", "hospede", "livre", "limpeza", "higieniz", "excedid", "terminar")) {
+        const rooms = data.rooms || [];
+        const activeStays = data.stays?.filter((s) => s.status === 'open') || [];
+        const occupied = rooms.filter((r) => r.status === 'occupied' || r.status === 'overtime');
+        const cleaning = rooms.filter((r) => r.status === 'cleaning');
+        const freeRooms = rooms.filter((r) => r.status === 'free');
+        const maintenance = rooms.filter((r) => r.status === 'maintenance');
+
+        if (has(q, "limpeza", "higieniz", "sujo", "limpar")) {
+            if (!cleaning.length) return "✅ **Nenhum quarto pendente de limpeza.** Todos os quartos vagos estão prontos e higienizados.";
+            return `### 🧹 Quartos a precisar de limpeza (${cleaning.length})\n\n` +
+                list(cleaning.map((r) => `**${r.name}** (${r.type || "Standard"}) — aguarda higienização`));
+        }
+
+        if (has(q, "excedid", "atrasad", "terminar", "acabou o tempo", "passou")) {
+            const now = Date.now();
+            const overdue = activeStays.filter((s) => {
+                const exp = s.expectedCheckOutAt ? new Date(s.expectedCheckOutAt).getTime() : 0;
+                return exp > 0 && now > exp;
+            });
+            if (!overdue.length) return "✅ **Nenhuma estadia com tempo excedido.** Todas as estadias ativas estão dentro do horário contratado.";
+            return `### ⚠️ Estadias com tempo excedido (${overdue.length})\n\n` +
+                list(overdue.map((s) => {
+                    const exp = new Date(s.expectedCheckOutAt!).getTime();
+                    const diffMins = Math.round((now - exp) / 60000);
+                    return `🔴 **Quarto ${s.roomName || s.roomId}** — ${s.clientName || "Hóspede"} (+${diffMins} min excedidos)`;
+                }));
+        }
+
+        if (has(q, "ocupad", "estadia")) {
+            if (!occupied.length) return "🟢 **Nenhum quarto ocupado de momento.** Todos os quartos operacionais estão livres para check-in.";
+            return `### 🛏️ Quartos Ocupados (${occupied.length} de ${rooms.length})\n\n` +
+                list(occupied.map((r) => {
+                    const stay = activeStays.find((s) => s.roomId === r.id);
+                    return `**${r.name}** — ${stay?.clientName || "Hóspede particular"}${stay?.clientPhone ? ` (${stay.clientPhone})` : ""}`;
+                }));
+        }
+
+        if (has(q, "livre", "disponiv")) {
+            if (!freeRooms.length) return "🔴 **Lotação esgotada!** Não há quartos livres para check-in imediato.";
+            return `### 🟢 Quartos Livres (${freeRooms.length} de ${rooms.length})\n\n` +
+                list(freeRooms.map((r) => `**${r.name}** (${r.type || "Standard"}) — ${formatCurrency(r.ratePerHour)}/h`));
+        }
+
+        return `### 🏨 Estado dos Quartos (${rooms.length} no total)\n` +
+            `- **Ocupados:** ${occupied.length}\n` +
+            `- **Livres:** ${freeRooms.length}\n` +
+            `- **A limpar:** ${cleaning.length}\n` +
+            `- **Em manutenção:** ${maintenance.length}`;
+    }
 
     // ---------- what to do today ----------
     if (has(q, "o que devo fazer", "fazer hoje", "prioridade", "por onde comecar", "plano do dia", "resumo do dia", "bom dia")) {
@@ -219,7 +273,7 @@ function today(a: Analysis): string {
 }
 
 function help(): string {
-    return `Pode perguntar, por exemplo:\n- **"O que devo fazer hoje?"**\n- **"Alertas críticos"**\n- **"Vendas deste mês"** / **"vendas hoje"**\n- **"Stock de bloco 15"** (qualquer produto)\n- **"O que vai esgotar?"**\n- **"Quem me deve dinheiro?"**\n- **"Encomendas atrasadas"** · **"Por levantar"**\n- **"Lucro"** · **"Mais vendidos"** · **"Stock parado"**\n- **"O que falta preencher?"**`;
+    return `Pode perguntar, por exemplo:\n- **"Quartos ocupados agora"**\n- **"Quartos a precisar de limpeza"**\n- **"Estadias com tempo excedido"**\n- **"Faturado hoje no alojamento"**\n- **"Produtos do bar a esgotar"**\n- **"Resumo do dia"**`;
 }
 
 function fmtDate(d: unknown): string {

@@ -1,29 +1,28 @@
 <svg width="512" height="512" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Gradiente Terracota Hotelaria -->
-    <linearGradient id="ms-terracotta" x1="12" y1="12" x2="108" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#BA5A1A" />
-      <stop offset="55%" stop-color="#A04812" />
-      <stop offset="100%" stop-color="#6E2D07" />
+    <!-- Gradiente Azul Cerúleo Principal (Stitch 3 Hospitality) -->
+    <linearGradient id="ms-cerulean" x1="16" y1="16" x2="104" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="45%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#006194" />
     </linearGradient>
 
-    <!-- Gradiente Ouro Champagne -->
-    <linearGradient id="ms-gold" x1="20" y1="16" x2="100" y2="104" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#F5D59A" />
-      <stop offset="30%" stop-color="#E2A648" />
-      <stop offset="70%" stop-color="#C97920" />
-      <stop offset="100%" stop-color="#9C4E0E" />
+    <!-- Gradiente Azul Noturno para o Squircle -->
+    <linearGradient id="ms-badge-bg-blue" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#002D47" />
+      <stop offset="100%" stop-color="#001827" />
     </linearGradient>
 
-    <!-- Gradiente Fundo Nobre -->
-    <linearGradient id="ms-badge-bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#2E231D" />
-      <stop offset="100%" stop-color="#191310" />
+    <!-- Gradiente Brilho Céu Litoral -->
+    <linearGradient id="ms-sky-glow" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#BAE6FD" />
+      <stop offset="60%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
     </linearGradient>
 
     <!-- Sombra Suave de Profundidade -->
-    <filter id="ms-shadow" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1F1510" flood-opacity="0.35" />
+    <filter id="ms-shadow-blue" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#001827" flood-opacity="0.45" />
     </filter>
   </defs>
 
@@ -34,17 +33,17 @@
     width="108"
     height="108"
     rx="26"
-    fill="url(#ms-badge-bg)"
-    stroke="url(#ms-gold)"
+    fill="url(#ms-badge-bg-blue)"
+    stroke="url(#ms-cerulean)"
     stroke-width="1.5"
-    stroke-opacity="0.45"
+    stroke-opacity="0.65"
   />
 
-  <g filter="url(#ms-shadow)">
+  <g filter="url(#ms-shadow-blue)">
     <!-- Telhado / Frontão Arquitetónico Superior (Linha Nobre de Hotel) -->
     <path
       d="M 28 44 L 60 22 L 92 44"
-      stroke="url(#ms-gold)"
+      stroke="url(#ms-sky-glow)"
       stroke-width="3.5"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -53,7 +52,7 @@
     <!-- Pilar Esquerdo do 'M' -->
     <path
       d="M 32 46 L 32 94"
-      stroke="url(#ms-gold)"
+      stroke="url(#ms-cerulean)"
       stroke-width="6"
       stroke-linecap="round"
     />
@@ -61,7 +60,7 @@
     <!-- Pilar Direito do 'M' -->
     <path
       d="M 88 46 L 88 94"
-      stroke="url(#ms-gold)"
+      stroke="url(#ms-cerulean)"
       stroke-width="6"
       stroke-linecap="round"
     />
@@ -69,7 +68,7 @@
     <!-- Diagonais Centrais do 'M' convergindo para o Pórtico -->
     <path
       d="M 32 46 L 60 70 L 88 46"
-      stroke="url(#ms-terracotta)"
+      stroke="url(#ms-sky-glow)"
       stroke-width="5"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -78,7 +77,7 @@
     <!-- Arco do Pórtico de Entrada (Hotel Portal / Archway) -->
     <path
       d="M 46 94 L 46 76 C 46 68 52 62 60 62 C 68 62 74 68 74 76 L 74 94"
-      stroke="url(#ms-gold)"
+      stroke="url(#ms-cerulean)"
       stroke-width="3"
       stroke-linecap="round"
       fill="none"
@@ -89,16 +88,16 @@
       cx="60"
       cy="40"
       r="4.5"
-      fill="url(#ms-gold)"
+      fill="url(#ms-sky-glow)"
     />
 
     <!-- Linha de Base / Soleira de Mármore -->
     <path
       d="M 24 94 L 96 94"
-      stroke="url(#ms-gold)"
+      stroke="url(#ms-cerulean)"
       stroke-width="2.5"
       stroke-linecap="round"
-      stroke-opacity="0.75"
+      stroke-opacity="0.85"
     />
   </g>
 </svg>

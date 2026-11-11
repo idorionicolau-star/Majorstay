@@ -5,21 +5,22 @@ import { BRAND } from '@/lib/brand';
 interface MajorStayMarkProps extends React.SVGProps<SVGSVGElement> {
   size?: number | string;
   className?: string;
-  variant?: 'gold' | 'terracotta' | 'monochrome' | 'inverted';
+  variant?: 'blue' | 'gold' | 'terracotta' | 'monochrome' | 'inverted';
 }
 
 /**
  * Ícone Emblema MajorStay:
  * Fusão harmónica do "M" monumental com a arquitectura de hotelaria boutique:
- * pórtico com arco clássico, frontão triangular/telhado de suíte e o fecho/portal de boas-vindas dourado.
+ * pórtico com arco clássico, frontão triangular/telhado de suíte e o fecho/portal de boas-vindas cerúleo/litoral.
  */
 export function MajorStayMark({
   size = 40,
   className,
-  variant = 'gold',
+  variant = 'blue',
   ...props
 }: MajorStayMarkProps) {
   const sizeNum = typeof size === 'number' ? size : parseInt(size, 10) || 40;
+  const isBlue = variant === 'blue';
 
   return (
     <svg
@@ -33,6 +34,26 @@ export function MajorStayMark({
       {...props}
     >
       <defs>
+        {/* Gradiente Azul Cerúleo Principal (Stitch 3 Hospitality) */}
+        <linearGradient id="ms-cerulean" x1="16" y1="16" x2="104" y2="104" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="45%" stopColor="#0284C7" />
+          <stop offset="100%" stopColor="#006194" />
+        </linearGradient>
+
+        {/* Gradiente Azul Noturno para o Squircle */}
+        <linearGradient id="ms-badge-bg-blue" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#002D47" />
+          <stop offset="100%" stopColor="#001827" />
+        </linearGradient>
+
+        {/* Gradiente Brilho Céu Litoral */}
+        <linearGradient id="ms-sky-glow" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#BAE6FD" />
+          <stop offset="60%" stopColor="#38BDF8" />
+          <stop offset="100%" stopColor="#0284C7" />
+        </linearGradient>
+
         {/* Gradiente Terracota Hotelaria */}
         <linearGradient id="ms-terracotta" x1="12" y1="12" x2="108" y2="108" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#C58A2C" />
@@ -56,7 +77,7 @@ export function MajorStayMark({
 
         {/* Sombra Suave de Profundidade */}
         <filter id="ms-shadow" x="-10%" y="-10%" width="120%" height="130%" filterUnits="userSpaceOnUse">
-          <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#1F1510" floodOpacity="0.35" />
+          <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#001827" floodOpacity="0.45" />
         </filter>
       </defs>
 
@@ -67,17 +88,17 @@ export function MajorStayMark({
         width="108"
         height="108"
         rx="26"
-        fill="url(#ms-badge-bg)"
-        stroke="url(#ms-gold)"
+        fill={isBlue ? "url(#ms-badge-bg-blue)" : "url(#ms-badge-bg)"}
+        stroke={isBlue ? "url(#ms-cerulean)" : "url(#ms-gold)"}
         strokeWidth="1.5"
-        strokeOpacity="0.45"
+        strokeOpacity={isBlue ? 0.65 : 0.45}
       />
 
       <g filter="url(#ms-shadow)">
         {/* Telhado / Frontão Arquitetónico Superior (Linha Nobre de Hotel) */}
         <path
           d="M 28 44 L 60 22 L 92 44"
-          stroke="url(#ms-gold)"
+          stroke={isBlue ? "url(#ms-sky-glow)" : "url(#ms-gold)"}
           strokeWidth="3.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -86,7 +107,7 @@ export function MajorStayMark({
         {/* Pilar Esquerdo do "M" */}
         <path
           d="M 32 46 L 32 94"
-          stroke="url(#ms-gold)"
+          stroke={isBlue ? "url(#ms-cerulean)" : "url(#ms-gold)"}
           strokeWidth="6"
           strokeLinecap="round"
         />
@@ -94,7 +115,7 @@ export function MajorStayMark({
         {/* Pilar Direito do "M" */}
         <path
           d="M 88 46 L 88 94"
-          stroke="url(#ms-gold)"
+          stroke={isBlue ? "url(#ms-cerulean)" : "url(#ms-gold)"}
           strokeWidth="6"
           strokeLinecap="round"
         />
@@ -102,7 +123,7 @@ export function MajorStayMark({
         {/* Diagonais Centrais do "M" convergindo para o Arco de Entrada */}
         <path
           d="M 32 46 L 60 70 L 88 46"
-          stroke="url(#ms-terracotta)"
+          stroke={isBlue ? "url(#ms-sky-glow)" : "url(#ms-terracotta)"}
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -111,7 +132,7 @@ export function MajorStayMark({
         {/* Arco do Pórtico de Entrada (Hotel Portal / Archway) */}
         <path
           d="M 46 94 L 46 76 C 46 68 52 62 60 62 C 68 62 74 68 74 76 L 74 94"
-          stroke="url(#ms-gold)"
+          stroke={isBlue ? "url(#ms-cerulean)" : "url(#ms-gold)"}
           strokeWidth="3"
           strokeLinecap="round"
           fill="none"
@@ -122,16 +143,16 @@ export function MajorStayMark({
           cx="60"
           cy="40"
           r="4.5"
-          fill="url(#ms-gold)"
+          fill={isBlue ? "url(#ms-sky-glow)" : "url(#ms-gold)"}
         />
 
         {/* Linha de Base / Soleira de Mármore */}
         <path
           d="M 24 94 L 96 94"
-          stroke="url(#ms-gold)"
+          stroke={isBlue ? "url(#ms-cerulean)" : "url(#ms-gold)"}
           strokeWidth="2.5"
           strokeLinecap="round"
-          strokeOpacity="0.75"
+          strokeOpacity={0.85}
         />
       </g>
     </svg>
@@ -189,12 +210,12 @@ export function MajorStayLogo({
       <div className={cn('flex flex-col justify-center leading-none', !horizontal && 'items-center mt-1')}>
         <div className={cn('font-headline font-extrabold tracking-tight flex items-baseline', titleSize)}>
           <span className="text-slate-900 dark:text-white tracking-[0.06em]">MAJOR</span>
-          <span className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 bg-clip-text text-transparent ml-1 font-black">
+          <span className="bg-gradient-to-r from-[#0284C7] via-[#007bb9] to-[#006194] bg-clip-text text-transparent ml-1 font-black">
             STAY
           </span>
         </div>
         {showTagline && (
-          <span className={cn('uppercase font-extrabold text-slate-400 dark:text-slate-500 mt-1', badgeSize)}>
+          <span className={cn('uppercase font-black text-[#007bb9] dark:text-sky-400 mt-1', badgeSize)}>
             Hospitality Suite
           </span>
         )}

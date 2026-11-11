@@ -107,7 +107,7 @@ interface RoomsContextType {
   cancelBooking: (bookingId: string) => Promise<void>;
 }
 
-const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
+export const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
 
 export function RoomsProvider({ children }: { children: ReactNode }) {
   const { companyId, user, canView, notifyManagers, companyData } = useInventory();
