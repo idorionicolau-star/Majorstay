@@ -398,10 +398,8 @@ service cloud.firestore {
           && request.resource.data.openedBy == resource.data.openedBy
           && (
             isManagerOf(companyId) ||
-            // Se está a fechar a estadia pelo cliente, checkOutAt tem de ser request.time
-            (request.resource.data.status == 'closed' && request.resource.data.checkOutAt == request.time) ||
-            // Ou prorrogação/extensão mantendo a estadia aberta
-            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied', 'consumptions']))
+            // Prorrogação pelo cliente mantendo a estadia aberta (não-gestor não pode fechar directamente nem alterar contractedHours ou consumptions)
+            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied', 'contractedHours', 'consumptions']))
           );
         // Eliminação de estadia: apenas gestor
         allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
