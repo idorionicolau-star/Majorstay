@@ -273,7 +273,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       notifyManagers?.({
         title: `⚠️ Alerta de Higienização: ${room.name}`,
         body: `O ${room.name} está em higienização há mais de ${cleaningStatus.maxMinutes} min (${cleaningStatus.durationMinutes} min decorridos). Verifique com a equipa de limpeza.`,
-        link: '/rooms',
+        link: '/rooms?filtro=cleaning',
         type: 'cleaning_delay',
         dedupeId: dedupeKey,
         always: true,

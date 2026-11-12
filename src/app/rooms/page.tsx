@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useEffect, useState, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BedDouble,
   Clock,
@@ -36,10 +36,19 @@ import { BookingsListDialog } from '@/components/rooms/bookings-list-dialog';
 import { RoomQrDialog } from '@/components/rooms/room-qr-dialog';
 import type { Room, Stay, Booking } from '@/lib/types';
 
-type FilterTab = 'all' | 'free' | 'occupied' | 'overtime' | 'cleaning';
+type FilterTab = 'all' | 'free' | 'occupied' | 'overtime' | 'cleaning' | 'open';
 
-export default function RoomsPage() {
+const VALID_FILTERS: FilterTab[] = ['all', 'free', 'occupied', 'overtime', 'cleaning', 'open'];
+
+function parseFilter(value: string | null): FilterTab {
+  return value && (VALID_FILTERS as string[]).includes(value) ? (value as FilterTab) : 'all';
+}
+
+function RoomsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const filtroParam = searchParams.get('filtro');
+  const quartoParam = searchParams.get('quarto');
   const {
     rooms,
     openStays,
@@ -55,7 +64,24 @@ export default function RoomsPage() {
   const { user } = useInventory();
   const isManager = user?.role === 'Admin' || user?.role === 'Dono';
 
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  // O filtro e o quarto vêm do endereço (?filtro=free|occupied|overtime|cleaning|open e ?quarto=ID),
+  // para que um alerta ou cartão do painel abra já a lista certa.
+  const [activeTab, setActiveTab] = useState<FilterTab>(() => parseFilter(filtroParam));
+  const [focusRoomId, setFocusRoomId] = useState<string | null>(quartoParam);
+
+  useEffect(() => {
+    setActiveTab(parseFilter(filtroParam));
+  }, [filtroParam]);
+
+  useEffect(() => {
+    setFocusRoomId(quartoParam);
+  }, [quartoParam]);
+
+  const selectTab = (tab: FilterTab) => {
+    setActiveTab(tab);
+    setFocusRoomId(null);
+    router.replace(tab === 'all' ? '/rooms' : `/rooms?filtro=${tab}`, { scroll: false });
+  };
   const [searchTerm, setSearchTerm] = useState('');
 
   const delayedCleaningCount = useMemo(() => {
@@ -127,7 +153,11 @@ export default function RoomsPage() {
   // Filtragem dos quartos
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
+      // Um quarto específico (?quarto=ID)
+      if (focusRoomId && room.id !== focusRoomId) return false;
+
       // Filtro por tab
+      if (activeTab === 'open' && room.status !== 'occupied' && room.status !== 'overtime') return false;
       if (activeTab === 'free' && room.status !== 'free') return false;
       if (activeTab === 'occupied' && room.status !== 'occupied') return false;
       if (activeTab === 'overtime' && room.status !== 'overtime') return false;
@@ -146,7 +176,7 @@ export default function RoomsPage() {
 
       return true;
     });
-  }, [rooms, activeTab, searchTerm, staysByRoomId]);
+  }, [rooms, activeTab, focusRoomId, searchTerm, staysByRoomId]);
 
   // Ações dos modais e navegação
   const handleOpenCheckIn = (room?: Room) => {
@@ -287,7 +317,7 @@ export default function RoomsPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3.5">
         {/* Livres */}
         <div
-          onClick={() => setActiveTab('free')}
+          onClick={() => selectTab('free')}
           className={cn(
             'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'free'
@@ -310,7 +340,7 @@ export default function RoomsPage() {
 
         {/* Ocupados */}
         <div
-          onClick={() => setActiveTab('occupied')}
+          onClick={() => selectTab('occupied')}
           className={cn(
             'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'occupied'
@@ -333,7 +363,7 @@ export default function RoomsPage() {
 
         {/* Tempo Excedido */}
         <div
-          onClick={() => setActiveTab('overtime')}
+          onClick={() => selectTab('overtime')}
           className={cn(
             'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'overtime'
@@ -364,7 +394,7 @@ export default function RoomsPage() {
 
         {/* Em Limpeza */}
         <div
-          onClick={() => setActiveTab('cleaning')}
+          onClick={() => selectTab('cleaning')}
           className={cn(
             'p-4 rounded-3xl border transition-all cursor-pointer shadow-card hover:shadow-soft-hover min-w-0',
             activeTab === 'cleaning'
@@ -421,7 +451,7 @@ export default function RoomsPage() {
                 ? 'bg-[#007bb9] text-white hover:bg-[#006194] shadow-sm'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             )}
-            onClick={() => setActiveTab('all')}
+            onClick={() => selectTab('all')}
           >
             Todos ({rooms.length})
           </Button>
@@ -435,7 +465,7 @@ export default function RoomsPage() {
                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             )}
-            onClick={() => setActiveTab('free')}
+            onClick={() => selectTab('free')}
           >
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
             Livres ({stats.free})
@@ -450,7 +480,7 @@ export default function RoomsPage() {
                 ? 'bg-blue-50 text-[#007bb9] dark:bg-blue-950/60 dark:text-sky-300 border border-blue-200/80 shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             )}
-            onClick={() => setActiveTab('occupied')}
+            onClick={() => selectTab('occupied')}
           >
             <BedDouble className="h-3.5 w-3.5 text-[#007bb9]" />
             Ocupados ({stats.occupied})
@@ -465,7 +495,7 @@ export default function RoomsPage() {
                 ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/80 shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             )}
-            onClick={() => setActiveTab('overtime')}
+            onClick={() => selectTab('overtime')}
           >
             <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
             Excedidos ({stats.overtime})
@@ -480,7 +510,7 @@ export default function RoomsPage() {
                 ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200/80 shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             )}
-            onClick={() => setActiveTab('cleaning')}
+            onClick={() => selectTab('cleaning')}
           >
             <Sparkles className="h-3.5 w-3.5 text-sky-600" />
             Limpeza ({stats.cleaning})
@@ -503,6 +533,15 @@ export default function RoomsPage() {
           />
         </div>
       </div>
+
+      {(activeTab === 'open' || focusRoomId) && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 px-4 py-2.5 text-xs font-semibold text-[#006194] dark:text-sky-300">
+          <span>{focusRoomId ? 'A mostrar apenas o quarto selecionado' : 'A mostrar apenas quartos com estadia aberta'}</span>
+          <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs font-bold shrink-0" onClick={() => selectTab('all')}>
+            Ver todos
+          </Button>
+        </div>
+      )}
 
       {/* Grelha de Quartos */}
       {loading ? (
@@ -621,5 +660,13 @@ export default function RoomsPage() {
         room={roomForQr}
       />
     </div>
+  );
+}
+
+export default function RoomsPage() {
+  return (
+    <Suspense fallback={null}>
+      <RoomsPageContent />
+    </Suspense>
   );
 }
