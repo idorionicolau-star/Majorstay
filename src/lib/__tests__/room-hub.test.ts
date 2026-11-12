@@ -113,12 +113,18 @@ describe('PARTE 1 — Segurança do PIN e QR (/api/room-hub & /unlock)', () => {
     });
 
     mockRunTransaction.mockImplementation(async (updateFunction: any) => {
+      // Imita a regra do Firestore: todas as leituras antes de qualquer escrita.
+      let hasWritten = false;
       const transaction = {
         get: async (ref: any) => {
+          if (hasWritten) {
+            throw new Error('Firestore transactions require all reads to be executed before all writes.');
+          }
           const path = typeof ref === 'string' ? ref : ref.path;
           return mockDocGet(path);
         },
         update: (ref: any, data: any) => {
+          hasWritten = true;
           const path = typeof ref === 'string' ? ref : ref.path;
           mockDocUpdate(path, data);
         },
