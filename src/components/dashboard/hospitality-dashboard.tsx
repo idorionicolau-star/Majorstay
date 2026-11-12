@@ -98,9 +98,10 @@ interface TileProps {
   value: number;
   icon: React.ComponentType<{ className?: string }>;
   tone?: "free" | "occupied" | "overtime" | "cleaning";
+  href?: string;
 }
 
-function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
+function Tile({ label, value, icon: Icon, tone = "occupied", href = "/rooms" }: TileProps) {
   const toneConfig = {
     free: {
       badgeBg: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-100/80 dark:border-emerald-900/40",
@@ -126,7 +127,7 @@ function Tile({ label, value, icon: Icon, tone = "occupied" }: TileProps) {
 
   return (
     <Link
-      href="/rooms"
+      href={href}
       className={cn(
         "group rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-5 flex flex-col justify-between h-[130px] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
         toneConfig.hoverBorder
@@ -292,10 +293,10 @@ export function HospitalityDashboard() {
           </SectionTitle>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Tile label="Livres" value={stats.free} icon={CheckCircle2} tone="free" />
-          <Tile label="Ocupados" value={stats.occupied} icon={BedDouble} tone="occupied" />
-          <Tile label="Tempo Excedido" value={stats.overtime} icon={AlertTriangle} tone="overtime" />
-          <Tile label="Em Limpeza" value={stats.cleaning} icon={Sparkles} tone="cleaning" />
+          <Tile label="Livres" value={stats.free} icon={CheckCircle2} tone="free" href="/rooms?filtro=free" />
+          <Tile label="Ocupados" value={stats.occupied} icon={BedDouble} tone="occupied" href="/rooms?filtro=occupied" />
+          <Tile label="Tempo Excedido" value={stats.overtime} icon={AlertTriangle} tone="overtime" href="/rooms?filtro=overtime" />
+          <Tile label="Em Limpeza" value={stats.cleaning} icon={Sparkles} tone="cleaning" href="/rooms?filtro=cleaning" />
         </div>
       </section>
 
@@ -306,7 +307,7 @@ export function HospitalityDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {stats.overtime > 0 && (
               <Link
-                href="/rooms"
+                href="/rooms?filtro=overtime"
                 className="flex items-center gap-3 rounded-2xl border border-[#FBD5D0] dark:border-[#5C2323] bg-[#FDF0EE] dark:bg-[#381616] p-4 text-xs font-bold text-[#C53030] dark:text-[#FEB2B2] shadow-sm hover:opacity-95 transition-all"
               >
                 <div className="p-2 rounded-xl bg-[#C53030]/10 shrink-0">
@@ -324,7 +325,7 @@ export function HospitalityDashboard() {
             )}
             {stats.cleaning > 0 && (
               <Link
-                href="/rooms"
+                href="/rooms?filtro=cleaning"
                 className={cn(
                   "flex items-center gap-3 rounded-2xl border p-4 text-xs font-bold shadow-sm hover:opacity-95 transition-all",
                   delayedCleaningCount > 0
@@ -382,7 +383,7 @@ export function HospitalityDashboard() {
             {rows.map(({ stay, realtime, pricing }, idx) => (
               <Link
                 key={stay.id}
-                href="/rooms"
+                href="/rooms?filtro=open"
                 className={cn(
                   "flex items-center justify-between gap-3 rounded-3xl border bg-white dark:bg-[#191E25] p-5 shadow-card hover:shadow-md transition-all group",
                   realtime.isOvertime
