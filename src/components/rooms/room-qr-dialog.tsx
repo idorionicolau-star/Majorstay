@@ -283,12 +283,12 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
         </div>
 
         {/* Rodapé Fixo */}
-        <DialogFooter className="px-6 sm:px-7 py-3 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-stone-50/80 dark:bg-stone-900/80 shrink-0 flex flex-col sm:flex-row sm:flex-wrap gap-2 justify-end">
+        <DialogFooter className="px-6 sm:px-7 py-3 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-stone-50/80 dark:bg-stone-900/80 shrink-0 grid grid-cols-2 gap-2 sm:space-x-0">
           <Button
             type="button"
             variant="outline"
             onClick={handleCopy}
-            className="w-full sm:w-auto h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-stone-700 dark:text-stone-300"
+            className="w-full h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-stone-700 dark:text-stone-300"
           >
             {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
             Copiar Link
@@ -298,7 +298,7 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
             type="button"
             variant="outline"
             onClick={() => window.open(roomUrl, '_blank')}
-            className="w-full sm:w-auto h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-stone-700 dark:text-stone-300"
+            className="w-full h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] text-stone-700 dark:text-stone-300"
           >
             <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
             Abrir Visor
@@ -307,7 +307,7 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
           <Button
             type="button"
             onClick={handlePrint}
-            className="w-full sm:w-auto h-10 text-xs font-bold rounded-xl bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] hover:from-[#A87019] hover:to-[#B55E22] text-white shadow-xs"
+            className="col-span-2 order-first w-full h-11 text-sm font-bold rounded-xl bg-gradient-to-r from-[#C58A2C] to-[#C86A2B] hover:from-[#A87019] hover:to-[#B55E22] text-white shadow-xs"
           >
             <Printer className="w-3.5 h-3.5 mr-1.5" />
             Imprimir Cartão
