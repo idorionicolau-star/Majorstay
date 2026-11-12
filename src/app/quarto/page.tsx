@@ -768,7 +768,7 @@ function QuartoPortalContent() {
             <Card className="rounded-3xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 sm:p-5 space-y-3 shadow-xs">
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
-                  <span>Acomodação ({stay.contractedHours}h contratadas)</span>
+                  <span>Acomodação (horas contratadas e tempo em uso)</span>
                   <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">
                     {formatCurrency(pricing?.roomTotal ?? stay.contractedHours * stay.ratePerHour)}
                   </span>

@@ -33,7 +33,6 @@ import { whatsappLink } from '@/lib/support';
 import { LoadingBar } from './loading-bar';
 import { markAppReady } from '@/lib/app-ready';
 import { clearNavHint } from '@/lib/nav-hint';
-import { INTRO_ALWAYS_KEY, INTRO_PLAY_EVENT } from '@/lib/intro-gate';
 import { isSuperAdminEmail } from '@/lib/super-admin';
 import { GuestBanner } from './guest-banner';
 import { AppLoader } from './app-loader';
@@ -142,18 +141,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
   }, [authContext?.loading, authContext?.firebaseUser, pathname, router, isAuthPage, isPublicPage]);
 
-
-  // O super-administrador vê a animação de entrada sempre que abre a app e ao entrar com a senha (os outros, uma vez
-  // por dia): marca o aparelho para o script do <head> (lib/intro-gate.ts) e, depois de entrar, pede para tocar.
-  const signedOutSeen = React.useRef(false);
-  React.useEffect(() => {
-    const fu = authContext?.firebaseUser;
-    if (!fu) { if (!authContext?.loading) signedOutSeen.current = true; return; }
-    const superAdmin = isSuperAdminEmail(fu.email);
-    try { if (superAdmin) localStorage.setItem(INTRO_ALWAYS_KEY, '1'); else localStorage.removeItem(INTRO_ALWAYS_KEY); } catch { /* ignore */ }
-    if (superAdmin && signedOutSeen.current) window.dispatchEvent(new Event(INTRO_PLAY_EVENT));
-    signedOutSeen.current = false;
-  }, [authContext?.loading, authContext?.firebaseUser]);
 
   // A app carrega por fases (sessão, depois os dados): entre elas, por um instante, parecia pronta. O ecrã de
   // carregamento saía e voltava a entrar, a recomeçar a animação. Agora só sai quando está pronta há 300 ms, com

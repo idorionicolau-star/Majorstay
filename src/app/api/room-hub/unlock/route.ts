@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import { calculateExpectedCheckOut, normalizeDate } from '@/lib/hospitality-calc';
+import { calculateExpectedCheckOut, calculateStayPricing, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
 import { verifyRoomPin } from '@/lib/room-pin';
 
@@ -159,7 +159,17 @@ export async function POST(req: Request) {
       ? stayData.extensions.reduce((acc: number, ext: any) => acc + (Number(ext.hours) || 0), 0)
       : 0;
     const totalHours = contractedHours + extensionsHours;
-    const roomTotal = totalHours * ratePerHour;
+    // Mesma regra do check-out (horas começadas e tolerância), para o valor mostrado bater com o cobrado.
+    let roomTotal = totalHours * ratePerHour;
+    try {
+      roomTotal = calculateStayPricing({
+        checkInAt: stayData.checkInAt,
+        checkOutAt: new Date(),
+        contractedHours: totalContractedHours(stayData),
+        ratePerHour,
+        consumptions: [],
+      }).stayAmountDue;
+    } catch { /* mantém o valor contratado */ }
 
     const pendingOrdersTotal = orders
       .filter((o) => o.status === 'pending')
