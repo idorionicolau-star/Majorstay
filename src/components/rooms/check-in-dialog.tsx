@@ -56,7 +56,6 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const freeRooms = rooms.filter((r) => r.active && (r.status === 'free' || r.id === preselectedRoomId));
 
   const [roomId, setRoomId] = useState<string>('');
-  const [roomSearch, setRoomSearch] = useState<string>('');
   const [clientName, setClientName] = useState<string>('Hóspede Particular');
   const [clientPhone, setClientPhone] = useState<string>('');
   const [clientDoc, setClientDoc] = useState<string>('');
@@ -184,47 +183,32 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00855b] dark:bg-emerald-400" /> Disponível
               </span>
             </div>
-            {freeRooms.length > 6 && (
-              <Input
-                value={roomSearch}
-                onChange={(e) => setRoomSearch(e.target.value)}
-                placeholder="Filtrar quartos..."
-                className="h-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 mb-1"
-              />
-            )}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-              {freeRooms
-                .filter((r) => r.name.toLowerCase().includes(roomSearch.toLowerCase()))
-                .map((r) => {
-                  const isSelected = roomId === r.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => handleRoomChange(r.id)}
-                      className={cn(
-                        "p-2.5 rounded-2xl text-left transition-all active:scale-95 flex flex-col justify-between border",
-                        isSelected
-                          ? "bg-[#007bb9] text-white border-[#007bb9] shadow-sm ring-2 ring-[#007bb9]/20"
-                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-200 hover:bg-blue-50/40"
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-1 w-full">
-                        <span className="font-bold text-xs truncate">{r.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-                      </div>
-                      <span className={cn("text-[10px] mt-1 block truncate font-medium", isSelected ? "text-blue-100" : "text-slate-500 dark:text-slate-400")}>
-                        {formatCurrency(r.ratePerHour)}/h
+
+            <Select value={roomId} onValueChange={handleRoomChange}>
+              <SelectTrigger
+                id="roomSelect"
+                className="w-full h-11 text-xs font-semibold rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 px-4 focus:ring-2 focus:ring-[#007bb9]/20 focus:border-[#007bb9] transition-all"
+              >
+                <SelectValue placeholder="Selecione um quarto disponível" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-xl max-h-60">
+                {freeRooms.map((r) => (
+                  <SelectItem key={r.id} value={r.id} className="text-xs font-semibold py-2.5 rounded-xl cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-white">{r.name}</span>
+                      <span className="text-slate-300 dark:text-slate-600">|</span>
+                      <span className="text-slate-600 dark:text-slate-300 font-medium">
+                        {formatCurrency(r.ratePerHour)}/hora {r.minimumHours && r.minimumHours > 1 ? `(mín. ${r.minimumHours}h)` : ''}
                       </span>
-                    </button>
-                  );
-                })}
-              {freeRooms.length === 0 && (
-                <div className="col-span-full py-4 text-center text-xs text-slate-400 font-medium">
-                  Nenhum quarto livre no momento.
-                </div>
-              )}
-            </div>
+                    </div>
+                  </SelectItem>
+                ))}
+                {freeRooms.length === 0 && (
+                  <div className="p-3 text-center text-xs text-slate-400">Nenhum quarto disponível</div>
+                )}
+              </SelectContent>
+            </Select>
+
             {selectedRoom && (
               <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                 <Sparkles className="w-3.5 h-3.5 text-[#fd761a]" />

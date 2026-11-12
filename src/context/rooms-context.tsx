@@ -485,7 +485,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     toast({
       title: 'Check-in efetuado com sucesso!',
-      description: `${roomName} — ${contracted}h contratadas`,
+      description: `${roomName} — ${contracted}h contratadas · PIN: ${accessPin}`,
     });
 
     return stayRef.id;

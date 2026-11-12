@@ -57,6 +57,19 @@ export async function POST(req: Request) {
       const expCheckOut = stay
         ? calculateExpectedCheckOut(stay.checkInAt, stay.contractedHours, stay.extensions)
         : new Date(Date.now() + 75 * 60 * 1000);
+      const ratePerHour = stay?.ratePerHourApplied || room?.ratePerHour || 300;
+
+      const rawConsumptions = Array.isArray(stay?.consumptions) ? stay.consumptions : [];
+      const consumptions = rawConsumptions.map((c: any, idx: number) => ({
+        id: c.id || `demo-c-${idx}`,
+        productName: String(c.productName || 'Item de Bar'),
+        quantity: Number(c.quantity || 1),
+        unitPrice: Number(c.unitPrice || 0),
+        totalPrice: Number(c.totalPrice || (c.quantity * c.unitPrice) || 0),
+        addedAt: c.addedAt ? normalizeDate(c.addedAt).toISOString() : null,
+      }));
+      const consumptionsTotal = consumptions.reduce((acc: number, c: any) => acc + c.totalPrice, 0);
+      const roomTotal = contractedHours * ratePerHour;
 
       return NextResponse.json({
         success: true,
@@ -65,8 +78,17 @@ export async function POST(req: Request) {
           checkInAt: checkInDate.toISOString(),
           contractedHours,
           expectedCheckOut: expCheckOut.toISOString(),
-          ratePerHour: stay?.ratePerHourApplied || room?.ratePerHour || 300,
+          ratePerHour,
           graceMinutes: 10,
+          consumptions,
+        },
+        orders: [],
+        pricing: {
+          roomTotal,
+          consumptionsTotal,
+          pendingOrdersTotal: 0,
+          totalDue: roomTotal + consumptionsTotal,
+          estimatedTotalWithPending: roomTotal + consumptionsTotal,
         },
         wifi: {
           ssid: 'MajorStay-VIP',
@@ -86,6 +108,65 @@ export async function POST(req: Request) {
     const checkInDate = normalizeDate(stayData.checkInAt);
     const contractedHours = stayData.contractedHours || 1;
     const expCheckOut = calculateExpectedCheckOut(stayData.checkInAt, stayData.contractedHours, stayData.extensions);
+    const ratePerHour = stayData.ratePerHourApplied || roomData.ratePerHour || 0;
+
+    // Consumos confirmados na conta da estadia
+    const rawConsumptions = Array.isArray(stayData.consumptions) ? stayData.consumptions : [];
+    const consumptions = rawConsumptions.map((c: any, idx: number) => ({
+      id: c.id || `c-${idx}`,
+      productName: String(c.productName || 'Item de Bar'),
+      quantity: Number(c.quantity || 1),
+      unitPrice: Number(c.unitPrice || 0),
+      totalPrice: Number(c.totalPrice || (c.quantity * c.unitPrice) || 0),
+      addedAt: c.addedAt ? normalizeDate(c.addedAt).toISOString() : null,
+    }));
+    const consumptionsTotal = consumptions.reduce((acc: number, c: any) => acc + c.totalPrice, 0);
+
+    // Pedidos de bar do quarto (pendentes, confirmados ou recusados)
+    let orders: any[] = [];
+    try {
+      const ordersSnap = await db
+        .collection(`companies/${companyId}/roomOrders`)
+        .where('stayId', '==', stayId)
+        .limit(50)
+        .get();
+
+      if (!ordersSnap.empty) {
+        orders = ordersSnap.docs.map((doc) => {
+          const d = doc.data() || {};
+          return {
+            id: doc.id,
+            status: d.status || 'pending',
+            items: Array.isArray(d.items) ? d.items.map((it: any) => ({
+              productId: it.productId,
+              productName: it.productName,
+              quantity: it.quantity,
+              unitPrice: it.unitPrice,
+              totalPrice: it.totalPrice,
+            })) : [],
+            total: Number(d.total || 0),
+            createdAt: d.createdAt ? normalizeDate(d.createdAt).toISOString() : new Date().toISOString(),
+            rejectReason: d.rejectReason || null,
+          };
+        });
+      }
+    } catch (ordersErr) {
+      console.warn('Não foi possível ler roomOrders para o visor do quarto:', ordersErr);
+    }
+
+    // Extensões de horas
+    const extensionsHours = Array.isArray(stayData.extensions)
+      ? stayData.extensions.reduce((acc: number, ext: any) => acc + (Number(ext.hours) || 0), 0)
+      : 0;
+    const totalHours = contractedHours + extensionsHours;
+    const roomTotal = totalHours * ratePerHour;
+
+    const pendingOrdersTotal = orders
+      .filter((o) => o.status === 'pending')
+      .reduce((acc: number, o: any) => acc + (Number(o.total) || 0), 0);
+
+    const totalDue = roomTotal + consumptionsTotal;
+    const estimatedTotalWithPending = totalDue + pendingOrdersTotal;
 
     return NextResponse.json({
       success: true,
@@ -94,8 +175,17 @@ export async function POST(req: Request) {
         checkInAt: checkInDate.toISOString(),
         contractedHours,
         expectedCheckOut: expCheckOut.toISOString(),
-        ratePerHour: stayData.ratePerHourApplied || roomData.ratePerHour || 0,
+        ratePerHour,
         graceMinutes: 10,
+        consumptions,
+      },
+      orders,
+      pricing: {
+        roomTotal,
+        consumptionsTotal,
+        pendingOrdersTotal,
+        totalDue,
+        estimatedTotalWithPending,
       },
       wifi: {
         ssid: companyData.wifiSsid ? String(companyData.wifiSsid).trim() : null,

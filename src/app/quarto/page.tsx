@@ -23,6 +23,10 @@ import {
   Lock,
   Unlock,
   AlertCircle,
+  Receipt,
+  CheckCircle2,
+  Hourglass,
+  XCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +56,40 @@ interface RoomHubData {
   }[];
 }
 
+interface StayConsumption {
+  id: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  addedAt: string | null;
+}
+
+interface RoomOrderItem {
+  productId?: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+interface RoomOrder {
+  id: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  items: RoomOrderItem[];
+  total: number;
+  createdAt: string;
+  rejectReason?: string | null;
+}
+
+interface PricingSummary {
+  roomTotal: number;
+  consumptionsTotal: number;
+  pendingOrdersTotal: number;
+  totalDue: number;
+  estimatedTotalWithPending: number;
+}
+
 interface StayUnlockedData {
   id: string;
   checkInAt: string;
@@ -59,6 +97,7 @@ interface StayUnlockedData {
   expectedCheckOut: string;
   ratePerHour: number;
   graceMinutes: number;
+  consumptions?: StayConsumption[];
 }
 
 interface WifiData {
@@ -74,6 +113,8 @@ function QuartoPortalContent() {
   const [data, setData] = useState<RoomHubData | null>(null);
   const [stay, setStay] = useState<StayUnlockedData | null>(null);
   const [wifi, setWifi] = useState<WifiData | null>(null);
+  const [orders, setOrders] = useState<RoomOrder[]>([]);
+  const [pricing, setPricing] = useState<PricingSummary | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +161,8 @@ function QuartoPortalContent() {
         }
         setStay(json.stay);
         setWifi(json.wifi || null);
+        setOrders(Array.isArray(json.orders) ? json.orders : []);
+        setPricing(json.pricing || null);
         setIsUnlocked(true);
         setPinError(null);
         setIsLockedOut(false);
@@ -135,6 +178,8 @@ function QuartoPortalContent() {
         setIsUnlocked(false);
         setStay(null);
         setWifi(null);
+        setOrders([]);
+        setPricing(null);
         return false;
       }
 
@@ -146,6 +191,8 @@ function QuartoPortalContent() {
       setIsUnlocked(false);
       setStay(null);
       setWifi(null);
+      setOrders([]);
+      setPricing(null);
       return false;
     } catch (err: any) {
       setPinError('Erro ao comunicar com o servidor. Verifique a sua ligação.');
@@ -174,6 +221,8 @@ function QuartoPortalContent() {
         setIsUnlocked(false);
         setStay(null);
         setWifi(null);
+        setOrders([]);
+        setPricing(null);
         setPinError(null);
         setIsLockedOut(false);
       } else {
@@ -354,6 +403,12 @@ function QuartoPortalContent() {
       });
       setCart({});
       setConfirmOpen(false);
+
+      // Atualiza o extrato do quarto imediatamente para mostrar o pedido pendente
+      if (typeof window !== 'undefined') {
+        const savedPin = sessionStorage.getItem(pinStorageKey);
+        if (savedPin) unlockWithPin(savedPin);
+      }
     } catch {
       setOrderError('Sem ligação à internet. Verifique e tente de novo.');
     } finally {
@@ -693,6 +748,159 @@ function QuartoPortalContent() {
             </a>
           </Button>
         </Card>
+
+        {/* Extrato da Estadia & Pedidos Efetuados (Visível com PIN desbloqueado) */}
+        {isUnlocked && stay && (
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-[#C58A2C]" />
+                <h3 className="font-extrabold text-sm text-[#251D18] dark:text-[#F5EFEB]">
+                  A Sua Conta & Pedidos
+                </h3>
+              </div>
+              <span className="text-[11px] font-bold text-stone-500 font-mono">
+                {pricing ? formatCurrency(pricing.estimatedTotalWithPending) : formatCurrency(stay.contractedHours * stay.ratePerHour)}
+              </span>
+            </div>
+
+            {/* Resumo da Conta e Total Geral Previsto */}
+            <Card className="rounded-3xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 sm:p-5 space-y-3 shadow-xs">
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
+                  <span>Acomodação ({stay.contractedHours}h contratadas)</span>
+                  <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">
+                    {formatCurrency(pricing?.roomTotal ?? stay.contractedHours * stay.ratePerHour)}
+                  </span>
+                </div>
+
+                {stay.consumptions && stay.consumptions.length > 0 && (
+                  <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      Consumos de Bar Confirmados
+                    </span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                      {formatCurrency(pricing?.consumptionsTotal ?? 0)}
+                    </span>
+                  </div>
+                )}
+
+                {pricing && pricing.pendingOrdersTotal > 0 && (
+                  <div className="flex items-center justify-between text-amber-700 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200/80 dark:border-amber-900/60 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Hourglass className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
+                      Pedidos a aguardar receção (Pendentes)
+                    </span>
+                    <span className="font-black font-mono">
+                      + {formatCurrency(pricing.pendingOrdersTotal)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Total Geral Final a Pagar */}
+              <div className="pt-3 border-t border-[#F2ECE1] dark:border-[#2C3440] flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider block">
+                    Total a Pagar no Check-out
+                  </span>
+                  <span className="text-[11px] text-stone-500">
+                    {pricing && pricing.pendingOrdersTotal > 0
+                      ? '* Inclui pedidos pendentes em validação'
+                      : 'Valor atualizado sem surpresas na saída'}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl sm:text-2xl font-black text-[#C58A2C] dark:text-[#E88C4A] font-mono tracking-tight">
+                    {formatCurrency(pricing?.estimatedTotalWithPending ?? stay.contractedHours * stay.ratePerHour)}
+                  </span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Pedidos Pendentes Efetuados via QR Code */}
+            {orders.filter((o) => o.status === 'pending').length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200">
+                    <Hourglass className="w-4 h-4 text-amber-600" />
+                    Pedidos de Bar a Aguardar Confirmação ({orders.filter((o) => o.status === 'pending').length})
+                  </span>
+                  <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 border-amber-300 text-[10px] font-bold">
+                    Pendente
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {orders
+                    .filter((o) => o.status === 'pending')
+                    .map((ord) => (
+                      <div key={ord.id} className="bg-white/80 dark:bg-black/20 p-2.5 rounded-xl border border-amber-200/60 text-xs space-y-1">
+                        <div className="flex items-center justify-between font-semibold text-stone-800 dark:text-stone-200">
+                          <span className="font-mono text-[11px]">Pedido #{ord.id.slice(-5).toUpperCase()}</span>
+                          <span className="font-black text-[#C58A2C] font-mono">{formatCurrency(ord.total)}</span>
+                        </div>
+                        <div className="text-[11px] text-stone-600 dark:text-stone-300 space-y-0.5">
+                          {ord.items.map((it, idx) => (
+                            <div key={idx} className="flex justify-between">
+                              <span>{it.quantity}× {it.productName}</span>
+                              <span className="font-mono">{formatCurrency(it.totalPrice)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Consumos Confirmados na Conta */}
+            {stay.consumptions && stay.consumptions.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Consumos Confirmados na Conta ({stay.consumptions.length})
+                  </span>
+                  <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-emerald-300 text-[10px] font-bold">
+                    Lançados na Fatura
+                  </Badge>
+                </div>
+                <div className="bg-white/80 dark:bg-black/20 p-2.5 rounded-xl border border-emerald-200/60 text-xs space-y-1.5">
+                  {stay.consumptions.map((c, idx) => (
+                    <div key={c.id || idx} className="flex items-center justify-between text-[11px] text-stone-700 dark:text-stone-300">
+                      <span>{c.quantity}× {c.productName}</span>
+                      <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">
+                        {formatCurrency(c.totalPrice)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="pt-1.5 border-t border-emerald-200/60 dark:border-emerald-800 flex items-center justify-between font-bold text-emerald-900 dark:text-emerald-200 text-xs">
+                    <span>Subtotal Consumos</span>
+                    <span className="font-mono">{formatCurrency(pricing?.consumptionsTotal ?? 0)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Pedidos Recusados (Informativo, nada cobrado) */}
+            {orders.filter((o) => o.status === 'rejected').length > 0 && (
+              <div className="p-3 rounded-2xl bg-stone-100 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 text-xs space-y-1">
+                <span className="flex items-center gap-1.5 font-bold text-stone-700 dark:text-stone-300">
+                  <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                  Pedidos Não Atendidos (Nada Cobrado)
+                </span>
+                {orders
+                  .filter((o) => o.status === 'rejected')
+                  .map((ord) => (
+                    <p key={ord.id} className="text-[11px] text-stone-500 dark:text-stone-400">
+                      • Pedido Nº {ord.id.slice(-5).toUpperCase()}: {ord.rejectReason || 'Sem disponibilidade no stock da receção'}.
+                    </p>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Menu do Bar & Pedidos Rápidos */}
         {barProducts && barProducts.length > 0 && (

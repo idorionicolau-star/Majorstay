@@ -182,22 +182,21 @@ function RoomsPageContent() {
 
   // Ações dos modais e navegação
   const handleOpenCheckIn = (room?: Room) => {
-    if (room?.id) {
-      router.push(`/rooms/checkin?roomId=${room.id}`);
-    } else {
-      router.push('/rooms/checkin');
-    }
+    setSelectedRoomForCheckIn(room || null);
+    setPrefillGuestName('');
+    setPrefillGuestPhone('');
+    setPrefillHours(room?.minimumHours || 1);
+    setCheckInOpen(true);
   };
 
   const handleCheckInFromBooking = async (booking: Booking) => {
     setBookingsListOpen(false);
-    const params = new URLSearchParams();
-    if (booking.roomId) params.set('roomId', booking.roomId);
-    if (booking.id) params.set('bookingId', booking.id);
-    if (booking.clientName) params.set('name', booking.clientName);
-    if (booking.clientPhone) params.set('phone', booking.clientPhone);
-    if (booking.durationHours) params.set('hours', String(booking.durationHours));
-    router.push(`/rooms/checkin?${params.toString()}`);
+    const targetRoom = booking.roomId ? rooms.find((r) => r.id === booking.roomId) : null;
+    setSelectedRoomForCheckIn(targetRoom || null);
+    setPrefillGuestName(booking.clientName || '');
+    setPrefillGuestPhone(booking.clientPhone || '');
+    setPrefillHours(booking.durationHours || 1);
+    setCheckInOpen(true);
   };
 
   const handleOpenExtend = (room: Room, stay: Stay) => {
