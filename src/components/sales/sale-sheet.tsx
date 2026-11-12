@@ -48,14 +48,13 @@ export function SaleSheetHost() {
 
 function SaleSheet({ sale }: { sale: Sale }) {
     const inventoryContext = useContext(InventoryContext);
-    const { updateSale, confirmPickup, removeSale, canEditSales } = useSaleActions();
+    const { updateSale, removeSale, canEditSales } = useSaleActions();
     const { customer, sendReceipt, download, print } = useSaleDocument(sale);
     const [editing, setEditing] = useState(false);
 
     const isManager = inventoryContext?.user?.role === "Admin" || inventoryContext?.user?.role === "Dono";
     const paid = sale.amountPaid ?? sale.totalValue;
     const owed = sale.totalValue - paid;
-    const canPickup = canEditSales && sale.status === "Pago" && !sale.orderId && sale.documentType !== "Encomenda";
     const locationName = inventoryContext?.isMultiLocation && sale.location
         ? inventoryContext.locations.find((l) => l.id === sale.location)?.name
         : undefined;
@@ -137,11 +136,6 @@ function SaleSheet({ sale }: { sale: Sale }) {
                     {canEditSales && owed > 0.01 && (
                         <Button variant="outline" className="text-amber-700" onClick={() => updateSale(paidInFull(sale))}>
                             <DollarSign className="mr-2 h-4 w-4" /> Pago por inteiro
-                        </Button>
-                    )}
-                    {canPickup && (
-                        <Button variant="outline" className="text-emerald-700" onClick={() => confirmPickup(sale)}>
-                            <CheckCircle className="mr-2 h-4 w-4" /> Levantado
                         </Button>
                     )}
                     <Button variant="outline" onClick={print}><Printer className="mr-2 h-4 w-4" /> Imprimir</Button>
