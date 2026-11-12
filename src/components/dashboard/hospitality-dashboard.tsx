@@ -496,17 +496,17 @@ export function HospitalityDashboard() {
             <SectionTitle subtitle="Evolução de receitas ao longo da semana">
               Últimos 7 Dias
             </SectionTitle>
-            <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-6 shadow-sm flex flex-col justify-between">
-              <div className="h-[148px] flex items-end justify-between gap-3 pt-4 pb-1">
+            <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-4 sm:p-6 shadow-sm flex flex-col justify-between overflow-hidden">
+              <div className="h-[148px] flex items-end justify-between gap-1.5 sm:gap-3 pt-4 pb-1">
                 {week.map((b) => {
                   const isPeak = b.total > 0 && b.total === weekMax;
                   const heightPercent = b.total > 0 ? Math.max(12, (b.total / weekMax) * 100) : 0;
                   return (
-                    <div key={b.key} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative">
+                    <div key={b.key} className="flex-1 min-w-0 flex flex-col items-center gap-2 h-full justify-end group relative">
                       {b.total > 0 && (
                         <span
                           className={cn(
-                            "text-[10px] font-bold px-1.5 py-0.5 rounded-full border shadow-2xs whitespace-nowrap",
+                            "text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full border shadow-2xs whitespace-nowrap max-w-full truncate",
                             isPeak
                               ? "text-[#006194] dark:text-sky-300 bg-blue-50 dark:bg-blue-950/70 border-blue-200 dark:border-blue-800"
                               : "text-slate-400 bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800"
@@ -536,7 +536,8 @@ export function HospitalityDashboard() {
                             : "font-bold text-slate-400 dark:text-slate-500"
                         )}
                       >
-                        {b.label}
+                        <span className="sm:hidden">{b.label.slice(0, 3)}</span>
+                        <span className="hidden sm:inline">{b.label}</span>
                       </span>
                     </div>
                   );
