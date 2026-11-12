@@ -40,7 +40,7 @@ export function MobileNav({ onLinkClick }: MobileNavProps) {
     return (
         <aside className="flex flex-col h-full bg-white dark:bg-[#191E25] border-r border-slate-200/80 dark:border-slate-800">
             <div className="flex h-20 items-center justify-center border-b border-slate-200/80 dark:border-slate-800 px-4">
-                <Link href="/dashboard" className="flex items-center justify-center" onClick={handleLinkClick}>
+                <Link href="/dashboard" className="flex items-center justify-center min-w-0 max-w-full" onClick={handleLinkClick}>
                     <MajorStayLogo size="md" showTagline customLogoUrl={companyData?.logoUrl} customName={companyData?.name} />
                 </Link>
             </div>
