@@ -136,6 +136,8 @@ export async function POST(req: Request) {
         ratePerHour,
         graceMinutes: 10,
         consumptions: sanitizedConsumptions,
+        packagePrice: Number(stayData.packagePrice) || undefined,
+        packageHours: Number(stayData.packageHours) || undefined,
       });
 
       const totalAmountDue = pricing.totalAmountDue;

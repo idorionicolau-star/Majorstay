@@ -1,6 +1,6 @@
 import { formatCurrency } from '@/lib/utils';
 import type { Booking, Stay, Room } from '@/lib/types';
-import { normalizeDate, formatStayDuration } from '@/lib/hospitality-calc';
+import { normalizeDate, formatStayDuration, stayChargeForHours } from '@/lib/hospitality-calc';
 
 /**
  * Normaliza um número de telemóvel para o formato internacional de Moçambique (+258).
@@ -110,7 +110,7 @@ export function buildStayReceiptWhatsAppMessage(
   const dateStr = checkIn.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const hoursStay = stay.billedHours || stay.contractedHours || 1;
-  const staySubtotal = (stay.ratePerHourApplied || room?.ratePerHour || 300) * hoursStay;
+  const staySubtotal = stayChargeForHours(stay, hoursStay, room?.ratePerHour || 300);
 
   let msg = `🏨 *RECIBO DE ESTADIA — ${brand}*\n\n`;
   msg += `Prezado(a) *${client}*, agradecemos a sua visita e preferência!\n\n`;

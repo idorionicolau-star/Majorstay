@@ -567,6 +567,9 @@ export type Room = {
   type?: RoomType | string;
   ratePerHour: number; // Preço por hora em MT
   minimumHours: number; // Mínimo de horas (padrão: 1)
+  overnightPrice?: number; // Preço fixo da pernoite (opcional)
+  overnightHours?: number; // Horas da pernoite (padrão: 12)
+  dailyPrice?: number; // Preço fixo da diária de 24h (opcional)
   cleaningDurationMinutes?: number; // Duração estimada da limpeza (minutos)
   cleaningStartedAt?: string | any; // Timestamp do início da higienização atual
   active: boolean;
@@ -618,6 +621,9 @@ export type Stay = {
   consumptions?: StayConsumptionItem[]; // Consumos do Bar / Cozinha / Minibar
   billedHours?: number; // Total de horas faturadas (hora começada = hora paga)
   ratePerHourApplied: number; // Tarifa horária aplicada na estadia
+  packageType?: 'pernoite' | 'diaria'; // Pacote de preço fixo escolhido no check-in (sem isto: por hora)
+  packagePrice?: number; // Preço fixo do pacote
+  packageHours?: number; // Horas cobertas pelo pacote
   totalAmountDue: number; // Total calculado a cobrar
   totalAmountPaid: number; // Total pago pelo cliente
   paymentMethod?: string; // Dinheiro, M-Pesa, E-Mola, Cartão, Ponto24

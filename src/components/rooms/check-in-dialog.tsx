@@ -41,7 +41,7 @@ const PRESET_HOURS = [
   { label: '4 horas', hours: 4 },
   { label: '6 horas', hours: 6 },
   { label: '12 horas', hours: 12 },
-  { label: '24h / Pernoite', hours: 24, isNight: true },
+  { label: '24 horas (por hora)', hours: 24, isNight: true },
 ];
 
 const QUICK_PAYMENTS = [
@@ -61,6 +61,8 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const [clientPhone, setClientPhone] = useState<string>('');
   const [clientDoc, setClientDoc] = useState<string>('');
   const [contractedHours, setContractedHours] = useState<number>(1);
+  // pacote de preço fixo escolhido (só aparece se o quarto tiver o preço configurado); sem pacote cobra-se por hora
+  const [pkg, setPkg] = useState<'pernoite' | 'diaria' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -102,7 +104,13 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
 
   const selectedRoom = rooms.find((r) => r.id === roomId);
   const ratePerHour = selectedRoom?.ratePerHour || 0;
-  const totalAmount = contractedHours * ratePerHour;
+  const pkgOptions = [
+    Number(selectedRoom?.overnightPrice) > 0 && { type: 'pernoite' as const, label: 'Pernoite', hours: Math.max(1, Number(selectedRoom?.overnightHours) || 12), price: Number(selectedRoom?.overnightPrice) },
+    Number(selectedRoom?.dailyPrice) > 0 && { type: 'diaria' as const, label: 'Diária', hours: 24, price: Number(selectedRoom?.dailyPrice) },
+  ].filter(Boolean) as { type: 'pernoite' | 'diaria'; label: string; hours: number; price: number }[];
+  const activePkg = pkgOptions.find((o) => o.type === pkg) || null;
+  const totalAmount = activePkg ? activePkg.price : contractedHours * ratePerHour;
+  const pickHours = (h: number) => { setPkg(null); setContractedHours(h); };
 
   const expectedCheckOutFormatted = useMemo(() => {
     const d = new Date();
@@ -112,6 +120,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
 
   const handleRoomChange = (newRoomId: string) => {
     setRoomId(newRoomId);
+    setPkg(null);
     const room = rooms.find((r) => r.id === newRoomId);
     if (room?.minimumHours && contractedHours < room.minimumHours) {
       setContractedHours(room.minimumHours);
@@ -141,11 +150,13 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         ratePerHour,
         paymentMethod,
         notes: notes.trim(),
+        ...(activePkg ? { packageType: activePkg.type, packagePrice: activePkg.price } : {}),
       });
       onOpenChange(false);
       setClientName('Hóspede Particular');
       setClientPhone('');
       setClientDoc('');
+      setPkg(null);
       setContractedHours(selectedRoom?.minimumHours || 1);
       setNotes('');
     } catch (err: any) {
@@ -331,7 +342,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                   <button
                     key={p.hours}
                     type="button"
-                    onClick={() => setContractedHours(p.hours)}
+                    onClick={() => pickHours(p.hours)}
                     className={cn(
                       "py-2.5 text-xs font-bold rounded-2xl transition-all flex items-center justify-center active:scale-95 shadow-xs",
                       active
@@ -352,7 +363,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                   <button
                     key={p.hours}
                     type="button"
-                    onClick={() => setContractedHours(p.hours)}
+                    onClick={() => pickHours(p.hours)}
                     className={cn(
                       "py-2.5 text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-xs",
                       isNight ? "col-span-2" : "col-span-1",
@@ -361,12 +372,38 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                         : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-blue-200 hover:bg-blue-50/40"
                     )}
                   >
-                    {isNight && <Moon className="w-3.5 h-3.5" />}
                     <span>{p.label}</span>
                   </button>
                 );
               })}
             </div>
+
+            {pkgOptions.length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Pacotes de preço fixo</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {pkgOptions.map((o) => {
+                    const active = pkg === o.type;
+                    return (
+                      <button
+                        key={o.type}
+                        type="button"
+                        onClick={() => { setPkg(o.type); setContractedHours(o.hours); }}
+                        className={cn(
+                          "py-2 px-2 text-xs font-bold rounded-2xl transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 shadow-xs",
+                          active
+                            ? "bg-[#007bb9] text-white shadow-md ring-2 ring-[#007bb9]/20 hover:bg-[#006194]"
+                            : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-blue-200 hover:bg-blue-50/40"
+                        )}
+                      >
+                        <span className="flex items-center gap-1.5">{o.type === 'pernoite' && <Moon className="w-3.5 h-3.5" />}{o.label} ({o.hours}h)</span>
+                        <span className={cn("text-[11px] font-extrabold", active ? "text-white" : "text-[#006194] dark:text-sky-300")}>{formatCurrency(o.price)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="pt-3 border-t border-blue-100 dark:border-slate-800 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Valor Inicial a Cobrar:</span>

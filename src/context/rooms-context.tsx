@@ -36,7 +36,7 @@ import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { calculateExpectedCheckOut, computeStayRealtimeStatus,
   computeRoomCleaningStatus,
-  totalContractedHours } from '@/lib/hospitality-calc';
+  totalContractedHours, stayChargeForHours, contractedStayAmount } from '@/lib/hospitality-calc';
 import { formatCurrency } from '@/lib/utils';
 
 export interface RoomStats {
@@ -395,9 +395,15 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     ratePerHour: number;
     paymentMethod?: string;
     notes?: string;
+    packageType?: 'pernoite' | 'diaria';
+    packagePrice?: number;
+    packageHours?: number;
   }): Promise<string> => {
     const contracted = Math.max(1, data.contractedHours || 1);
-    const totalDue = contracted * data.ratePerHour;
+    const pkg = data.packageType && Number(data.packagePrice) > 0
+      ? { packageType: data.packageType, packagePrice: Number(data.packagePrice), packageHours: contracted }
+      : {};
+    const totalDue = stayChargeForHours({ ratePerHourApplied: data.ratePerHour, ...pkg }, contracted);
     const targetRoom = rooms.find((r) => r.id === data.roomId);
     const roomName = data.roomName || targetRoom?.name || 'Quarto';
 
@@ -425,6 +431,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         contractedHours: contracted,
         extensions: [],
         ratePerHourApplied: data.ratePerHour,
+        ...pkg,
         totalAmountDue: totalDue,
         totalAmountPaid: totalDue,
         paymentMethod: data.paymentMethod || 'Dinheiro',
@@ -464,6 +471,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       contractedHours: contracted,
       extensions: [],
       ratePerHourApplied: data.ratePerHour,
+      ...pkg,
       totalAmountDue: totalDue,
       totalAmountPaid: totalDue,
       paymentMethod: data.paymentMethod || 'Dinheiro',
@@ -509,7 +517,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       const newExpected = calculateExpectedCheckOut(currentStay.checkInAt, currentStay.contractedHours, updatedExtensions);
       const consumptionsTotal = (currentStay.consumptions || []).reduce((sum, c) => sum + (Number(c.totalPrice) || 0), 0);
       const totalHours = totalContractedHours({ contractedHours: currentStay.contractedHours, extensions: updatedExtensions });
-      const newTotalDue = (totalHours * (currentStay.ratePerHourApplied || 0)) + consumptionsTotal;
+      const newTotalDue = stayChargeForHours(currentStay, totalHours) + consumptionsTotal;
 
       updateGuestStay(stayId, {
         extensions: updatedExtensions,
@@ -543,7 +551,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const newExpected = calculateExpectedCheckOut(stayData.checkInAt, stayData.contractedHours, updatedExtensions);
     const consumptionsTotal = (stayData.consumptions || []).reduce((sum, c) => sum + (Number(c.totalPrice) || 0), 0);
     const totalHours = totalContractedHours({ contractedHours: stayData.contractedHours, extensions: updatedExtensions });
-    const newTotalDue = (totalHours * (stayData.ratePerHourApplied || 0)) + consumptionsTotal;
+    const newTotalDue = stayChargeForHours(stayData as any, totalHours) + consumptionsTotal;
 
     await updateDoc(stayRef, {
       extensions: updatedExtensions,
@@ -654,7 +662,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       };
       const updatedConsumptions = [...(currentStay.consumptions || []), newConsumption];
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-      const stayHoursTotal = totalContractedHours(currentStay) * (currentStay.ratePerHourApplied || 0);
+      const stayHoursTotal = contractedStayAmount(currentStay);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       updateGuestStay(stayId, {
@@ -724,7 +732,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       const addedTotal = newConsumptions.reduce((sum, c) => sum + c.totalPrice, 0);
       const updatedConsumptions = [...(currentStay.consumptions || []), ...newConsumptions];
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-      const stayHoursTotal = totalContractedHours(currentStay) * (currentStay.ratePerHourApplied || 0);
+      const stayHoursTotal = contractedStayAmount(currentStay);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       updateGuestStay(stayId, {
@@ -765,7 +773,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     if (isGuest) {
       const updatedConsumptions = (currentStay.consumptions || []).filter((c) => c.id !== consumptionId);
       const consumptionsTotal = updatedConsumptions.reduce((sum, c) => sum + (c.totalPrice || 0), 0);
-      const stayHoursTotal = totalContractedHours(currentStay) * (currentStay.ratePerHourApplied || 0);
+      const stayHoursTotal = contractedStayAmount(currentStay);
       const newTotalDue = stayHoursTotal + consumptionsTotal;
 
       updateGuestStay(stayId, {
