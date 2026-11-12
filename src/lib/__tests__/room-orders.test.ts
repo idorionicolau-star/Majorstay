@@ -201,3 +201,35 @@ describe('receção: confirmar e recusar', () => {
     expect(db[`companies/${C}/stays/s1`].status).toBe('open');
   });
 });
+
+import { GET as review } from '@/app/api/room-orders/review/route';
+
+describe('controlo do dono: recusados e removidos', () => {
+  it('só Admin/Dono; devolve recusados e consumos removidos com quem e porquê', async () => {
+    db[`companies/${C}/employees/boss`] = { username: 'Chefe', role: 'Dono' };
+    db[`companies/${C}/roomOrders/o1`] = {
+      status: 'rejected', roomName: 'Quarto 1', total: 240, rejectReason: 'Sem stock', resolvedByName: 'Rita',
+      resolvedAt: '2026-11-12T08:00:00.000Z', createdAt: '2026-11-12T07:55:00.000Z',
+      items: [{ productName: 'Corona', quantity: 2 }],
+    };
+    db[`companies/${C}/roomOrders/o2`] = { status: 'pending', roomName: 'Quarto 2', total: 50 };
+    db[`companies/${C}/hospitalityAudit/a1`] = {
+      action: 'remove_consumption', targetId: 's1', userName: 'Rita', reason: 'Remoção de consumo: cliente desistiu',
+      before: { consumptionsTotal: 300 }, after: { consumptionsTotal: 180 }, timestamp: '2026-11-12T08:10:00.000Z',
+    };
+    db[`companies/${C}/hospitalityAudit/a2`] = { action: 'add_consumption', targetId: 's1', userName: 'Rita', timestamp: '2026-11-12T08:11:00.000Z' };
+
+    mockVerify.mockResolvedValue({ uid: 'e1', companyId: C });
+    const denied = await review(new Request(`http://localhost/api/room-orders/review?companyId=${C}`));
+    expect(denied.status).toBe(403);
+
+    mockVerify.mockResolvedValue({ uid: 'boss', companyId: C });
+    const res = await review(new Request(`http://localhost/api/room-orders/review?companyId=${C}`));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.rejectedOrders).toHaveLength(1);
+    expect(body.rejectedOrders[0]).toMatchObject({ roomName: 'Quarto 1', by: 'Rita', reason: 'Sem stock', total: 240 });
+    expect(body.removedConsumptions).toHaveLength(1);
+    expect(body.removedConsumptions[0]).toMatchObject({ roomName: 'Quarto 1', by: 'Rita', value: 120, reason: 'cliente desistiu' });
+  });
+});
