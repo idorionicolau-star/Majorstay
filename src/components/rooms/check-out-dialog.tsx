@@ -22,7 +22,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { LogOut, Clock, AlertTriangle, Sparkles, CheckCircle2, DollarSign, CreditCard, MessageCircle } from 'lucide-react';
 import { buildStayReceiptWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp';
 import { useInventory } from '@/context/inventory-context';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
@@ -323,13 +323,13 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
           </div>
           </div>
 
-          <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 justify-end">
+          <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 grid grid-cols-2 gap-2.5 sm:flex sm:flex-row sm:flex-wrap sm:justify-end sm:space-x-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
-              className="w-full sm:w-auto h-11 rounded-full border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold px-5"
+              className={cn("w-full sm:w-auto h-11 rounded-full border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold px-5", !stay.clientPhone && "col-span-2")}
             >
               Cancelar
             </Button>
@@ -349,7 +349,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
 
             <Button
               type="submit"
-              className="w-full sm:w-auto h-11 rounded-full bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold shadow-md shadow-blue-500/20 px-7 transition-all active:scale-95"
+              className="col-span-2 order-first sm:order-none w-full sm:w-auto h-12 sm:h-11 rounded-full bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold shadow-md shadow-blue-500/20 px-7 transition-all active:scale-95"
               disabled={loading}
             >
               {loading ? 'A Concluir...' : `Concluir Check-out (${formatCurrency(pricing.totalAmountDue)})`}
