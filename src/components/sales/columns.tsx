@@ -54,22 +54,6 @@ const ActionsCell = ({ row, options }: { row: any, options: ColumnsOptions }) =>
                 </Tooltip>
             </TooltipProvider>
 
-            {sale.status === 'Pago' && canEdit && !sale.orderId && sale.documentType !== 'Encomenda' && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-500" onClick={() => options.onConfirmPickup(sale)}>
-                                <CheckCircle className="h-4 w-4" />
-                                <span className="sr-only">Confirmar Levantamento</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Confirmar Levantamento</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-
             {canEdit && (
                 <>
                     <TooltipProvider>
