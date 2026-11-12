@@ -607,6 +607,8 @@ export type Stay = {
   clientPhone?: string;
   clientDoc?: string; // BI / Passaporte
   accessPin?: string; // PIN de 4 dígitos para acesso exclusivo do hóspede via QR Code
+  pinFailedAttempts?: number; // Contador de tentativas incorretas
+  pinLockedUntil?: string | any; // Timestamp de bloqueio temporário (15 min após 5 erros)
   checkInAt: string | any; // Timestamp do servidor (Firestore ou ISO)
   expectedCheckOutAt?: string | any;
   checkOutAt?: string | any;

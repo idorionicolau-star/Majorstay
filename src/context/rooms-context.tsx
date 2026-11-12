@@ -400,7 +400,11 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const totalDue = contracted * data.ratePerHour;
     const targetRoom = rooms.find((r) => r.id === data.roomId);
     const roomName = data.roomName || targetRoom?.name || 'Quarto';
-    const accessPin = String(Math.floor(1000 + Math.random() * 9000));
+
+    // Gerar PIN de 4 dígitos criptograficamente seguro com crypto.getRandomValues
+    const pinBuf = new Uint32Array(1);
+    crypto.getRandomValues(pinBuf);
+    const accessPin = String(1000 + (pinBuf[0] % 9000));
 
     if (isGuest) {
       const stayId = `stay-${Date.now()}`;
@@ -413,7 +417,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         clientName: data.clientName || 'Hóspede Particular',
         clientPhone: data.clientPhone || '',
         clientDoc: data.clientDoc || '',
-        accessPin: accessPin,
+        accessPin,
+        pinFailedAttempts: 0,
+        pinLockedUntil: null,
         checkInAt: now.toISOString(),
         expectedCheckOutAt: expectedOut.toISOString(),
         contractedHours: contracted,
@@ -450,6 +456,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       clientName: data.clientName || 'Hóspede Particular',
       clientPhone: data.clientPhone || '',
       clientDoc: data.clientDoc || '',
+      accessPin,
+      pinFailedAttempts: 0,
+      pinLockedUntil: null,
       checkInAt: serverTimestamp(),
       expectedCheckOutAt: expectedOut.toISOString(),
       contractedHours: contracted,

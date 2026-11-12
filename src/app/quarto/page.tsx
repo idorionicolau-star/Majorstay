@@ -22,12 +22,12 @@ import {
   Info,
   Lock,
   Unlock,
+  AlertCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, cn } from '@/lib/utils';
-import { normalizeDate } from '@/lib/hospitality-calc';
 
 interface RoomHubData {
   room: {
@@ -42,18 +42,8 @@ interface RoomHubData {
     name: string;
     phone: string;
     whatsapp: string;
-    wifiSsid?: string | null;
-    wifiPassword?: string | null;
   };
-  stay: {
-    id: string;
-    checkInAt: string;
-    contractedHours: number;
-    expectedCheckOut: string;
-    ratePerHour: number;
-    graceMinutes: number;
-    accessPin?: string;
-  } | null;
+  pinRequired: boolean;
   barProducts: {
     id: string;
     name: string;
@@ -62,34 +52,44 @@ interface RoomHubData {
   }[];
 }
 
+interface StayUnlockedData {
+  id: string;
+  checkInAt: string;
+  contractedHours: number;
+  expectedCheckOut: string;
+  ratePerHour: number;
+  graceMinutes: number;
+}
+
+interface WifiData {
+  ssid: string | null;
+  password: string | null;
+}
+
 function QuartoPortalContent() {
   const searchParams = useSearchParams();
   const companyId = searchParams.get('c') || 'guest';
   const roomId = searchParams.get('r') || 'room-1';
 
   const [data, setData] = useState<RoomHubData | null>(null);
+  const [stay, setStay] = useState<StayUnlockedData | null>(null);
+  const [wifi, setWifi] = useState<WifiData | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedWifi, setCopiedWifi] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [now, setNow] = useState<number>(Date.now());
+
+  // Estado de PIN & Desbloqueio seguro no servidor
   const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [isLockedOut, setIsLockedOut] = useState(false);
+  const [isSubmittingPin, setIsSubmittingPin] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
 
-  useEffect(() => {
-    if (data?.stay?.id && data?.stay?.accessPin) {
-      const saved = sessionStorage.getItem(`ms_room_pin_${roomId}_${data.stay.id}`);
-      if (saved === data.stay.accessPin) {
-        setIsUnlocked(true);
-      } else {
-        setIsUnlocked(false);
-      }
-    } else {
-      setIsUnlocked(true);
-    }
-  }, [data?.stay?.id, data?.stay?.accessPin, roomId]);
+  const pinStorageKey = `ms_room_pin_${companyId}_${roomId}`;
 
   // Atualização do relógio a cada 10 segundos
   useEffect(() => {
@@ -97,22 +97,95 @@ function QuartoPortalContent() {
     return () => clearInterval(clockTimer);
   }, []);
 
-  // Carregar dados do quarto
+  // Função para validar PIN no servidor via POST /api/room-hub/unlock
+  const unlockWithPin = useCallback(async (pinToTest: string): Promise<boolean> => {
+    try {
+      setIsSubmittingPin(true);
+      const res = await fetch('/api/room-hub/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ c: companyId, r: roomId, pin: pinToTest }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.status === 200 && json.success) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(pinStorageKey, pinToTest);
+        }
+        setStay(json.stay);
+        setWifi(json.wifi || null);
+        setIsUnlocked(true);
+        setPinError(null);
+        setIsLockedOut(false);
+        return true;
+      }
+
+      if (res.status === 429) {
+        setIsLockedOut(true);
+        setPinError(json.error || 'Demasiadas tentativas incorretas. Acesso bloqueado por 15 minutos.');
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(pinStorageKey);
+        }
+        setIsUnlocked(false);
+        setStay(null);
+        setWifi(null);
+        return false;
+      }
+
+      // 403 ou outros erros
+      setPinError(json.error || 'PIN incorreto. Acesso não autorizado.');
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(pinStorageKey);
+      }
+      setIsUnlocked(false);
+      setStay(null);
+      setWifi(null);
+      return false;
+    } catch (err: any) {
+      setPinError('Erro ao comunicar com o servidor. Verifique a sua ligação.');
+      return false;
+    } finally {
+      setIsSubmittingPin(false);
+    }
+  }, [companyId, roomId, pinStorageKey]);
+
+  // Carregar dados públicos do quarto via GET /api/room-hub
   const fetchRoomData = useCallback(async () => {
     try {
       const res = await fetch(`/api/room-hub?c=${encodeURIComponent(companyId)}&r=${encodeURIComponent(roomId)}`);
       if (!res.ok) {
         throw new Error('Não foi possível carregar os dados deste quarto.');
       }
-      const json = await res.json();
+      const json: RoomHubData = await res.json();
       setData(json);
       setError(null);
+
+      // Se o quarto estiver livre ou sem estadia aberta, limpar sessão
+      if (!json.pinRequired) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(pinStorageKey);
+        }
+        setIsUnlocked(false);
+        setStay(null);
+        setWifi(null);
+        setPinError(null);
+        setIsLockedOut(false);
+      } else {
+        // Se houver estadia ativa e tivermos PIN guardado na sessão, revalidar no servidor
+        if (typeof window !== 'undefined') {
+          const savedPin = sessionStorage.getItem(pinStorageKey);
+          if (savedPin) {
+            await unlockWithPin(savedPin);
+          }
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar quarto.');
     } finally {
       setLoading(false);
     }
-  }, [companyId, roomId]);
+  }, [companyId, roomId, pinStorageKey, unlockWithPin]);
 
   useEffect(() => {
     fetchRoomData();
@@ -121,7 +194,14 @@ function QuartoPortalContent() {
     return () => clearInterval(pollTimer);
   }, [fetchRoomData]);
 
-  // Gestão de ecrã inteiro (ideal para tablets/telemóveis na parede)
+  // Submissão do formulário de PIN pelo hóspede
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pinInput.trim() || pinInput.trim().length < 4) return;
+    await unlockWithPin(pinInput.trim());
+  };
+
+  // Gestão de ecrã inteiro
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -135,18 +215,18 @@ function QuartoPortalContent() {
   };
 
   const copyWifiPassword = () => {
-    if (data?.hotel.wifiPassword) {
-      navigator.clipboard.writeText(data.hotel.wifiPassword);
+    if (wifi?.password) {
+      navigator.clipboard.writeText(wifi.password);
       setCopiedWifi(true);
       setTimeout(() => setCopiedWifi(false), 2500);
     }
   };
 
-  // Cálculos de tempo da estadia (sereno, sem tremer)
+  // Cálculos de tempo da estadia
   const stayMetrics = useMemo(() => {
-    if (!data?.stay) return null;
-    const expMs = new Date(data.stay.expectedCheckOut).getTime();
-    const checkInMs = new Date(data.stay.checkInAt).getTime();
+    if (!stay) return null;
+    const expMs = new Date(stay.expectedCheckOut).getTime();
+    const checkInMs = new Date(stay.checkInAt).getTime();
     const diffMs = expMs - now;
     const diffMinutes = Math.round(diffMs / 60000);
 
@@ -185,7 +265,7 @@ function QuartoPortalContent() {
       isOvertime,
       timeLabel,
     };
-  }, [data?.stay, now]);
+  }, [stay, now]);
 
   // Gestão do Carrinho do Bar
   const addToCart = (productId: string) => {
@@ -229,7 +309,7 @@ function QuartoPortalContent() {
 
   const sendExtensionWhatsApp = () => {
     if (!data) return;
-    const msg = `Olá receção, estou no *${data.room.name}* e gostaria de solicitar a extensão da minha estadia por mais 1 hora (+${data.stay?.ratePerHour || data.room.ratePerHour} MT).`;
+    const msg = `Olá receção, estou no *${data.room.name}* e gostaria de solicitar a extensão da minha estadia por mais 1 hora (+${stay?.ratePerHour || data.room.ratePerHour} MT).`;
     const cleanWhatsapp = data.hotel.whatsapp.replace(/\D/g, '');
     window.open(`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
   };
@@ -259,19 +339,25 @@ function QuartoPortalContent() {
         <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-center justify-center text-rose-600 mb-4">
           <Info className="w-7 h-7" />
         </div>
-        <h2 className="text-lg font-bold text-neutral-800 dark:text-neutral-100">Quarto Indisponível</h2>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mt-1">{error || 'Dados inválidos'}</p>
-        <Button onClick={fetchRoomData} variant="outline" className="mt-4 text-xs rounded-xl">
-          Tentar Novamente
+        <h2 className="font-bold text-base text-[#251D18] dark:text-[#F5EFEB]">Alojamento não acessível</h2>
+        <p className="text-xs text-[#827568] dark:text-[#A0AEC0] mt-1 max-w-sm">
+          {error || 'Não foi possível encontrar este quarto. Confirme o QR Code ou contacte a receção.'}
+        </p>
+        <Button
+          onClick={fetchRoomData}
+          variant="outline"
+          className="mt-4 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440]"
+        >
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Tentar Novamente
         </Button>
       </div>
     );
   }
 
-  const { room, hotel, stay, barProducts } = data;
-  const isOccupied = room.status === 'occupied' || room.status === 'overtime' || Boolean(stay);
+  const { room, hotel, barProducts } = data;
 
-  if (isOccupied && stay && stay.accessPin && !isUnlocked) {
+  // CASO 1: Quarto com Estadia Ativa mas BLOQUEADO por PIN
+  if (data.pinRequired && !isUnlocked) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] dark:bg-[#111418] text-[#251D18] dark:text-[#F5EFEB] flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
         <div className="w-full max-w-md bg-white dark:bg-[#191E25] rounded-3xl border border-blue-100 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
@@ -287,23 +373,11 @@ function QuartoPortalContent() {
               Acesso Privado do Hóspede
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-              Para sua total privacidade e segurança contra acessos indevidos, introduza o <b>PIN de 4 dígitos</b> do seu comprovativo de check-in.
+              Para sua total privacidade e confidencialidade, introduza o <b>PIN de 4 dígitos</b> do seu comprovativo de check-in.
             </p>
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (pinInput.trim() === stay.accessPin) {
-                sessionStorage.setItem(`ms_room_pin_${roomId}_${stay.id}`, pinInput.trim());
-                setIsUnlocked(true);
-                setPinError(false);
-              } else {
-                setPinError(true);
-              }
-            }}
-            className="space-y-4"
-          >
+          <form onSubmit={handlePinSubmit} className="space-y-4">
             <div>
               <input
                 type="password"
@@ -311,27 +385,31 @@ function QuartoPortalContent() {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 autoFocus
+                disabled={isLockedOut || isSubmittingPin}
                 value={pinInput}
                 onChange={(e) => {
                   setPinInput(e.target.value);
-                  setPinError(false);
+                  setPinError(null);
                 }}
                 placeholder="• • • •"
-                className="w-full text-center tracking-[1em] text-2xl font-black py-3.5 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-[#007bb9]"
+                className="w-full text-center tracking-[1em] text-2xl font-black py-3.5 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-[#007bb9] disabled:opacity-50"
               />
+
               {pinError && (
-                <p className="text-xs text-rose-500 font-semibold mt-2">
-                  PIN incorreto. Verifique o comprovativo ou consulte a recepção.
-                </p>
+                <div className="flex items-center justify-center gap-1.5 mt-2.5 text-xs text-rose-500 font-semibold">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{pinError}</span>
+                </div>
               )}
             </div>
 
             <Button
               type="submit"
-              disabled={pinInput.trim().length < 4}
-              className="w-full h-12 rounded-2xl bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold text-sm shadow-md transition-all active:scale-95"
+              disabled={pinInput.trim().length < 4 || isLockedOut || isSubmittingPin}
+              className="w-full h-12 rounded-2xl bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold text-sm shadow-md transition-all active:scale-95 disabled:opacity-50"
             >
-              <Unlock className="w-4 h-4 mr-2" /> Desbloquear Painel do Quarto
+              <Unlock className="w-4 h-4 mr-2" />
+              {isSubmittingPin ? 'A Validar...' : 'Desbloquear Painel do Quarto'}
             </Button>
           </form>
 
@@ -343,6 +421,7 @@ function QuartoPortalContent() {
     );
   }
 
+  // CASO 2: Quarto Desbloqueado com Sucesso OU Quarto Livre
   return (
     <div className="min-h-screen bg-[#FAF8F5] dark:bg-[#111418] text-[#251D18] dark:text-[#F5EFEB] flex flex-col font-sans selection:bg-[#C58A2C]/20">
       {/* Topo Nobre com Branding e Controles */}
@@ -388,8 +467,8 @@ function QuartoPortalContent() {
 
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-28">
-        {/* Bloco de Estado da Estadia (Se Ocupado) */}
-        {isOccupied && stayMetrics ? (
+        {/* Bloco de Estado da Estadia (Se Desbloqueado e Ocupado) */}
+        {data.pinRequired && isUnlocked && stayMetrics ? (
           <div className="space-y-3">
             {/* Cartão Principal do Período */}
             <Card className="rounded-3xl border border-[#F6E0B5] dark:border-[#382D26] bg-gradient-to-b from-[#FFFDF9] to-[#FDF9F0] dark:from-[#191E25] dark:to-[#171B20] p-5 shadow-sm overflow-hidden relative">
@@ -480,7 +559,7 @@ function QuartoPortalContent() {
             )}
           </div>
         ) : (
-          /* Quando o Quarto Está Livre */
+          /* Quando o Quarto Está Livre (QR mostra Quarto Livre sem dados nenhuns) */
           <Card className="rounded-3xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-6 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
               <Sparkles className="w-6 h-6" />
@@ -490,7 +569,7 @@ function QuartoPortalContent() {
                 {room.name} · Higienizado & Disponível
               </h3>
               <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-                Tarifa: {formatCurrency(room.ratePerHour)} por hora. Para iniciar a estadia, contacte o balcão.
+                Tarifa: {formatCurrency(room.ratePerHour)} por hora. Para iniciar a sua estadia, dirija-se à receção.
               </p>
             </div>
             <div className="pt-2">
@@ -507,87 +586,88 @@ function QuartoPortalContent() {
           </Card>
         )}
 
-        {/* Card do Wi-Fi & Serviços Rápidos */}
-        <div className={cn("grid gap-3", (hotel.wifiSsid && hotel.wifiPassword) ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
-          {hotel.wifiSsid && hotel.wifiPassword && (
-            <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#2A2118] text-[#C58A2C] flex items-center justify-center shrink-0">
-                  <Wifi className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Wi-Fi do Quarto</span>
-                  <p className="text-xs font-bold truncate text-stone-800 dark:text-stone-200">{hotel.wifiSsid}</p>
-                  <p className="text-[11px] font-mono text-stone-500 truncate">
-                    Senha: <strong className="text-stone-700 dark:text-stone-300">{hotel.wifiPassword}</strong>
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={copyWifiPassword}
-                className="h-9 w-9 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] shrink-0 text-stone-600 dark:text-stone-300"
-                title="Copiar senha"
-              >
-                {copiedWifi ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              </Button>
-            </Card>
-          )}
-
+        {/* Card do Wi-Fi Seguro (Apenas visível com PIN Desbloqueado) */}
+        {isUnlocked && wifi?.ssid && wifi?.password && (
           <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <MessageCircle className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#2A2118] text-[#C58A2C] flex items-center justify-center shrink-0">
+                <Wifi className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Apoio ao Hóspede</span>
-                <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Serviço de Quarto</p>
-                <p className="text-[11px] text-stone-500">Toalhas, bebidas ou dúvidas</p>
+                <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Wi-Fi do Quarto</span>
+                <p className="text-xs font-bold truncate text-stone-800 dark:text-stone-200">{wifi.ssid}</p>
+                <p className="text-[11px] font-mono text-stone-500 truncate">
+                  Senha: <strong className="text-stone-700 dark:text-stone-300">{wifi.password}</strong>
+                </p>
               </div>
             </div>
             <Button
-              asChild
-              size="sm"
-              className="h-9 rounded-xl text-xs font-bold bg-[#245D3B] hover:bg-[#1B482E] text-white shrink-0"
+              variant="outline"
+              size="icon"
+              onClick={copyWifiPassword}
+              className="h-9 w-9 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] shrink-0 text-stone-600 dark:text-stone-300"
+              title="Copiar senha"
             >
-              <a
-                href={`https://wa.me/${hotel.whatsapp}?text=${encodeURIComponent(
-                  `Olá receção, estou no *${room.name}* e necessito de apoio.`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Falar
-              </a>
+              {copiedWifi ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
             </Button>
           </Card>
-        </div>
+        )}
 
-        {/* Cardápio do Bar & Bebidas */}
+        {/* Serviço de Apoio ao Hóspede via WhatsApp */}
+        <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Apoio ao Hóspede</span>
+              <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Serviço de Quarto</p>
+              <p className="text-[11px] text-stone-500">Toalhas, comodidades ou dúvidas</p>
+            </div>
+          </div>
+          <Button
+            asChild
+            variant="outline"
+            className="h-9 text-xs rounded-xl border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold shrink-0"
+          >
+            <a
+              href={`https://wa.me/${hotel.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá receção, estou no ${room.name} e preciso de apoio:`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Falar no WhatsApp
+            </a>
+          </Button>
+        </Card>
+
+        {/* Menu do Bar & Pedidos Rápidos */}
         {barProducts && barProducts.length > 0 && (
-          <div className="space-y-2 pt-2">
+          <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wine className="w-4 h-4 text-[#C58A2C]" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
-                  Cardápio do Bar & Snacks
+                <h3 className="font-bold text-sm text-[#251D18] dark:text-[#F5EFEB]">
+                  Bebidas & Bar do Quarto
                 </h3>
               </div>
-              <span className="text-[11px] text-stone-500">Entregue no quarto</span>
+              <span className="text-[11px] text-stone-500 font-medium">Entrega direta ao quarto</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {barProducts.map((p) => {
                 const qty = cart[p.id] || 0;
                 return (
                   <div
                     key={p.id}
-                    className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] flex items-center justify-between gap-3 shadow-xs"
                   >
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-stone-800 dark:text-stone-200 truncate">{p.name}</p>
-                      <p className="text-[11px] font-semibold text-[#C58A2C] mt-0.5">{formatCurrency(p.price)}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-xs text-[#251D18] dark:text-[#F5EFEB] truncate">
+                        {p.name}
+                      </p>
+                      <span className="text-xs font-extrabold text-[#C58A2C] dark:text-[#E88C4A]">
+                        {formatCurrency(p.price)}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -595,26 +675,22 @@ function QuartoPortalContent() {
                         <>
                           <Button
                             size="icon"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => removeFromCart(p.id)}
-                            className="h-7 w-7 rounded-lg border-[#E5DFD6] dark:border-[#2C3440] text-stone-600 dark:text-stone-300"
+                            className="h-7 w-7 rounded-lg text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-3.5 h-3.5" />
                           </Button>
-                          <span className="w-5 text-center text-xs font-bold font-mono">{qty}</span>
+                          <span className="text-xs font-extrabold w-5 text-center">{qty}</span>
                         </>
                       )}
                       <Button
                         size="icon"
-                        variant={qty > 0 ? 'default' : 'outline'}
+                        variant="outline"
                         onClick={() => addToCart(p.id)}
-                        className={`h-7 w-7 rounded-lg ${
-                          qty > 0
-                            ? 'bg-[#C58A2C] hover:bg-[#A87019] text-white'
-                            : 'border-[#E5DFD6] dark:border-[#2C3440] text-stone-600 dark:text-stone-300'
-                        }`}
+                        className="h-7 w-7 rounded-lg border-[#E5DFD6] dark:border-[#2C3440] text-stone-700 dark:text-stone-300 hover:bg-[#FDF6E8] dark:hover:bg-[#2A2118]"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -623,42 +699,43 @@ function QuartoPortalContent() {
             </div>
           </div>
         )}
-
-        {/* Rodapé Discreto de Garantia de Privacidade */}
-        <div className="pt-4 text-center text-[11px] text-stone-400 dark:text-stone-500 flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>MajorStay Hospitality · Privacidade e discrição garantidas</span>
-        </div>
       </main>
 
-      {/* Barra Flutuante de Fecho de Pedido do Bar (Apenas se tiver itens no carrinho) */}
+      {/* Barra Flutuante de Pedido do Bar (quando há itens no carrinho) */}
       {cartTotal > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-[#FFFDF9]/95 dark:bg-[#191E25]/95 backdrop-blur-md border-t border-[#E5DFD6] dark:border-[#2C3440] shadow-lg">
-          <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
+        <aside aria-label="Resumo do pedido" className="fixed bottom-4 left-0 right-0 max-w-md mx-auto px-4 z-40">
+          <div className="bg-[#251D18] dark:bg-[#0A0D10] text-white p-3.5 rounded-2xl shadow-2xl flex items-center justify-between border border-[#44382F] animate-in slide-in-from-bottom-3">
             <div>
-              <span className="text-[10px] uppercase font-bold text-stone-400">Total do Pedido</span>
-              <p className="text-base font-black text-[#C58A2C]">{formatCurrency(cartTotal)}</p>
+              <span className="text-[11px] text-stone-300 block">Total do Pedido:</span>
+              <span className="text-lg font-black text-[#F6E0B5]">{formatCurrency(cartTotal)}</span>
             </div>
             <Button
               onClick={sendBarOrderWhatsApp}
-              className="h-11 px-5 rounded-xl font-bold bg-[#245D3B] hover:bg-[#1C462C] text-white shadow-md flex items-center gap-2"
+              className="h-10 text-xs font-bold rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20ba5a] hover:to-[#0f7569] text-white shadow-md flex items-center gap-1.5"
             >
-              <Send className="w-4 h-4" />
-              <span>Pedir via WhatsApp</span>
+              <Send className="w-3.5 h-3.5" />
+              Pedir via WhatsApp
             </Button>
           </div>
-        </div>
+        </aside>
       )}
+
+      {/* Rodapé Discreto */}
+      <footer className="mt-auto py-4 text-center text-[11px] text-stone-400 border-t border-[#E5DFD6] dark:border-[#2C3440]">
+        Powered by MajorStay Hospitality · Painel Privado do Hóspede
+      </footer>
     </div>
   );
 }
 
-export default function QuartoPage() {
+export default function QuartoPortalPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FFFDF9] dark:bg-[#111418] flex items-center justify-center">
-          <p className="text-xs text-stone-500">A carregar quarto...</p>
+        <div className="min-h-screen bg-[#FFFDF9] dark:bg-[#111418] flex items-center justify-center p-6 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#FDF6E8] dark:bg-[#1F2630] border border-[#F6E0B5] dark:border-[#2C3440] flex items-center justify-center text-[#C58A2C] animate-pulse">
+            <Hotel className="w-6 h-6" />
+          </div>
         </div>
       }
     >

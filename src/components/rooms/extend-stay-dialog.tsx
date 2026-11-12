@@ -67,11 +67,11 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[460px] max-h-[90dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl p-0 text-slate-800 dark:text-slate-100">
+      <DialogContent className="flex flex-col max-h-[92dvh] w-full max-w-[calc(100vw-1.5rem)] sm:max-w-[460px] overflow-hidden p-0 rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl text-slate-800 dark:text-slate-100">
         {/* Faixa superior pastel nobre */}
-        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
+        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a] shrink-0" />
 
-        <DialogHeader className="px-7 pt-5 pb-3 flex flex-row items-center justify-between space-y-0 text-left">
+        <DialogHeader className="px-6 sm:px-7 pt-4 sm:pt-5 pb-3 shrink-0 flex flex-row items-center justify-between space-y-0 text-left border-b border-slate-100 dark:border-slate-800/80">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
               <Clock className="w-6 h-6" />
@@ -87,7 +87,8 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-7 py-3 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-7 py-3 space-y-4">
           {/* Identificação do Quarto e Hóspede */}
           <div className="p-4 bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl border border-slate-200/80 dark:border-slate-800 text-sm space-y-2 shadow-xs">
             <div className="flex justify-between items-center">
@@ -170,11 +171,12 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Hóspede solicitou mais tempo na receção..."
               rows={2}
-              className="resize-none text-xs rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus-visible:ring-[#007bb9]"
+              className="resize-none text-base sm:text-xs rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus-visible:ring-[#007bb9]"
             />
           </div>
+          </div>
 
-          <DialogFooter className="px-0 pt-3 flex flex-col sm:flex-row gap-2.5 justify-end">
+          <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col sm:flex-row gap-2.5 justify-end">
             <Button
               type="button"
               variant="outline"

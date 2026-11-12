@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,12 +151,12 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[536px] max-h-[90dvh] overflow-y-auto rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl p-0 text-slate-800 dark:text-slate-100">
+      <DialogContent className="flex flex-col max-h-[92dvh] w-full max-w-[calc(100vw-1.5rem)] sm:max-w-[536px] overflow-hidden p-0 rounded-3xl bg-white dark:bg-[#191E25] border border-blue-100/90 dark:border-slate-800 shadow-2xl text-slate-800 dark:text-slate-100">
         {/* Top Fresh Pastel Accent Gradient */}
-        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
+        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a] shrink-0" />
 
         {/* Modal Header */}
-        <DialogHeader className="px-7 pt-5 pb-3 flex flex-row items-center justify-between space-y-0 text-left">
+        <DialogHeader className="px-6 sm:px-7 pt-4 sm:pt-5 pb-3 shrink-0 flex flex-row items-center justify-between space-y-0 text-left border-b border-slate-100 dark:border-slate-800/80">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
               <BedDouble className="w-6 h-6" />
@@ -171,7 +172,8 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-7 py-2 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-7 py-3 space-y-4">
           {/* Seleção do Quarto */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
@@ -325,7 +327,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Ex: Carlos Mondlane"
-                className="text-xs font-semibold rounded-2xl bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 px-3.5 py-2.5 h-10"
+                className="text-base sm:text-xs font-semibold rounded-2xl bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 px-3.5 py-2.5 h-10"
               />
             </div>
 
@@ -338,10 +340,11 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
               </div>
               <Input
                 id="clientPhone"
+                inputMode="tel"
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
                 placeholder="84 / 82 / 87... (M-Pesa / Movitel)"
-                className="text-xs font-medium rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10"
+                className="text-base sm:text-xs font-medium rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10"
               />
             </div>
           </div>
@@ -385,29 +388,30 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Pagamento adiantado; cliente solicitou toalhas adicionais..."
               rows={2}
-              className="w-full text-xs font-normal bg-slate-50/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 resize-none"
+              className="w-full text-base sm:text-xs font-normal bg-slate-50/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 resize-none"
             />
           </div>
+          </div>
 
-          {/* Action Footer */}
-          <div className="px-7 py-4 bg-slate-50/70 dark:bg-slate-900/70 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 -mx-7 -mb-2 mt-4">
+          {/* Action Footer Fixo */}
+          <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col sm:flex-row gap-2.5 justify-end">
             <button
               type="button"
               onClick={() => onOpenChange(false)}
               disabled={loading}
-              className="px-5 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all shadow-xs"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all shadow-xs"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !roomId}
-              className="px-7 py-2.5 rounded-full bg-[#007bb9] hover:bg-[#006194] disabled:opacity-50 text-white text-xs font-extrabold flex items-center gap-2 shadow-md hover:shadow-lg active:scale-95 transition-all"
+              className="w-full sm:w-auto px-7 py-2.5 rounded-full bg-[#007bb9] hover:bg-[#006194] disabled:opacity-50 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95 transition-all"
             >
               <Check className="w-4 h-4" />
               <span>{loading ? 'A Registar...' : `Confirmar Check-in (${formatCurrency(totalAmount)})`}</span>
             </button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

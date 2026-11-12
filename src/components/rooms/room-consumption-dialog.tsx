@@ -203,11 +203,11 @@ export function RoomConsumptionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto flex flex-col p-0 rounded-3xl border border-blue-100/90 dark:border-slate-800 bg-white dark:bg-[#191E25] text-slate-800 dark:text-slate-100 shadow-2xl">
+      <DialogContent className="flex flex-col max-h-[92dvh] w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl overflow-hidden p-0 rounded-3xl border border-blue-100/90 dark:border-slate-800 bg-white dark:bg-[#191E25] text-slate-800 dark:text-slate-100 shadow-2xl">
         {/* Top Fresh Pastel Accent Gradient */}
-        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a]" />
+        <div className="h-2 w-full bg-gradient-to-r from-[#0091da] via-[#38bdf8] to-[#fd761a] shrink-0" />
 
-        <DialogHeader className="px-7 pt-5 pb-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <DialogHeader className="px-6 sm:px-7 pt-4 sm:pt-5 pb-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#cce5ff] via-[#e0f2fe] to-[#ffdbca] dark:from-blue-950 dark:via-sky-950 dark:to-orange-950 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center text-[#007bb9] dark:text-sky-300 shadow-sm shrink-0">
@@ -228,7 +228,7 @@ export function RoomConsumptionDialog({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-5 pt-3">
+        <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-5">
           <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
             <TabsList className="grid grid-cols-2 mb-4 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl h-11">
               <TabsTrigger
@@ -261,7 +261,7 @@ export function RoomConsumptionDialog({
                   placeholder="Pesquisar bebidas, petiscos, água..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10 text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
+                  className="pl-10 h-10 text-base sm:text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#C58A2C]"
                 />
               </div>
 
@@ -454,7 +454,7 @@ export function RoomConsumptionDialog({
           </Tabs>
         </div>
 
-        <DialogFooter className="px-7 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
+        <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex justify-end">
           <Button
             type="button"
             className="w-full sm:w-auto h-11 px-7 rounded-full font-extrabold bg-[#007bb9] hover:bg-[#006194] text-white shadow-md shadow-blue-500/20 active:scale-95 transition-all"

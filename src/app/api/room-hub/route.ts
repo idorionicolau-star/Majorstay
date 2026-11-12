@@ -2,9 +2,24 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import { calculateExpectedCheckOut, normalizeDate } from '@/lib/hospitality-calc';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
 
+/**
+ * GET /api/room-hub
+ * Endpoint público para o Visor / QR Code do Quarto.
+ * 
+ * Regra de Segurança Estrita:
+ * - Sem PIN, apenas devolve:
+ *   1. Quarto (id, nome, tipo, estado)
+ *   2. Hotel (nome, telefone, whatsapp)
+ *   3. pinRequired: true (se houver estadia aberta) ou false (se quarto livre/fechado)
+ *   4. barProducts: catálogo público de bebidas/snacks com preços
+ * - NUNCA devolve:
+ *   - Dados da estadia (horas contratadas, checkIn, checkOut, valores)
+ *   - Senha / SSID de Wi-Fi
+ *   - accessPin
+ *   - Dados pessoais do hóspede (nome, telefone, documento)
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -22,38 +37,22 @@ export async function GET(req: Request) {
       const guestStays = getGuestStays();
       const stay = guestStays.find((s) => s.roomId === room?.id && s.status === 'open') || null;
 
+      const hasOpenStay = Boolean(stay && (room?.status === 'occupied' || room?.status === 'overtime' || stay.status === 'open'));
+
       return NextResponse.json({
         room: {
           id: room ? room.id : roomId,
           name: room ? room.name : 'Quarto Demo',
           type: room?.type || 'Standard',
-          status: room ? room.status : 'occupied',
+          status: hasOpenStay ? (room?.status || 'occupied') : 'free',
           ratePerHour: room ? room.ratePerHour : 300,
         },
         hotel: {
           name: 'MajorStay Grand Hotel & Suites',
           phone: '+258 84 123 4567',
           whatsapp: '258841234567',
-          wifiSsid: 'MajorStay-VIP',
-          wifiPassword: 'staywithcomfort',
         },
-        stay: stay ? {
-          id: stay.id,
-          checkInAt: normalizeDate(stay.checkInAt).toISOString(),
-          contractedHours: stay.contractedHours || 2,
-          expectedCheckOut: calculateExpectedCheckOut(stay.checkInAt, stay.contractedHours, stay.extensions).toISOString(),
-          ratePerHour: stay.ratePerHourApplied || 300,
-          graceMinutes: 10,
-          accessPin: stay.accessPin || '1234',
-        } : {
-          id: 'demo-stay-1',
-          checkInAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-          contractedHours: 2,
-          expectedCheckOut: new Date(Date.now() + 75 * 60 * 1000).toISOString(),
-          ratePerHour: 300,
-          graceMinutes: 10,
-          accessPin: '1234',
-        },
+        pinRequired: hasOpenStay,
         barProducts: [
           { id: '1', name: 'Cerveja 2M 330ml', price: 120, category: 'Bebidas' },
           { id: '2', name: 'Cerveja Laurentina Clara 330ml', price: 120, category: 'Bebidas' },
@@ -77,35 +76,24 @@ export async function GET(req: Request) {
     }
     const roomData = roomDoc.data() || {};
 
-    // 2. Obter dados do hotel / estabelecimento
+    // 2. Obter dados do hotel / estabelecimento (apenas dados públicos: nome, telefone, whatsapp)
     const companyDoc = await db.doc(`companies/${companyId}`).get();
     const companyData = companyDoc.exists ? (companyDoc.data() || {}) : {};
 
     const rawPhone = companyData.phone || '';
     const cleanWhatsapp = rawPhone.replace(/\D/g, '');
 
-    // 3. Obter estadia ativa se ocupado
-    let activeStay: any = null;
+    // 3. Verificar se existe estadia aberta (sem expor detalhes)
+    let hasOpenStay = false;
     if (roomData.status === 'occupied' || roomData.status === 'overtime' || roomData.currentStayId) {
       if (roomData.currentStayId) {
         const stayDoc = await db.doc(`companies/${companyId}/stays/${roomData.currentStayId}`).get();
         if (stayDoc.exists && stayDoc.data()?.status === 'open') {
-          const s = stayDoc.data()!;
-          const checkInDate = normalizeDate(s.checkInAt);
-          const expCheckOut = calculateExpectedCheckOut(s.checkInAt, s.contractedHours, s.extensions);
-          activeStay = {
-            id: stayDoc.id,
-            checkInAt: checkInDate.toISOString(),
-            contractedHours: s.contractedHours || 1,
-            expectedCheckOut: expCheckOut.toISOString(),
-            ratePerHour: s.ratePerHourApplied || roomData.ratePerHour || 0,
-            graceMinutes: 10,
-            accessPin: s.accessPin || String(Math.abs(stayDoc.id.split('').reduce((acc: number, char: string) => ((acc << 5) - acc) + char.charCodeAt(0), 0)) % 9000 + 1000),
-          };
+          hasOpenStay = true;
         }
       }
 
-      if (!activeStay) {
+      if (!hasOpenStay) {
         const openStaysSnap = await db
           .collection(`companies/${companyId}/stays`)
           .where('roomId', '==', roomId)
@@ -114,22 +102,12 @@ export async function GET(req: Request) {
           .get();
 
         if (!openStaysSnap.empty) {
-          const s = openStaysSnap.docs[0].data();
-          const checkInDate = normalizeDate(s.checkInAt);
-          const expCheckOut = calculateExpectedCheckOut(s.checkInAt, s.contractedHours, s.extensions);
-          activeStay = {
-            id: openStaysSnap.docs[0].id,
-            checkInAt: checkInDate.toISOString(),
-            contractedHours: s.contractedHours || 1,
-            expectedCheckOut: expCheckOut.toISOString(),
-            ratePerHour: s.ratePerHourApplied || roomData.ratePerHour || 0,
-            graceMinutes: 10,
-          };
+          hasOpenStay = true;
         }
       }
     }
 
-    // 4. Produtos do bar (sem filtro 'active', excluindo deletedAt e preço <= 0, deduplicados por nome)
+    // 4. Produtos do bar
     const barProducts: { id: string; name: string; price: number; category?: string }[] = [];
     try {
       const prodSnap = await db
@@ -162,12 +140,13 @@ export async function GET(req: Request) {
       console.warn('Erro ao carregar produtos do bar:', e);
     }
 
+    // Resposta estrita: sem stay, sem wifi, sem accessPin, sem dados de hóspede
     return NextResponse.json({
       room: {
         id: roomDoc.id,
         name: roomData.name || 'Quarto',
         type: roomData.type || 'Standard',
-        status: roomData.status || 'free',
+        status: hasOpenStay ? (roomData.status || 'occupied') : 'free',
         ratePerHour: roomData.ratePerHour || 0,
         notes: roomData.notes || '',
       },
@@ -175,10 +154,8 @@ export async function GET(req: Request) {
         name: companyData.name || 'MajorStay',
         phone: rawPhone,
         whatsapp: cleanWhatsapp || '258840000000',
-        wifiSsid: companyData.wifiSsid ? String(companyData.wifiSsid).trim() : null,
-        wifiPassword: companyData.wifiPassword ? String(companyData.wifiPassword).trim() : null,
       },
-      stay: activeStay,
+      pinRequired: hasOpenStay,
       barProducts,
     });
   } catch (err: any) {

@@ -150,8 +150,9 @@ export function RoomCard({
   onShowQrCode,
 }: RoomCardProps) {
   const { markRoomCleaned, updateRoom, deleteRoom } = useRooms();
-  const { user, companyData } = useInventory();
+  const { user, companyData, companyId } = useInventory();
   const isManager = user?.role === 'Admin' || user?.role === 'Dono';
+  const isGuest = !companyId || companyId === 'guest' || companyId.startsWith('guest_');
 
   const realtime = stay
     ? computeStayRealtimeStatus({
@@ -255,7 +256,7 @@ export function RoomCard({
   const progressPercent = Math.min(100, Math.round((elapsedMinutes / totalContractedMinutes) * 100));
 
   const StatusIcon = statusTheme.Icon;
-  const stayPin = stay?.accessPin || (stay?.id ? String(Math.abs(stay.id.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0)) % 9000 + 1000) : '1234');
+  const stayPin = stay?.accessPin || (isGuest ? '1234' : 'PIN indisponível');
 
   return (
     <Card className={cn(
