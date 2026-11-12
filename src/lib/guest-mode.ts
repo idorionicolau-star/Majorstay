@@ -1053,6 +1053,8 @@ export function checkoutGuestStay(stayId: string, options?: { amountPaid?: numbe
     ratePerHour: stay.ratePerHourApplied || room?.ratePerHour || 300,
     graceMinutes: 10,
     consumptions: stay.consumptions || [],
+    packagePrice: stay.packagePrice,
+    packageHours: stay.packageHours,
   });
 
   const amountPaid = typeof options?.amountPaid === 'number' ? options.amountPaid : pricing.totalAmountDue;

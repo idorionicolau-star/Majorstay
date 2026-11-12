@@ -178,6 +178,8 @@ export function HospitalityDashboard() {
             contractedHours: totalContractedHours(stay),
             ratePerHour: stay.ratePerHourApplied,
             consumptions: stay.consumptions,
+            packagePrice: stay.packagePrice,
+            packageHours: stay.packageHours,
           });
           return { stay, realtime, pricing };
         })

@@ -168,6 +168,8 @@ export async function POST(req: Request) {
         contractedHours: totalContractedHours(stayData),
         ratePerHour,
         consumptions: [],
+        packagePrice: Number(stayData.packagePrice) || undefined,
+        packageHours: Number(stayData.packageHours) || undefined,
       }).stayAmountDue;
     } catch { /* mantém o valor contratado */ }
 
@@ -177,6 +179,9 @@ export async function POST(req: Request) {
 
     const totalDue = roomTotal + consumptionsTotal;
     const estimatedTotalWithPending = totalDue + pendingOrdersTotal;
+    // No check-in já se regista o que foi pago; o que falta é o total menos isso (nunca negativo)
+    const amountPaid = Number(stayData.totalAmountPaid) || 0;
+    const balanceDue = Math.max(0, totalDue - amountPaid);
 
     return NextResponse.json({
       success: true,
@@ -196,6 +201,9 @@ export async function POST(req: Request) {
         pendingOrdersTotal,
         totalDue,
         estimatedTotalWithPending,
+        amountPaid,
+        balanceDue,
+        packageType: stayData.packageType || null,
       },
       wifi: {
         ssid: companyData.wifiSsid ? String(companyData.wifiSsid).trim() : null,

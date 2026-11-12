@@ -88,6 +88,9 @@ interface PricingSummary {
   pendingOrdersTotal: number;
   totalDue: number;
   estimatedTotalWithPending: number;
+  amountPaid?: number;
+  balanceDue?: number;
+  packageType?: 'pernoite' | 'diaria' | null;
 }
 
 interface StayUnlockedData {
@@ -786,6 +789,13 @@ function QuartoPortalContent() {
                   </div>
                 )}
 
+                {pricing && (pricing.amountPaid ?? 0) > 0 && (
+                  <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
+                    <span>Já pago</span>
+                    <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">- {formatCurrency(pricing.amountPaid ?? 0)}</span>
+                  </div>
+                )}
+
                 {pricing && pricing.pendingOrdersTotal > 0 && (
                   <div className="flex items-center justify-between text-amber-700 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200/80 dark:border-amber-900/60 font-medium">
                     <span className="flex items-center gap-1.5">
@@ -803,7 +813,7 @@ function QuartoPortalContent() {
               <div className="pt-3 border-t border-[#F2ECE1] dark:border-[#2C3440] flex items-center justify-between">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider block">
-                    Total a Pagar no Check-out
+                    Falta pagar no Check-out
                   </span>
                   <span className="text-[11px] text-stone-500">
                     {pricing && pricing.pendingOrdersTotal > 0
@@ -813,7 +823,7 @@ function QuartoPortalContent() {
                 </div>
                 <div className="text-right">
                   <span className="text-xl sm:text-2xl font-black text-[#C58A2C] dark:text-[#E88C4A] font-mono tracking-tight">
-                    {formatCurrency(pricing?.estimatedTotalWithPending ?? stay.contractedHours * stay.ratePerHour)}
+                    {formatCurrency(pricing ? Math.max(0, pricing.estimatedTotalWithPending - (pricing.amountPaid ?? 0)) : stay.contractedHours * stay.ratePerHour)}
                   </span>
                 </div>
               </div>

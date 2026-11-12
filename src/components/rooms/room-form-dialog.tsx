@@ -46,6 +46,10 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
   const [type, setType] = useState<RoomType>('standard');
   const [ratePerHour, setRatePerHour] = useState<number>(300);
   const [minimumHours, setMinimumHours] = useState<number>(1);
+  // preços fixos opcionais; vazio = esse pacote não existe neste quarto
+  const [overnightPrice, setOvernightPrice] = useState<string>('');
+  const [overnightHours, setOvernightHours] = useState<number>(12);
+  const [dailyPrice, setDailyPrice] = useState<string>('');
   const [cleaningDurationMinutes, setCleaningDurationMinutes] = useState<number>(15);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,6 +60,9 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
       setType((roomToEdit.type as RoomType) || 'standard');
       setRatePerHour(roomToEdit.ratePerHour || 300);
       setMinimumHours(roomToEdit.minimumHours || 1);
+      setOvernightPrice(roomToEdit.overnightPrice ? String(roomToEdit.overnightPrice) : '');
+      setOvernightHours(roomToEdit.overnightHours || 12);
+      setDailyPrice(roomToEdit.dailyPrice ? String(roomToEdit.dailyPrice) : '');
       setCleaningDurationMinutes(roomToEdit.cleaningDurationMinutes || 15);
       setNotes(roomToEdit.notes || '');
     } else {
@@ -87,6 +94,9 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           type,
           ratePerHour,
           minimumHours: Math.max(1, minimumHours),
+          overnightPrice: Number(overnightPrice) > 0 ? Number(overnightPrice) : 0,
+          overnightHours: Math.max(1, overnightHours || 12),
+          dailyPrice: Number(dailyPrice) > 0 ? Number(dailyPrice) : 0,
           cleaningDurationMinutes: Math.max(1, cleaningDurationMinutes || 15),
           notes: notes.trim(),
         });
@@ -96,6 +106,9 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           type,
           ratePerHour,
           minimumHours: Math.max(1, minimumHours),
+          overnightPrice: Number(overnightPrice) > 0 ? Number(overnightPrice) : 0,
+          overnightHours: Math.max(1, overnightHours || 12),
+          dailyPrice: Number(dailyPrice) > 0 ? Number(dailyPrice) : 0,
           cleaningDurationMinutes: Math.max(1, cleaningDurationMinutes || 15),
           active: true,
           notes: notes.trim(),
@@ -209,6 +222,26 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
                 onChange={(e) => setMinimumHours(Number(e.target.value))}
                 className="h-10 text-base sm:text-xs font-semibold rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 focus-visible:ring-[#007bb9]"
               />
+            </div>
+          </div>
+
+          {/* Preços fixos (opcionais) */}
+          <div className="space-y-2 rounded-2xl border border-slate-200 dark:border-slate-800 p-3">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Preços fixos (opcional)</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Deixe vazio se o quarto só cobra por hora. Depois do pacote, cada hora a mais paga o preço da hora.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="overnightPrice" className="text-xs font-bold text-slate-700 dark:text-slate-200">Pernoite (MT)</Label>
+                <Input id="overnightPrice" type="number" inputMode="numeric" min="0" value={overnightPrice} onChange={(e) => setOvernightPrice(e.target.value)} placeholder="Ex: 1500" className="h-10 text-base sm:text-xs font-semibold rounded-2xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="overnightHours" className="text-xs font-bold text-slate-700 dark:text-slate-200">Horas da pernoite</Label>
+                <Input id="overnightHours" type="number" inputMode="numeric" min="1" max="24" value={overnightHours} onChange={(e) => setOvernightHours(Number(e.target.value))} className="h-10 text-base sm:text-xs font-semibold rounded-2xl" />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label htmlFor="dailyPrice" className="text-xs font-bold text-slate-700 dark:text-slate-200">Diária de 24h (MT)</Label>
+                <Input id="dailyPrice" type="number" inputMode="numeric" min="0" value={dailyPrice} onChange={(e) => setDailyPrice(e.target.value)} placeholder="Ex: 2500" className="h-10 text-base sm:text-xs font-semibold rounded-2xl" />
+              </div>
             </div>
           </div>
 

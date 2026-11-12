@@ -76,6 +76,8 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     ratePerHour,
     graceMinutes: 10,
     consumptions: stay.consumptions || [],
+    packagePrice: stay.packagePrice,
+    packageHours: stay.packageHours,
   });
 
   const previousPaid = Number(stay.totalAmountPaid) || 0;

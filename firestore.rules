@@ -399,7 +399,7 @@ service cloud.firestore {
           && (
             isManagerOf(companyId) ||
             // Prorrogação pelo cliente mantendo a estadia aberta (não-gestor não pode fechar directamente nem alterar contractedHours ou consumptions)
-            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied', 'contractedHours', 'consumptions']))
+            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied', 'packageType', 'packagePrice', 'packageHours', 'contractedHours', 'consumptions']))
           );
         // Eliminação de estadia: apenas gestor
         allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
