@@ -72,6 +72,22 @@ export async function POST(req: Request) {
     const roomRef = db.doc(`companies/${companyId}/rooms/${roomId}`);
     const companyRef = db.doc(`companies/${companyId}`);
 
+    // Pedidos de bar dos hóspedes ainda por confirmar não podem ficar de fora da fatura.
+    const pendingOrders = await db
+      .collection(`companies/${companyId}/roomOrders`)
+      .where('stayId', '==', stayId)
+      .where('status', '==', 'pending')
+      .limit(10)
+      .get();
+    if (pendingOrders.docs.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Há ${pendingOrders.docs.length} pedido(s) de bar pendente(s) neste quarto. Confirme ou recuse na lista de pedidos antes do check-out.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Execução em transação atómica para evitar concorrência ou encerramento duplo
     const result = await db.runTransaction(async (transaction) => {
       const staySnap = await transaction.get(stayRef);

@@ -72,6 +72,7 @@ export async function POST(req: Request) {
       items,
       consumptionId,
       reason = '',
+      orderId,
     } = body;
 
     if (!companyId || !stayId || !action) {
@@ -104,19 +105,53 @@ export async function POST(req: Request) {
         throw new Error('Não é possível alterar consumos: a estadia já está encerrada.');
       }
 
+      let orderRef: FirebaseFirestore.DocumentReference | null = null;
+      let orderData: Record<string, any> = {};
       const currentConsumptions: StayConsumptionItem[] = stayData.consumptions || [];
       const underStockNotes: string[] = [];
       let updatedConsumptions: StayConsumptionItem[] = [];
 
       if (action === 'add') {
-        if (!Array.isArray(items) || items.length === 0) {
+        let addItems: AddItemPayload[] = Array.isArray(items) ? (items as AddItemPayload[]) : [];
+
+        // Confirmação de um pedido do hóspede: os itens vêm do próprio pedido (nunca do navegador)
+        // e o pedido passa a "confirmado" na MESMA transacção, para não se cobrar duas vezes.
+        if (orderId) {
+          if (typeof orderId !== 'string') throw new Error('Pedido inválido.');
+          orderRef = db.doc(`companies/${companyId}/roomOrders/${orderId}`);
+          const orderSnap = await transaction.get(orderRef);
+          if (!orderSnap.exists) throw new Error('Pedido não encontrado.');
+          orderData = orderSnap.data() || {};
+          if (orderData.status !== 'pending') throw new Error('Este pedido já foi tratado.');
+          if (orderData.stayId !== stayId) throw new Error('Este pedido pertence a outra estadia.');
+          addItems = ((orderData.items as any[]) || []).map((it) => ({
+            productId: it.productId,
+            productName: it.productName,
+            quantity: it.quantity,
+          }));
+        }
+
+        if (addItems.length === 0) {
           throw new Error('Lista de itens a lançar está vazia.');
         }
 
+        // O Firestore exige todas as leituras antes de qualquer escrita: ler já todos os produtos.
+        const productSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+        const productIds = Array.from(
+          new Set(
+            addItems
+              .map((it) => (typeof it.productId === 'string' ? it.productId.trim() : ''))
+              .filter((id) => id !== '')
+          )
+        );
+        const snaps = await Promise.all(productIds.map((id) => transaction.get(db.doc(`companies/${companyId}/products/${id}`))));
+        productIds.forEach((id, idx) => productSnaps.set(id, snaps[idx]));
+        const runningStock = new Map<string, number>();
+
         const newItems: StayConsumptionItem[] = [];
 
-        for (let i = 0; i < items.length; i++) {
-          const rawItem = items[i] as AddItemPayload;
+        for (let i = 0; i < addItems.length; i++) {
+          const rawItem = addItems[i] as AddItemPayload;
           const qty = rawItem.quantity;
 
           // Validação da quantidade: inteira entre 1 e 100
@@ -129,9 +164,9 @@ export async function POST(req: Request) {
 
           if (rawItem.productId && typeof rawItem.productId === 'string' && rawItem.productId.trim() !== '') {
             // Produto do catálogo: lê da base de dados e ignora o unitPrice do cliente
-            const prodRef = db.doc(`companies/${companyId}/products/${rawItem.productId}`);
-            const prodSnap = await transaction.get(prodRef);
-            if (!prodSnap.exists) {
+            const prodRef = db.doc(`companies/${companyId}/products/${rawItem.productId.trim()}`);
+            const prodSnap = productSnaps.get(rawItem.productId.trim());
+            if (!prodSnap || !prodSnap.exists) {
               throw new Error(`Produto não encontrado no catálogo (ID: ${rawItem.productId}).`);
             }
             const prodData = prodSnap.data() || {};
@@ -144,7 +179,8 @@ export async function POST(req: Request) {
             resolvedProductName = prodData.name || resolvedProductName || 'Produto do Bar';
 
             // Abate de stock com tolerância para stock insuficiente (apenas no registo do produto indicado)
-            const currentStock = Number(prodData.stock) || 0;
+            const stockKey = rawItem.productId.trim();
+            const currentStock = runningStock.has(stockKey) ? (runningStock.get(stockKey) as number) : Number(prodData.stock) || 0;
             let newStock = currentStock - qty;
 
             if (currentStock < qty) {
@@ -155,6 +191,7 @@ export async function POST(req: Request) {
               );
             }
 
+            runningStock.set(stockKey, newStock);
             transaction.update(prodRef, {
               stock: newStock,
               lastUpdated: new Date().toISOString(),
@@ -199,12 +236,23 @@ export async function POST(req: Request) {
             addedAt: new Date().toISOString(),
             addedBy: decoded.uid,
             addedByName: employeeName,
+            ...(orderRef ? { orderId: orderRef.id } : {}),
           };
 
           newItems.push(consumptionItem);
         }
 
         updatedConsumptions = [...currentConsumptions, ...newItems];
+
+        if (orderRef) {
+          transaction.update(orderRef, {
+            status: 'confirmed',
+            resolvedAt: new Date().toISOString(),
+            resolvedBy: decoded.uid,
+            resolvedByName: employeeName,
+            consumptionIds: newItems.map((c) => c.id),
+          });
+        }
       } else if (action === 'remove') {
         if (!consumptionId || typeof consumptionId !== 'string') {
           throw new Error('ID do consumo a remover é obrigatório.');
@@ -266,7 +314,7 @@ export async function POST(req: Request) {
       // Registar na auditoria de hotelaria
       const auditRef = db.collection(`companies/${companyId}/hospitalityAudit`).doc();
       const auditReason = action === 'add'
-        ? `Lançamento de ${items?.length || 1} consumo(s) no quarto ${stayData.roomName || ''}${underStockNotes.length ? ` (${underStockNotes.join('; ')})` : ''}`
+        ? `${orderRef ? `Confirmação do pedido do hóspede ${orderRef.id}: ` : 'Lançamento de '}${orderRef ? (orderData.items?.length || 1) : (items?.length || 1)} consumo(s) no quarto ${stayData.roomName || ''}${underStockNotes.length ? ` (${underStockNotes.join('; ')})` : ''}`
         : `Remoção de consumo: ${(reason || '').trim()}`;
 
       transaction.set(auditRef, {

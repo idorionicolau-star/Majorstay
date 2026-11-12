@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { calculateExpectedCheckOut, normalizeDate } from '@/lib/hospitality-calc';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
+import { verifyRoomPin } from '@/lib/room-pin';
 
 /**
  * POST /api/room-hub/unlock
@@ -75,136 +76,31 @@ export async function POST(req: Request) {
     }
 
     // 2. Empresas reais via Firebase Admin SDK
-    const admin = initializeAdmin();
-    const db = admin.firestore();
-
-    const roomRef = db.doc(`companies/${companyId}/rooms/${roomId}`);
-    const roomSnap = await roomRef.get();
-    if (!roomSnap.exists) {
-      return NextResponse.json({ error: 'Quarto não encontrado.' }, { status: 404 });
-    }
-    const roomData = roomSnap.data() || {};
-
-    let targetStayId: string | null = null;
-    if (roomData.currentStayId) {
-      const sDoc = await db.doc(`companies/${companyId}/stays/${roomData.currentStayId}`).get();
-      if (sDoc.exists && sDoc.data()?.status === 'open') {
-        targetStayId = roomData.currentStayId;
-      }
+    const db = initializeAdmin().firestore();
+    const result = await verifyRoomPin(db, companyId, roomId, pin);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    if (!targetStayId) {
-      const openStaysSnap = await db
-        .collection(`companies/${companyId}/stays`)
-        .where('roomId', '==', roomId)
-        .where('status', '==', 'open')
-        .limit(1)
-        .get();
-
-      if (!openStaysSnap.empty) {
-        targetStayId = openStaysSnap.docs[0].id;
-      }
-    }
-
-    if (!targetStayId) {
-      return NextResponse.json({ error: 'Quarto livre ou sem estadia ativa.' }, { status: 404 });
-    }
-
-    const stayRef = db.doc(`companies/${companyId}/stays/${targetStayId}`);
-    const companyRef = db.doc(`companies/${companyId}`);
-
-    // Executar validação e rate limit atómicos em transação Firestore
-    const unlockResult = await db.runTransaction(async (transaction) => {
-      // O Firestore exige que TODAS as leituras de uma transação venham antes de qualquer escrita.
-      // Antes a empresa era lida depois do update do PIN correto, o que dava erro interno (500).
-      const staySnap = await transaction.get(stayRef);
-      const companySnap = await transaction.get(companyRef);
-      if (!staySnap.exists) {
-        return { status: 404, error: 'Estadia não encontrada.' };
-      }
-      const stayData = staySnap.data() || {};
-      if (stayData.status !== 'open') {
-        return { status: 404, error: 'Esta estadia já se encontra encerrada.' };
-      }
-
-      // Estadia aberta sem accessPin fica bloqueada (sem fallbacks '1234' nem hash de ID)
-      if (!stayData.accessPin || typeof stayData.accessPin !== 'string') {
-        return { status: 403, error: 'PIN indisponível ou acesso bloqueado. Consulte a recepção.' };
-      }
-
-      const nowMs = Date.now();
-      const lockedUntil = stayData.pinLockedUntil ? normalizeDate(stayData.pinLockedUntil).getTime() : 0;
-
-      // Verificar se o quarto está bloqueado temporariamente (15 minutos)
-      if (lockedUntil > nowMs) {
-        return {
-          status: 429,
-          error: 'Demasiadas tentativas incorretas. Acesso bloqueado por 15 minutos.',
-        };
-      }
-
-      const isCorrectPin = String(stayData.accessPin).trim() === pin;
-
-      if (!isCorrectPin) {
-        const currentFailed = Number(stayData.pinFailedAttempts || 0) + 1;
-        if (currentFailed >= 5) {
-          const lockDate = new Date(nowMs + 15 * 60 * 1000);
-          transaction.update(stayRef, {
-            pinFailedAttempts: currentFailed,
-            pinLockedUntil: lockDate,
-          });
-          return {
-            status: 429,
-            error: 'Demasiadas tentativas incorretas. Acesso bloqueado por 15 minutos.',
-          };
-        } else {
-          transaction.update(stayRef, {
-            pinFailedAttempts: currentFailed,
-          });
-          return {
-            status: 403,
-            error: 'PIN incorreto. Acesso não autorizado.',
-          };
-        }
-      }
-
-      // PIN correto: zerar contadores de falhas e desbloquear
-      transaction.update(stayRef, {
-        pinFailedAttempts: 0,
-        pinLockedUntil: null,
-      });
-
-      const companyData = companySnap.exists ? (companySnap.data() || {}) : {};
-
-      const checkInDate = normalizeDate(stayData.checkInAt);
-      const contractedHours = stayData.contractedHours || 1;
-      const expCheckOut = calculateExpectedCheckOut(stayData.checkInAt, stayData.contractedHours, stayData.extensions);
-
-      return {
-        status: 200,
-        stay: {
-          id: staySnap.id,
-          checkInAt: checkInDate.toISOString(),
-          contractedHours,
-          expectedCheckOut: expCheckOut.toISOString(),
-          ratePerHour: stayData.ratePerHourApplied || roomData.ratePerHour || 0,
-          graceMinutes: 10,
-        },
-        wifi: {
-          ssid: companyData.wifiSsid ? String(companyData.wifiSsid).trim() : null,
-          password: companyData.wifiPassword ? String(companyData.wifiPassword).trim() : null,
-        },
-      };
-    });
-
-    if (unlockResult.status !== 200) {
-      return NextResponse.json({ error: unlockResult.error }, { status: unlockResult.status });
-    }
+    const { stayId, stayData, roomData, companyData } = result;
+    const checkInDate = normalizeDate(stayData.checkInAt);
+    const contractedHours = stayData.contractedHours || 1;
+    const expCheckOut = calculateExpectedCheckOut(stayData.checkInAt, stayData.contractedHours, stayData.extensions);
 
     return NextResponse.json({
       success: true,
-      stay: unlockResult.stay,
-      wifi: unlockResult.wifi,
+      stay: {
+        id: stayId,
+        checkInAt: checkInDate.toISOString(),
+        contractedHours,
+        expectedCheckOut: expCheckOut.toISOString(),
+        ratePerHour: stayData.ratePerHourApplied || roomData.ratePerHour || 0,
+        graceMinutes: 10,
+      },
+      wifi: {
+        ssid: companyData.wifiSsid ? String(companyData.wifiSsid).trim() : null,
+        password: companyData.wifiPassword ? String(companyData.wifiPassword).trim() : null,
+      },
     });
   } catch (err: any) {
     console.error('Erro em /api/room-hub/unlock:', err);
