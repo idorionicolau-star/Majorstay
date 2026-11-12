@@ -7,8 +7,8 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { BOOT_DONE, bootLabel, bootRange, getBootStep, subscribeBootStep } from "@/lib/boot-progress";
 
-/** as cores do logótipo, da esquerda para a direita */
-const GRADIENT = "linear-gradient(90deg, rgb(248,173,0), rgb(225,51,51) 40%, rgb(124,108,174) 70%, rgb(57,146,254))";
+/** as cores do logótipo MajorStay, da esquerda para a direita */
+const GRADIENT = "linear-gradient(90deg, #38BDF8, #0284C7 55%, #006194)";
 /** quanto tempo a barra se arrasta dentro de uma fase */
 const CRAWL_MS = 9000;
 const CSS = `@keyframes msx-bp-pre{from{transform:scaleX(0)}to{transform:scaleX(.16)}}

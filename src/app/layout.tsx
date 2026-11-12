@@ -8,9 +8,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { ProgressHaulHost } from "@/components/haul/progress-haul";
 import { PwaRegister } from "@/components/pwa-register";
 import { ErrorReporter } from "@/components/error-reporter";
-import { IntroSplash } from "@/components/intro-splash";
-import { INTRO_GATE } from "@/lib/intro-gate";
-import { LOADER_GATE } from "@/components/layout/app-loader";
 import { RELOAD_GATE } from "@/lib/nav-hint";
 
 const ptSans = PT_Sans({
@@ -62,10 +59,8 @@ export default function RootLayout({
       className={`${ptSans.variable} ${spaceGrotesk.variable}`}
     >
       <body className="font-body antialiased">
-        {/* antes da primeira pintura: se a animação de entrada aparece, em que objecto começa o ecrã de carregamento
-            e se é uma recarga com a sessão aberta (só o conteúdo espera) */}
-        <script dangerouslySetInnerHTML={{ __html: INTRO_GATE + LOADER_GATE + RELOAD_GATE }} />
-        <IntroSplash />
+        {/* antes da primeira pintura: se é uma recarga com a sessão aberta (só o conteúdo espera) */}
+        <script dangerouslySetInnerHTML={{ __html: RELOAD_GATE }} />
         <AppProviders>{children}</AppProviders>
         <Toaster />
         <ProgressHaulHost />
