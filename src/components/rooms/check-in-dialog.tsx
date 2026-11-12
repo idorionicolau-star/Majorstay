@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BedDouble, Clock, User, Phone, CreditCard, Sparkles, Check, Moon } from 'lucide-react';
+import { BedDouble, Clock, User, Phone, CreditCard, Sparkles, Check, Moon, Search } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
@@ -56,6 +56,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const freeRooms = rooms.filter((r) => r.active && (r.status === 'free' || r.id === preselectedRoomId));
 
   const [roomId, setRoomId] = useState<string>('');
+  const [roomSearch, setRoomSearch] = useState<string>('');
   const [clientName, setClientName] = useState<string>('Hóspede Particular');
   const [clientPhone, setClientPhone] = useState<string>('');
   const [clientDoc, setClientDoc] = useState<string>('');
@@ -67,6 +68,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   // Selecionar o quarto inicial
   useEffect(() => {
     if (open) {
+      setRoomSearch('');
       if (initialGuestName) setClientName(initialGuestName);
       if (initialGuestPhone) setClientPhone(initialGuestPhone);
       if (initialHours) setContractedHours(initialHours);
@@ -87,6 +89,16 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
       }
     }
   }, [preselectedRoomId, rooms, freeRooms, roomId]);
+
+  const filteredRooms = useMemo(() => {
+    if (!roomSearch.trim()) return freeRooms;
+    const q = roomSearch.toLowerCase().trim();
+    return freeRooms.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        (r.type && r.type.toLowerCase().includes(q))
+    );
+  }, [freeRooms, roomSearch]);
 
   const selectedRoom = rooms.find((r) => r.id === roomId);
   const ratePerHour = selectedRoom?.ratePerHour || 0;
@@ -173,29 +185,108 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-7 py-3 space-y-4">
-          {/* Seleção do Quarto */}
-          <div className="space-y-1.5">
+          {/* Seleção do Quarto: Pesquisa Rápida + Faixa com Scroll Horizontal + Dropdown */}
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="roomSelect" className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-wide">
                 Quarto a Ocupar <span className="text-[#fd761a]">*</span>
               </Label>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e8faf1] dark:bg-emerald-950/60 text-[#00855b] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00855b] dark:bg-emerald-400" /> Disponível
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00855b] dark:bg-emerald-400" /> {freeRooms.length} {freeRooms.length === 1 ? 'Disponível' : 'Disponíveis'}
               </span>
             </div>
 
+            {/* Barra de Pesquisa Rápida */}
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <Input
+                value={roomSearch}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setRoomSearch(val);
+                  if (val.trim()) {
+                    const match = freeRooms.find(
+                      (r) =>
+                        r.name.toLowerCase().includes(val.toLowerCase()) ||
+                        (r.type && r.type.toLowerCase().includes(val.toLowerCase()))
+                    );
+                    if (match) handleRoomChange(match.id);
+                  }
+                }}
+                placeholder="Pesquisar quarto (ex: Quarto 1, Presidencial, Suite)..."
+                className="pl-9.5 pr-8 h-10 text-xs rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border-slate-200/90 dark:border-slate-800 focus:bg-white transition-all"
+              />
+              {roomSearch && (
+                <button
+                  type="button"
+                  onClick={() => setRoomSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Faixa Horizontal de Quartos com Scroll Suave */}
+            <div className="relative -mx-1 px-1">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth">
+                {filteredRooms.map((r) => {
+                  const isSelected = roomId === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => handleRoomChange(r.id)}
+                      className={cn(
+                        "shrink-0 px-3.5 py-2.5 rounded-2xl border text-left transition-all active:scale-95 flex flex-col justify-between min-w-[130px] shadow-2xs",
+                        isSelected
+                          ? "bg-[#007bb9] text-white border-[#007bb9] shadow-sm ring-2 ring-[#007bb9]/20"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-200 hover:bg-blue-50/40"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-1.5 w-full">
+                        <span className="font-bold text-xs truncate">{r.name}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      </div>
+                      <div className="flex items-center justify-between gap-1 mt-1">
+                        <span className={cn("text-[10px] font-semibold", isSelected ? "text-blue-100" : "text-slate-500 dark:text-slate-400")}>
+                          {formatCurrency(r.ratePerHour)}/h
+                        </span>
+                        {r.type && (
+                          <span className={cn("text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
+                            {r.type}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+                {filteredRooms.length === 0 && (
+                  <div className="py-2 px-3 text-center text-xs text-slate-400 w-full font-medium">
+                    Nenhum quarto corresponde a &quot;{roomSearch}&quot;
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Dropdown Menu Complementar */}
             <Select value={roomId} onValueChange={handleRoomChange}>
               <SelectTrigger
                 id="roomSelect"
-                className="w-full h-11 text-xs font-semibold rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 px-4 focus:ring-2 focus:ring-[#007bb9]/20 focus:border-[#007bb9] transition-all"
+                className="w-full h-10 text-xs font-semibold rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 px-4 focus:ring-2 focus:ring-[#007bb9]/20 focus:border-[#007bb9] transition-all"
               >
-                <SelectValue placeholder="Selecione um quarto disponível" />
+                <SelectValue placeholder="Ou selecione pela lista completa de quartos" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-xl max-h-60">
-                {freeRooms.map((r) => (
+                {filteredRooms.map((r) => (
                   <SelectItem key={r.id} value={r.id} className="text-xs font-semibold py-2.5 rounded-xl cursor-pointer">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-900 dark:text-white">{r.name}</span>
+                      {r.type && (
+                        <span className="text-[10px] uppercase font-bold text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                          {r.type}
+                        </span>
+                      )}
                       <span className="text-slate-300 dark:text-slate-600">|</span>
                       <span className="text-slate-600 dark:text-slate-300 font-medium">
                         {formatCurrency(r.ratePerHour)}/hora {r.minimumHours && r.minimumHours > 1 ? `(mín. ${r.minimumHours}h)` : ''}
@@ -203,9 +294,6 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                     </div>
                   </SelectItem>
                 ))}
-                {freeRooms.length === 0 && (
-                  <div className="p-3 text-center text-xs text-slate-400">Nenhum quarto disponível</div>
-                )}
               </SelectContent>
             </Select>
 
