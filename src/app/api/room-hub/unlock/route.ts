@@ -115,7 +115,10 @@ export async function POST(req: Request) {
 
     // Executar validação e rate limit atómicos em transação Firestore
     const unlockResult = await db.runTransaction(async (transaction) => {
+      // O Firestore exige que TODAS as leituras de uma transação venham antes de qualquer escrita.
+      // Antes a empresa era lida depois do update do PIN correto, o que dava erro interno (500).
       const staySnap = await transaction.get(stayRef);
+      const companySnap = await transaction.get(companyRef);
       if (!staySnap.exists) {
         return { status: 404, error: 'Estadia não encontrada.' };
       }
@@ -171,7 +174,6 @@ export async function POST(req: Request) {
         pinLockedUntil: null,
       });
 
-      const companySnap = await transaction.get(companyRef);
       const companyData = companySnap.exists ? (companySnap.data() || {}) : {};
 
       const checkInDate = normalizeDate(stayData.checkInAt);

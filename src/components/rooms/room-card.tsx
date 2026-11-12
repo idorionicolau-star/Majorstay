@@ -260,7 +260,7 @@ export function RoomCard({
 
   return (
     <Card className={cn(
-      'relative flex flex-col justify-between overflow-hidden rounded-3xl border bg-white dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft-hover',
+      'relative flex flex-col justify-between min-w-0 w-full overflow-hidden rounded-3xl border bg-white dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft-hover',
       statusTheme.cardBorder
     )}>
       {/* Faixa superior nobre com a cor do estado */}
@@ -271,28 +271,27 @@ export function RoomCard({
         <div>
           <div className="flex items-start justify-between gap-2 min-w-0">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight">
-                  {room.name}
-                </h3>
+              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight break-words">
+                {room.name}
+              </h3>
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                <Badge className={cn('text-xs font-bold px-2.5 py-0.5 flex items-center gap-1.5 rounded-full shadow-none whitespace-nowrap', statusTheme.badgeClass)}>
+                  <StatusIcon className="h-3.5 w-3.5" />
+                  {statusTheme.badgeText}
+                </Badge>
                 {room.type && (
                   <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 h-5 rounded-full border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 shrink-0">
                     {room.type}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold truncate">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-semibold">
                 {formatCurrency(room.ratePerHour)}/hora (mín. {room.minimumHours || 1}h)
               </p>
             </div>
 
             {/* Badge de Estado e Menu */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Badge className={cn('text-xs font-bold px-2.5 py-0.5 flex items-center gap-1.5 rounded-full shadow-none whitespace-nowrap', statusTheme.badgeClass)}>
-                <StatusIcon className="h-3.5 w-3.5" />
-                {statusTheme.badgeText}
-              </Badge>
-
+            <div className="flex items-center gap-0.5 shrink-0">
               {onShowQrCode && (
                 <Button
                   variant="ghost"
@@ -354,7 +353,7 @@ export function RoomCard({
           {(isOccupied || isOvertime) && stay && realtime && (
             <div className="mt-3.5 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5 text-xs">
               {/* Informações do Hóspede */}
-              <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 min-w-0">
                 <span className="font-bold text-slate-900 dark:text-slate-100 truncate flex items-center gap-1.5 min-w-0">
                   <User className="h-3.5 w-3.5 text-[#007bb9] shrink-0" />
                   <span className="truncate">{stay.clientName || 'Hóspede Particular'}</span>

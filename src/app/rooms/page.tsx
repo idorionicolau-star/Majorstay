@@ -506,7 +506,7 @@ export default function RoomsPage() {
 
       {/* Grelha de Quartos */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="h-64 rounded-2xl bg-[#EFEBE4]/60 dark:bg-[#1E242D] animate-pulse border border-[#E5DFD6]/60 dark:border-[#2C3440]/60" />
           ))}
@@ -537,7 +537,7 @@ export default function RoomsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-4">
           {filteredRooms.map((room) => {
             const stay = staysByRoomId.get(room.id);
             return (

@@ -283,7 +283,7 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
         </div>
 
         {/* Rodapé Fixo */}
-        <DialogFooter className="px-6 sm:px-7 py-3 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-stone-50/80 dark:bg-stone-900/80 shrink-0 flex flex-col sm:flex-row gap-2 justify-end">
+        <DialogFooter className="px-6 sm:px-7 py-3 border-t border-[#E5DFD6] dark:border-[#2C3440] bg-stone-50/80 dark:bg-stone-900/80 shrink-0 flex flex-col sm:flex-row sm:flex-wrap gap-2 justify-end">
           <Button
             type="button"
             variant="outline"
