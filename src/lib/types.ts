@@ -595,6 +595,7 @@ export type StayConsumptionItem = {
   addedAt: string | any;
   addedBy: string;
   addedByName?: string;
+  orderId?: string; // pedido do hóspede (QR do quarto) que deu origem a este consumo
 };
 
 export type StayStatus = 'open' | 'closed' | 'cancelled';

@@ -80,6 +80,11 @@ function QuartoPortalContent() {
   const [copiedWifi, setCopiedWifi] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
+  // Pedido do bar: confirmação antes de enviar + estado do pedido enviado (pendente até a receção confirmar)
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [sendingOrder, setSendingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [orderSent, setOrderSent] = useState<{ id: string; total: number; lines: { name: string; qty: number; price: number }[] } | null>(null);
   const [now, setNow] = useState<number>(Date.now());
 
   // Estado de PIN & Desbloqueio seguro no servidor
@@ -292,19 +297,68 @@ function QuartoPortalContent() {
     }, 0);
   }, [cart, data?.barProducts]);
 
-  const sendBarOrderWhatsApp = () => {
-    if (!data) return;
-    const items = Object.entries(cart)
+  const cartLines = useMemo(() => {
+    if (!data?.barProducts) return [];
+    return Object.entries(cart)
       .map(([id, qty]) => {
         const prod = data.barProducts.find((p) => p.id === id);
-        return prod ? `• ${qty}x ${prod.name} (${prod.price * qty} MT)` : '';
+        return prod ? { id, name: prod.name, qty, price: prod.price } : null;
       })
-      .filter(Boolean)
-      .join('\n');
+      .filter((l): l is { id: string; name: string; qty: number; price: number } => l !== null);
+  }, [cart, data?.barProducts]);
 
-    const msg = `Olá receção, estou no *${data.room.name}* e gostaria de fazer o seguinte pedido de bar:\n\n${items}\n\n*Total a pagar: ${cartTotal} MT*\nPor favor confirmar e trazer ao quarto. Obrigado!`;
+  const openBarWhatsApp = (lines: { name: string; qty: number; price: number }[], total: number, orderId?: string) => {
+    if (!data) return;
+    const items = lines.map((l) => `• ${l.qty}x ${l.name} (${l.price * l.qty} MT)`).join('\n');
+    const ref = orderId ? `\nPedido nº ${orderId.slice(-5).toUpperCase()}` : '';
+    const msg = `Olá receção, estou no *${data.room.name}* e gostaria de fazer o seguinte pedido de bar:\n\n${items}\n\n*Total a pagar: ${total} MT*${ref}\nPor favor confirmar e trazer ao quarto. Obrigado!`;
     const cleanWhatsapp = data.hotel.whatsapp.replace(/\D/g, '');
     window.open(`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  // Quarto sem estadia (sem PIN): continua a ser só uma mensagem de WhatsApp.
+  const sendBarOrderWhatsApp = () => openBarWhatsApp(cartLines, cartTotal);
+
+  // Estadia com PIN: o pedido fica registado como PENDENTE no sistema até a receção o confirmar.
+  const submitOrder = async () => {
+    if (!data || sendingOrder || cartLines.length === 0) return;
+    const pin = typeof window !== 'undefined' ? sessionStorage.getItem(pinStorageKey) || '' : '';
+    setSendingOrder(true);
+    setOrderError(null);
+    try {
+      const res = await fetch('/api/room-hub/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          c: companyId,
+          r: roomId,
+          pin,
+          items: cartLines.map((l) => ({ productId: l.id, quantity: l.qty })),
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        if (res.status === 403 || res.status === 429) {
+          if (typeof window !== 'undefined') sessionStorage.removeItem(pinStorageKey);
+          setIsUnlocked(false);
+          setConfirmOpen(false);
+          return;
+        }
+        setOrderError(json.error || 'Não foi possível enviar o pedido. Tente de novo.');
+        return;
+      }
+      setOrderSent({
+        id: String(json.orderId || ''),
+        total: Number(json.total ?? cartTotal),
+        lines: cartLines.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+      });
+      setCart({});
+      setConfirmOpen(false);
+    } catch {
+      setOrderError('Sem ligação à internet. Verifique e tente de novo.');
+    } finally {
+      setSendingOrder(false);
+    }
   };
 
   const sendExtensionWhatsApp = () => {
@@ -710,14 +764,88 @@ function QuartoPortalContent() {
               <span className="text-lg font-black text-[#F6E0B5]">{formatCurrency(cartTotal)}</span>
             </div>
             <Button
-              onClick={sendBarOrderWhatsApp}
+              onClick={() => {
+                if (data?.pinRequired) {
+                  setOrderError(null);
+                  setConfirmOpen(true);
+                } else {
+                  sendBarOrderWhatsApp();
+                }
+              }}
               className="h-10 text-xs font-bold rounded-xl bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#20ba5a] hover:to-[#0f7569] text-white shadow-md flex items-center gap-1.5"
             >
               <Send className="w-3.5 h-3.5" />
-              Pedir via WhatsApp
+              {data?.pinRequired ? 'Rever pedido' : 'Pedir via WhatsApp'}
             </Button>
           </div>
         </aside>
+      )}
+
+      {/* Confirmação do pedido antes de enviar */}
+      {confirmOpen && (
+        <div role="dialog" aria-modal="true" aria-label="Confirmar pedido" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-[#FFFDF9] dark:bg-[#191E25] border border-[#E5DFD6] dark:border-[#2C3440] shadow-2xl overflow-hidden">
+            <div className="px-5 pt-5 pb-3 shrink-0">
+              <h3 className="font-extrabold text-base text-[#251D18] dark:text-[#F5EFEB]">Confirmar pedido</h3>
+              <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                A receção vai levar o pedido ao quarto. O valor entra na conta da sua estadia depois de a receção o confirmar.
+              </p>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-2 space-y-2">
+              {cartLines.map((l) => (
+                <div key={l.id} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate font-semibold text-[#251D18] dark:text-[#F5EFEB]">{l.qty}× {l.name}</span>
+                  <span className="shrink-0 font-bold text-[#C58A2C] dark:text-[#E88C4A]">{formatCurrency(l.price * l.qty)}</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#E5DFD6] dark:border-[#2C3440]">
+                <span className="text-sm font-bold">Total</span>
+                <span className="text-lg font-black text-[#251D18] dark:text-[#F5EFEB]">{formatCurrency(cartTotal)}</span>
+              </div>
+              {orderError && <p className="text-xs font-semibold text-rose-600">{orderError}</p>}
+            </div>
+            <div className="grid grid-cols-2 gap-2 px-5 py-4 shrink-0 border-t border-[#E5DFD6] dark:border-[#2C3440]">
+              <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)} disabled={sendingOrder} className="h-11 rounded-xl text-sm font-semibold">
+                Voltar
+              </Button>
+              <Button type="button" onClick={submitOrder} disabled={sendingOrder} className="h-11 rounded-xl text-sm font-bold bg-[#251D18] hover:bg-[#3A2D25] text-white">
+                {sendingOrder ? 'A enviar...' : 'Confirmar e enviar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pedido enviado (pendente até a receção confirmar) */}
+      {orderSent && (
+        <div role="dialog" aria-modal="true" aria-label="Pedido enviado" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3">
+          <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] dark:bg-[#191E25] border border-[#E5DFD6] dark:border-[#2C3440] shadow-2xl p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center shrink-0">
+                <Check className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-extrabold text-base text-[#251D18] dark:text-[#F5EFEB]">Pedido enviado à receção</h3>
+                <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                  Fica pendente até a receção o confirmar. Nº {orderSent.id.slice(-5).toUpperCase()} · {formatCurrency(orderSent.total)}.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                type="button"
+                onClick={() => openBarWhatsApp(orderSent.lines, orderSent.total, orderSent.id)}
+                className="h-11 rounded-xl text-sm font-bold bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Avisar também no WhatsApp
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setOrderSent(null)} className="h-11 rounded-xl text-sm font-semibold">
+                Fechar
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Rodapé Discreto */}

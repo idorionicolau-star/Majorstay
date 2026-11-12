@@ -26,6 +26,7 @@ import { computeRoomCleaningStatus } from '@/lib/hospitality-calc';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { RoomCard } from '@/components/rooms/room-card';
+import { PendingRoomOrders } from '@/components/rooms/pending-orders';
 import { CheckInDialog } from '@/components/rooms/check-in-dialog';
 import { ExtendStayDialog } from '@/components/rooms/extend-stay-dialog';
 import { CheckOutDialog } from '@/components/rooms/check-out-dialog';
@@ -437,6 +438,8 @@ function RoomsPageContent() {
           </div>
         </div>
       </div>
+
+      <PendingRoomOrders />
 
       {/* Barra de Filtros e Pesquisa com Pílulas Suaves */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-[#191E25] p-2.5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-card">
