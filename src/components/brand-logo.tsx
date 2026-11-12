@@ -208,7 +208,7 @@ export function MajorStayLogo({
   return (
     <div
       className={cn(
-        'flex items-center gap-3 select-none',
+        'flex items-center gap-3 select-none min-w-0 max-w-full',
         !horizontal && 'flex-col text-center',
         className
       )}
@@ -226,7 +226,13 @@ export function MajorStayLogo({
       )}
       <div className={cn('flex flex-col justify-center leading-none min-w-0', !horizontal && 'items-center mt-1')}>
         {displayName ? (
-          <div className={cn('font-headline font-extrabold tracking-tight truncate text-slate-900 dark:text-white', titleSize)}>
+          <div
+            title={displayName}
+            className={cn(
+              'font-headline font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight break-words line-clamp-2',
+              displayName.length > 16 ? 'text-base' : titleSize
+            )}
+          >
             {displayName}
           </div>
         ) : (

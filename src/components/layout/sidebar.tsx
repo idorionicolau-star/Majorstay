@@ -34,8 +34,8 @@ export function Sidebar() {
     return (
         <aside className="hidden md:flex flex-col py-6 border-r border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-[#191E25]/95 backdrop-blur-md z-50 fixed inset-y-0 left-0 w-64 h-screen transition-all duration-300 shadow-soft-sm">
             {/* Logo Area */}
-            <div className="h-14 w-full flex items-center px-5 mb-5 cursor-pointer hover:opacity-95 transition-opacity group">
-                <Link href="/dashboard" className="flex items-center w-full h-full">
+            <div className="min-h-14 w-full flex items-center px-5 mb-5 cursor-pointer hover:opacity-95 transition-opacity group">
+                <Link href="/dashboard" className="flex items-center w-full min-w-0 h-full">
                     <MajorStayLogo size="md" showTagline customLogoUrl={companyData?.logoUrl} customName={companyData?.name} />
                 </Link>
             </div>
