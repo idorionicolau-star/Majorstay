@@ -16,6 +16,7 @@ import {
   Calendar,
   MessageCircle,
   QrCode,
+  ShieldAlert,
 } from 'lucide-react';
 import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
@@ -253,6 +254,19 @@ function RoomsPageContent() {
             <RefreshCw className="h-3.5 w-3.5" />
             Atualizar
           </Button>
+
+          {isManager && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/rooms/controlo')}
+              title="Pedidos recusados e consumos removidos"
+              className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Controlo
+            </Button>
+          )}
 
           {/* Reservas Antecipadas */}
           <Button
