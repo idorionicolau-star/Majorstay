@@ -272,7 +272,7 @@ export function HospitalityDashboard() {
               <span className="text-lg font-black tracking-tight text-white">{formatCurrency(toReceive)}</span>
             </div>
             <Link
-              href="/rooms/checkin"
+              href="/rooms?checkin=1"
               className="px-4 py-2.5 rounded-2xl bg-white text-[#006194] hover:bg-blue-50 font-extrabold text-xs shadow-md transition-all flex items-center gap-2 active:scale-95 shrink-0"
             >
               <Key className="w-3.5 h-3.5" />

@@ -189,6 +189,15 @@ function RoomsPageContent() {
     setCheckInOpen(true);
   };
 
+  // ?checkin=1 (vindo do painel, do menu de comandos ou de links antigos): abre o pop-up de check-in e limpa o endereço
+  const checkinParam = searchParams.get('checkin');
+  useEffect(() => {
+    if (checkinParam !== '1') return;
+    handleOpenCheckIn();
+    router.replace('/rooms', { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkinParam]);
+
   const handleCheckInFromBooking = async (booking: Booking) => {
     setBookingsListOpen(false);
     const targetRoom = booking.roomId ? rooms.find((r) => r.id === booking.roomId) : null;

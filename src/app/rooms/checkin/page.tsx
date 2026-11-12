@@ -1,21 +1,6 @@
-import React, { Suspense } from 'react';
-import { CheckInView } from '@/components/rooms/check-in-view';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'Nova Entrada de Hóspede — MajorStay Hospitality',
-  description: 'Check-in rápido de balcão com alocação imediata de chave física e abertura de ficha no MajorStay.',
-};
-
+// O check-in é um pop-up na página de quartos (também no telemóvel). Esta rota fica só para links antigos.
 export default function CheckInPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-[60vh] text-stone-500">
-          <div className="animate-pulse text-sm font-semibold">Carregando balcão de check-in...</div>
-        </div>
-      }
-    >
-      <CheckInView />
-    </Suspense>
-  );
+  redirect('/rooms?checkin=1');
 }
