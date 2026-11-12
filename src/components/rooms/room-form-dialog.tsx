@@ -250,7 +250,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           </div>
           </div>
 
-          <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col sm:flex-row gap-2.5 justify-end">
+          <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 justify-end">
             <Button
               type="button"
               variant="outline"
