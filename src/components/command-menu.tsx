@@ -158,7 +158,7 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
 
           {!search && (
             <CommandGroup heading="Acesso Rápido">
-              <CommandItem onSelect={() => runCommand(() => router.push('/rooms/checkin'))}>
+              <CommandItem onSelect={() => runCommand(() => router.push('/rooms?checkin=1'))}>
                 <LogIn className="mr-2 h-4 w-4 text-[#006194]" />
                 <span className="font-semibold">Novo Check-in Rápido</span>
               </CommandItem>
