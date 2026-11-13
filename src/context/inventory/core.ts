@@ -412,18 +412,20 @@ export function useInventoryCore() {
           if (auth.currentUser?.uid !== fbUser.uid) return; // saiu entretanto (ex.: conta Google sem empresa)
         }
         const userMapDocRef = doc(firestore, `users/${fbUser.uid}`);
-        // Falha de rede (sem sinal, ligação a acordar) NÃO é motivo para terminar a sessão: tenta de novo.
+        // Falha de rede ou replicação de novo registo: tenta de novo até 6 vezes antes de desistir.
         for (let attempt = 0; attempt < 6 && !cancelled; attempt++) {
           try {
             const userMapDoc = await getDoc(userMapDocRef);
             if (userMapDoc.exists()) {
               setCompanyId(userMapDoc.data().companyId);
-            } else if (userMapDoc.metadata.fromCache) {
-              throw Object.assign(new Error('unavailable'), { code: 'unavailable' }); // cópia local incompleta: espera pelo servidor
+              return;
+            } else if (userMapDoc.metadata.fromCache || attempt < 5) {
+              // O registo pode ainda estar a propagar no Firestore: aguarda antes de tentar novamente
+              await new Promise((res) => setTimeout(res, 1200 * (attempt + 1)));
+              continue;
             } else {
               throw new Error("Mapeamento de utilizador não encontrado.");
             }
-            return;
           } catch (error) {
             if (isTransient(error) && attempt < 5) {
               await new Promise((res) => setTimeout(res, 1500 * (attempt + 1)));
@@ -468,6 +470,7 @@ export function useInventoryCore() {
       setNotifications([]); // Clear notifications on company change
       setChatHistory([]); // Clear chat history on company change
       const employeeDocRef = doc(firestore, `companies/${companyId}/employees/${firebaseUser.uid}`);
+      let empRetries = 0;
       unsubscribeEmployee = onSnapshot(employeeDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const employeeData = { id: docSnap.id, ...docSnap.data() } as Employee;
@@ -478,8 +481,9 @@ export function useInventoryCore() {
             setProfilePicture(null);
           }
           setLoading(false);
-        } else if (docSnap.metadata.fromCache) {
-          // Ainda só há a cópia local (sem sinal): não é prova de que o perfil não existe. Espera pelo servidor.
+        } else if (docSnap.metadata.fromCache || empRetries < 3) {
+          // Documento recém-criado ainda a propagar: aguarda o servidor antes de considerar erro
+          empRetries++;
         } else {
           console.error("Perfil de funcionário não encontrado na empresa.");
           logout();
@@ -487,8 +491,14 @@ export function useInventoryCore() {
         }
       }, (error) => {
         console.error("Error subscribing to employee data:", error);
-        // Só termina a sessão se o servidor recusou o acesso; falhas de rede passam sozinhas.
-        if ((error as { code?: string })?.code === 'permission-denied') logout();
+        // Só termina a sessão se o servidor recusou o acesso e já esgotou as tentativas de tolerância
+        if ((error as { code?: string })?.code === 'permission-denied') {
+          if (empRetries < 3) {
+            empRetries++;
+            return;
+          }
+          logout();
+        }
         setLoading(false);
       });
     } else if (!firebaseUser && authReady) {

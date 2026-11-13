@@ -9,6 +9,7 @@ import type { InventoryCore } from './core';
 import { trialEndFrom } from '@/lib/trial';
 import { beginRegistration, endRegistration } from '@/lib/registration-guard';
 import { discardGuestData } from '@/lib/guest-mode';
+import { BRAND } from '@/lib/brand';
 
 export function useAuthActions(core: InventoryCore) {
   const { auth, toast, firestore } = core;
@@ -236,7 +237,7 @@ export function useAuthActions(core: InventoryCore) {
           },
           body: JSON.stringify({
             to: adminEmail,
-            subject: '🎉 Bem-vindo ao MajorStockX!',
+            subject: `🎉 Bem-vindo ao ${BRAND.name}!`,
             type: 'WELCOME',
             companyName: companyName,
             companyId: newCompanyRef.id,
@@ -349,7 +350,7 @@ export function useAuthActions(core: InventoryCore) {
           },
           body: JSON.stringify({
             to: adminEmail,
-            subject: '🎉 Bem-vindo ao MajorStockX!',
+            subject: `🎉 Bem-vindo ao ${BRAND.name}!`,
             type: 'WELCOME',
             companyName: companyName,
             companyId: newCompanyRef.id,

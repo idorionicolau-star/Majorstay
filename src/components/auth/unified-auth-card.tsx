@@ -176,14 +176,16 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
         try {
           localStorage.setItem('majorstay_last_login_email', data.adminEmail.trim());
         } catch {}
+        router.push('/dashboard');
       } else if (success) {
         try {
           localStorage.setItem('majorstay_last_login_email', data.adminEmail.trim());
         } catch {}
         toast({
-          title: 'Conta Criada com Sucesso!',
-          description: `Bem-vindo ao ${BRAND.name}. A iniciar o seu teste grátis...`,
+          title: 'Conta Criada com Sucesso! 🎉',
+          description: `Bem-vindo ao ${BRAND.name}. A iniciar o seu período de teste grátis...`,
         });
+        router.push('/dashboard');
       } else {
         dropInvite();
       }
