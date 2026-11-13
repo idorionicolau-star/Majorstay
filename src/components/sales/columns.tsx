@@ -211,7 +211,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Sale>[] => {
         },
         {
             accessorKey: "totalValue",
-            header: "Valor Total",
+            header: () => <div className="text-right">Valor Total</div>,
             cell: ({ row }) => {
                 const sale = row.original;
                 const isPartiallyPaid = sale.amountPaid !== undefined && sale.amountPaid < sale.totalValue;

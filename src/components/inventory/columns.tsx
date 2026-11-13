@@ -108,7 +108,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Product>[] => {
   baseColumns.push(
     {
       accessorKey: "stock",
-      header: "Disponível",
+      header: () => <div className="text-center">Disponível</div>,
       cell: ({ row }) => {
         const status = getStockStatus(row.original);
         const availableStock = row.original.stock - row.original.reservedStock;
@@ -127,7 +127,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Product>[] => {
     },
     {
       accessorKey: "reservedStock",
-      header: "Reservado",
+      header: () => <div className="text-center">Reservado</div>,
       cell: ({ row }) => {
         const reserved = row.original.reservedStock;
         return (
@@ -141,7 +141,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Product>[] => {
     },
     {
       accessorKey: "restock",
-      header: "Reposição",
+      header: () => <div className="text-center">Reposição</div>,
       cell: ({ row }) => {
         const p = row.original;
         const available = p.stock - p.reservedStock;
@@ -192,6 +192,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Product>[] => {
 
   baseColumns.push({
     id: "actions",
+    header: () => <div className="text-right sr-only">Ações</div>,
     cell: ({ row }) => {
       const product = row.original
       return (

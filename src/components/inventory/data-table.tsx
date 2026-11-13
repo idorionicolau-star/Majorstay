@@ -84,52 +84,26 @@ export function InventoryDataTable<TData extends Product, TValue>({
               ))}
             </TableHeader>
             <TableBody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-              {useVirtualization ? (
-                <tr className="p-0 border-0">
-                  <td colSpan={columns.length} className="p-0 border-0">
-                    <Virtuoso
-                      useWindowScroll
-                      increaseViewportBy={500}
-                      data={table.getRowModel().rows}
-                      totalCount={table.getRowModel().rows.length}
-                      itemContent={(index, row) => (
-                        <div className="flex w-full border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all group">
-                          {row.getVisibleCells().map((cell) => (
-                            <div
-                              key={cell.id}
-                              className="px-4 sm:px-8 py-4 flex-shrink-0"
-                              style={{ width: cell.column.getSize() }}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    />
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className="dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all group"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="px-4 sm:px-8 py-4">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      Nenhum resultado.
-                    </TableCell>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all group"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="px-4 sm:px-8 py-4">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                )
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    Nenhum resultado.
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
