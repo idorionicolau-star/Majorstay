@@ -174,7 +174,8 @@ function RoomsPageContent() {
         const matchType = (room.type || '').toLowerCase().includes(query);
         const matchClient = (activeStay?.clientName || '').toLowerCase().includes(query);
         const matchPhone = (activeStay?.clientPhone || '').includes(query);
-        return matchRoomName || matchType || matchClient || matchPhone;
+        const matchPlate = (activeStay?.vehiclePlate || '').toLowerCase().replace(/\s/g, '').includes(query.replace(/\s/g, ''));
+        return matchRoomName || matchType || matchClient || matchPhone || matchPlate;
       }
 
       return true;

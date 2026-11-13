@@ -610,6 +610,7 @@ export type Stay = {
   clientName?: string;
   clientPhone?: string;
   clientDoc?: string; // BI / Passaporte
+  vehiclePlate?: string; // Matrícula do veículo do hóspede (opcional)
   accessPin?: string; // PIN de 4 dígitos para acesso exclusivo do hóspede via QR Code
   pinFailedAttempts?: number; // Contador de tentativas incorretas
   pinLockedUntil?: string | any; // Timestamp de bloqueio temporário (15 min após 5 erros)

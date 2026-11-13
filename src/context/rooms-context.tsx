@@ -65,6 +65,7 @@ interface RoomsContextType {
     clientName?: string;
     clientPhone?: string;
     clientDoc?: string;
+    vehiclePlate?: string;
     contractedHours: number;
     ratePerHour: number;
     paymentMethod?: string;
@@ -391,6 +392,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     clientName?: string;
     clientPhone?: string;
     clientDoc?: string;
+    vehiclePlate?: string;
     contractedHours: number;
     ratePerHour: number;
     paymentMethod?: string;
@@ -423,6 +425,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         clientName: data.clientName || 'Hóspede Particular',
         clientPhone: data.clientPhone || '',
         clientDoc: data.clientDoc || '',
+        vehiclePlate: (data.vehiclePlate || '').trim().toUpperCase().slice(0, 12),
         accessPin,
         pinFailedAttempts: 0,
         pinLockedUntil: null,
@@ -463,6 +466,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       clientName: data.clientName || 'Hóspede Particular',
       clientPhone: data.clientPhone || '',
       clientDoc: data.clientDoc || '',
+        vehiclePlate: (data.vehiclePlate || '').trim().toUpperCase().slice(0, 12),
       accessPin,
       pinFailedAttempts: 0,
       pinLockedUntil: null,
