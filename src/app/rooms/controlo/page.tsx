@@ -8,6 +8,7 @@ import { useInventory } from '@/context/inventory-context';
 import { formatCurrency } from '@/lib/utils';
 
 type Rejected = { id: string; roomName: string; total: number; items: { name: string; quantity: number }[]; reason: string; by: string; at: string };
+type ShiftRow = { id: string; employeeName: string; openedAt: string | null; closedAt: string | null; status: 'open' | 'closed'; openingCash: number; countedCash: number | null; expectedCash: number | null; difference: number | null; notes: string };
 type Removed = { id: string; roomName: string; value: number; reason: string; by: string; at: string };
 
 function when(iso: string) {
@@ -22,6 +23,7 @@ export default function ControloPage() {
   const isManager = user?.role === 'Admin' || user?.role === 'Dono';
   const [rejected, setRejected] = useState<Rejected[]>([]);
   const [removed, setRemoved] = useState<Removed[]>([]);
+  const [shifts, setShifts] = useState<ShiftRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +46,12 @@ export default function ControloPage() {
       if (!res.ok) throw new Error(json.error || `Erro ${res.status}`);
       setRejected(json.rejectedOrders || []);
       setRemoved(json.removedConsumptions || []);
+      // turnos: se falhar, o resto do controlo continua a aparecer
+      try {
+        const sr = await fetch(`/api/shifts?companyId=${encodeURIComponent(companyId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        const sj = await sr.json().catch(() => ({}));
+        setShifts(Array.isArray(sj.recent) ? sj.recent : []);
+      } catch { setShifts([]); }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível carregar.');
     } finally {
@@ -105,6 +113,35 @@ export default function ControloPage() {
 
           {!loading && !error && (
             <>
+              <section className="space-y-2">
+                <h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">Turnos de caixa ({shifts.length})</h2>
+                {shifts.length === 0 ? (
+                  <p className="text-sm text-slate-400">Ainda não há turnos.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {shifts.map((t) => (
+                      <li key={t.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#191E25] p-3.5 text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold truncate">{t.employeeName || '—'}</span>
+                          <span className="text-xs text-slate-400 shrink-0">{when(t.openedAt || '')}{t.closedAt ? ` → ${when(t.closedAt)}` : ''}</span>
+                        </div>
+                        {t.status === 'open' ? (
+                          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Turno aberto · fundo de caixa {formatCurrency(t.openingCash)}</p>
+                        ) : (
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                            Esperado {formatCurrency(t.expectedCash || 0)} · Contado {formatCurrency(t.countedCash || 0)} ·{' '}
+                            <b className={t.difference === 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                              {t.difference === 0 ? 'Certo' : `${(t.difference || 0) < 0 ? 'Falta' : 'Sobra'} ${formatCurrency(Math.abs(t.difference || 0))}`}
+                            </b>
+                          </p>
+                        )}
+                        {t.notes && <p className="text-xs text-slate-500 mt-1">Nota: {t.notes}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
               <section className="space-y-2">
                 <h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">Por funcionário</h2>
                 {byEmployee.length === 0 ? (
