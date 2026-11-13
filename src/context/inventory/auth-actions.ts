@@ -47,6 +47,9 @@ export function useAuthActions(core: InventoryCore) {
   const loginWithGoogle = async (): Promise<boolean | { noCompany: string; displayName?: string }> => {
     // enquanto se verifica se a conta tem empresa, a abertura da sessão espera (sem "Sessão terminada" pelo meio)
     beginRegistration();
+    // conta Google sem empresa: a pessoa fica no ecrã do nome do hotel; a sessão não pode ser dada por perdida
+    // enquanto isso (o registo ou o cancelamento libertam a espera)
+    let holdGuard = false;
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -57,6 +60,7 @@ export function useAuthActions(core: InventoryCore) {
         if (!userDoc.exists()) {
           // Conta Google sem empresa: mantém o login activo no Firebase Auth (sem signOut forçado)
           // para o utilizador apenas precisar de informar o nome do alojamento/hotel
+          holdGuard = true;
           return { noCompany: result.user.email || '', displayName: result.user.displayName || '' };
         }
       }
@@ -87,7 +91,7 @@ export function useAuthActions(core: InventoryCore) {
       toast({ variant: 'destructive', title: 'Erro de Login', description: message });
       return false;
     } finally {
-      endRegistration();
+      if (!holdGuard) endRegistration();
     }
   };
 

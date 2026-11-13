@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +18,7 @@ import { guestTrialStart } from '@/lib/guest-trial-client';
 import { InventoryContext } from '@/context/inventory-context';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, signOut } from 'firebase/auth';
+import { beginRegistration, endRegistration } from '@/lib/registration-guard';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,6 +69,10 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
 
   // Fluxo Google sem fricção: quando o Google autentica mas ainda não tem empresa
   const [googleSetup, setGoogleSetup] = useState<{ email: string; displayName?: string } | null>(null);
+  // ao sair desta página com a conta Google ainda sem hotel, deixa de segurar a sessão (como antes: sem empresa, sai)
+  const googleSetupActive = useRef(false);
+  useEffect(() => { googleSetupActive.current = !!googleSetup; }, [googleSetup]);
+  useEffect(() => () => { if (googleSetupActive.current) endRegistration(); }, []);
   const [googleHotelName, setGoogleHotelName] = useState('');
 
   // Código de convite / cupão
@@ -298,9 +303,11 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
         router.push('/dashboard');
       } else {
         dropInvite();
+        beginRegistration(); // falhou: continua no ecrã do nome do hotel, sem a sessão ser dada por perdida
       }
     } catch (err: any) {
       dropInvite();
+      beginRegistration();
       console.error('Erro ao finalizar Google Setup:', err);
     } finally {
       setIsGoogleLoading(false);
@@ -314,6 +321,7 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
     } catch {
       // ignorar
     }
+    endRegistration(); // liberta a espera da sessão (ver loginWithGoogle)
     setGoogleSetup(null);
     setGoogleHotelName('');
   };
