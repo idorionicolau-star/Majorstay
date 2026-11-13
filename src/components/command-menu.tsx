@@ -18,7 +18,7 @@ import { CRMContext } from "@/context/crm-context"
 import { RoomsContext } from "@/context/rooms-context"
 import type { Product, Room, Stay } from "@/lib/types"
 import { answerOffline, ASSISTANT_SUGGESTIONS } from "@/lib/offline-assistant"
-import { Bed, Wine, User, Sparkles, ArrowLeft, LogIn } from "lucide-react"
+import { Bed, Wine, User, HelpCircle, ArrowLeft, LogIn } from "lucide-react"
 
 import { useFuse } from "@/hooks/use-fuse"
 
@@ -141,7 +141,7 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
       {answer ? (
         <div className="max-h-[60vh] overflow-y-auto p-4" data-tour="search-answer">
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <Sparkles className="h-4 w-4 shrink-0 text-[#006194]" /> {answer.question}
+            <HelpCircle className="h-4 w-4 shrink-0 text-[#006194]" /> {answer.question}
           </p>
           <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>ol]:list-decimal [&>ol]:pl-4 [&>ul]:list-disc [&>ul]:pl-4">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer.text}</ReactMarkdown>
@@ -177,7 +177,7 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
             <CommandGroup heading="Perguntas de Hotelaria">
               {ASSISTANT_SUGGESTIONS.map((q) => (
                 <CommandItem key={q} value={`ask-${q}`} onSelect={() => ask(q)}>
-                  <Sparkles className="mr-2 h-4 w-4 text-[#006194]" />
+                  <HelpCircle className="mr-2 h-4 w-4 text-[#006194]" />
                   <span>{q}</span>
                 </CommandItem>
               ))}
@@ -187,7 +187,7 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
           {canAsk && search && (
             <CommandGroup>
               <CommandItem onSelect={() => ask(search)} value={`ask-${search}`}>
-                <Sparkles className="mr-2 h-4 w-4 text-[#006194]" />
+                <HelpCircle className="mr-2 h-4 w-4 text-[#006194]" />
                 <span>Perguntar ao assistente: «{search}»</span>
               </CommandItem>
             </CommandGroup>

@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BedDouble, Clock, User, Phone, CreditCard, Sparkles, Check, Moon, Search, Car } from 'lucide-react';
+import { BedDouble, Clock, User, Phone, CreditCard, Check, Moon, Search, Car, Tag } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
@@ -313,7 +313,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
 
             {selectedRoom && (
               <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                <Sparkles className="w-3.5 h-3.5 text-[#fd761a]" />
+                <Tag className="w-3.5 h-3.5 text-[#fd761a]" />
                 <span>
                   Tarifa base deste quarto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{formatCurrency(ratePerHour)}/hora</strong>
                 </span>

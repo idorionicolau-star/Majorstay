@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Clock, PlusCircle, ArrowRight, UserCheck, Sparkles } from 'lucide-react';
+import { Clock, PlusCircle, ArrowRight, UserCheck } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
@@ -143,7 +143,7 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
 
             <div className="flex items-center justify-between text-xs font-bold text-[#007bb9] dark:text-sky-400">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
+                <Clock className="w-3.5 h-3.5" />
                 Nova Saída Prevista:
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>

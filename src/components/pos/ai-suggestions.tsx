@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Plus, Loader2 } from 'lucide-react';
+import { TrendingUp, Plus, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { Product, CartItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +69,7 @@ export function AiSuggestions({ cart, catalogProducts, onAddToCart }: AiSuggesti
         } catch (error: any) {
             console.error('Error fetching suggestions:', error);
             toast({
-                title: 'Erro de IA',
+                title: 'Sugestões indisponíveis',
                 description: 'Não foi possível gerar sugestões neste momento.',
                 variant: 'destructive',
             });
@@ -82,8 +82,8 @@ export function AiSuggestions({ cart, catalogProducts, onAddToCart }: AiSuggesti
         <Card className="mt-4 p-4 border-primary/20 bg-primary/5">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-primary font-semibold">
-                    <Sparkles className="h-5 w-5" />
-                    <span>IA Major Stock (Cross-Selling)</span>
+                    <TrendingUp className="h-5 w-5" />
+                    <span>Sugestões Inteligentes (Cross-Selling)</span>
                 </div>
 
                 {!hasGenerated && (

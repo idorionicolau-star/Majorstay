@@ -19,7 +19,6 @@ import {
   Minus,
   Trash2,
   Receipt,
-  Sparkles,
   ShoppingBag,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -356,7 +355,7 @@ export function RoomConsumptionDialog({
               {/* Lançamento Rápido Personalizado */}
               <div className="p-3.5 bg-[#F8F5EE] dark:bg-[#261E1A] rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] space-y-2">
                 <p className="text-xs font-bold text-[#251D18] dark:text-[#F5EFEB] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#DF9E42]" />
+                  <Plus className="h-3.5 w-3.5 text-[#DF9E42]" />
                   Outro Item / Lançamento Manual na Conta
                 </p>
                 <form onSubmit={handleAddCustom} className="grid grid-cols-12 gap-2">

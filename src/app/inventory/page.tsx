@@ -11,7 +11,7 @@ import type { Product, Location, ModulePermission } from "@/lib/types";
 import { columns } from "@/components/inventory/columns";
 import { InventoryDataTable } from "@/components/inventory/data-table";
 import { Button } from "@/components/ui/button";
-import { FileText, ListFilter, MapPin, List, LayoutGrid, ChevronDown, Plus, ChevronsUpDown, Printer, Download, ScanBarcode, ClipboardList, WandSparkles, MoreHorizontal, Truck } from "lucide-react";
+import { FileText, ListFilter, MapPin, List, LayoutGrid, ChevronDown, Plus, ChevronsUpDown, Printer, Download, ScanBarcode, ClipboardList, RefreshCw, MoreHorizontal, Truck } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -693,7 +693,7 @@ export default function InventoryPage() {
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={async () => { await syncSmartThresholds(true); }}>
-                    <WandSparkles className="mr-2 h-4 w-4" /> Recalcular mínimos de stock
+                    <RefreshCw className="mr-2 h-4 w-4" /> Recalcular mínimos de stock
                   </DropdownMenuItem>
                 </>
               )}
@@ -868,7 +868,7 @@ export default function InventoryPage() {
             <DeepLinkBanner title={t.title} hint={t.hint} count={filteredProducts.length} onClear={() => router.replace('/inventory')}>
               {focus.problem === 'limites-manuais' && canEditInventory && filteredProducts.length > 0 && (
                 <Button type="button" size="sm" onClick={() => setAutoThresholds(filteredProducts)} disabled={isReadOnly} className="shrink-0">
-                  <WandSparkles className="mr-1.5 h-4 w-4" /> Pôr {filteredProducts.length === 1 ? 'em' : `os ${filteredProducts.length} em`} automático
+                  <RefreshCw className="mr-1.5 h-4 w-4" /> Pôr {filteredProducts.length === 1 ? 'em' : `os ${filteredProducts.length} em`} automático
                 </Button>
               )}
             </DeepLinkBanner>

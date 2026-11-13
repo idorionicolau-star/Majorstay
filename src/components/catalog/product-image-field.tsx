@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
-import { ImagePlus, Loader2, Sparkles, X } from "lucide-react";
+import { ImagePlus, Loader2, Camera, Check, X } from "lucide-react";
 import { InventoryContext } from "@/context/inventory-context";
 import { useToast } from "@/hooks/use-toast";
 import { uploadProductImage } from "@/lib/upload-product-image";
@@ -84,7 +84,7 @@ export function ProductImageField({ value, onChange }: { value?: string; onChang
             <Dialog open={!!picked} onOpenChange={(o) => { if (!o) close(); }}>
                 <DialogContent data-testid="studio-photo">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Foto de estúdio</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary" /> Foto de estúdio</DialogTitle>
                         <DialogDescription>Fundo branco feito no telemóvel, sem internet. Escolha a que prefere.</DialogDescription>
                     </DialogHeader>
                     <div className="grid grid-cols-2 gap-3">
@@ -108,7 +108,7 @@ export function ProductImageField({ value, onChange }: { value?: string; onChang
                     )}
                     <div className="flex flex-col gap-2 sm:flex-row-reverse">
                         <Button type="button" className="h-11 flex-1" disabled={studio?.state !== "done"} onClick={() => choose("studio")}>
-                            <Sparkles className="mr-2 h-4 w-4" /> Usar fundo branco
+                            <Check className="mr-2 h-4 w-4" /> Usar fundo branco
                         </Button>
                         <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => choose("original")}>Usar a original</Button>
                     </div>

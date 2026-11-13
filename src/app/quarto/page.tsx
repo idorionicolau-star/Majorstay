@@ -8,7 +8,7 @@ import {
   Phone,
   MessageCircle,
   Wine,
-  Sparkles,
+  CheckCircle2,
   Maximize2,
   Minimize2,
   RefreshCw,
@@ -24,7 +24,6 @@ import {
   Unlock,
   AlertCircle,
   Receipt,
-  CheckCircle2,
   Hourglass,
   XCircle,
 } from 'lucide-react';
@@ -674,7 +673,7 @@ function QuartoPortalContent() {
           /* Quando o Quarto Está Livre (QR mostra Quarto Livre sem dados nenhuns) */
           <Card className="rounded-3xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-6 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
+              <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
               <h3 className="font-bold text-base text-stone-800 dark:text-stone-100">

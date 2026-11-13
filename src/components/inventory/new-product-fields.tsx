@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, BookOpen, Check, Plus, Sparkles, Warehouse } from "lucide-react";
+import { AlertTriangle, BookOpen, Check, Plus, Tag, Warehouse } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { CategorySuggestion, NameMatch } from "@/lib/new-product";
@@ -94,7 +94,7 @@ export function NewProductFields(p: Props) {
                 <label className="mb-1 flex items-center justify-between text-xs font-medium text-muted-foreground">
                     <span>Categoria</span>
                     {p.suggestion.source !== "none" && (
-                        <span className="flex items-center gap-1 text-primary"><Sparkles className="h-3 w-3" /> sugerida pelo nome</span>
+                        <span className="flex items-center gap-1 text-primary"><Tag className="h-3 w-3" /> sugerida pelo nome</span>
                     )}
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -110,7 +110,7 @@ export function NewProductFields(p: Props) {
                                 className={cn("flex h-9 items-center gap-1 rounded-full border px-3 text-sm", active ? "border-primary bg-primary text-primary-foreground" : "bg-muted/50")}
                             >
                                 {active && <Check className="h-3.5 w-3.5" />}
-                                {suggested && !active && <Sparkles className="h-3 w-3 text-primary" />}
+                                {suggested && !active && <Tag className="h-3 w-3 text-primary" />}
                                 {c}
                                 {suggested && p.suggestion.isNew && <span className="text-[10px] opacity-80">(nova)</span>}
                             </button>

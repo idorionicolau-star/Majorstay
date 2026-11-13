@@ -7,7 +7,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle2,
-  Sparkles,
+  Brush,
   Plus,
   Search,
   Filter,
@@ -429,7 +429,7 @@ function RoomsPageContent() {
         >
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5" />
+              <Brush className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Limpeza</p>
@@ -540,7 +540,7 @@ function RoomsPageContent() {
             )}
             onClick={() => selectTab('cleaning')}
           >
-            <Sparkles className="h-3.5 w-3.5 text-sky-600" />
+            <Brush className="h-3.5 w-3.5 text-sky-600" />
             Limpeza ({stats.cleaning})
             {delayedCleaningCount > 0 && (
               <span className="ml-1 px-1.5 py-0.5 text-[9px] font-black bg-amber-500 text-white rounded-full leading-none animate-pulse">

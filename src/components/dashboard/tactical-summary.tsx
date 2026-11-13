@@ -6,7 +6,7 @@ import { useCRM } from '@/context/crm-context';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, RefreshCw, FileDown, Printer, MoreHorizontal } from "lucide-react";
+import { TrendingUp, RefreshCw, FileDown, Printer, MoreHorizontal } from "lucide-react";
 import { InventoryContext } from '@/context/inventory-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -136,8 +136,8 @@ export const TacticalSummary = () => {
     <Card className="bg-card/60 dark:bg-slate-900/50 border-border shadow-sm lg:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-slate-300">
-          <Sparkles className="text-cyan-600 dark:text-sky-400 dark:shadow-neon-sky" strokeWidth={1.5} />
-          Insights da IA
+          <TrendingUp className="text-cyan-600 dark:text-sky-400" strokeWidth={1.5} />
+          Insights Operacionais
         </CardTitle>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading} className="h-8 w-8">

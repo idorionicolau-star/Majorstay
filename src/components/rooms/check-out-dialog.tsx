@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { LogOut, Clock, AlertTriangle, Sparkles, CheckCircle2, DollarSign, CreditCard, MessageCircle } from 'lucide-react';
+import { LogOut, Clock, AlertTriangle, Brush, CheckCircle2, DollarSign, CreditCard, MessageCircle } from 'lucide-react';
 import { buildStayReceiptWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp';
 import { useInventory } from '@/context/inventory-context';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -290,7 +290,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
               }`}>
                 <RadioGroupItem value="cleaning" id="cleaning" />
                 <Label htmlFor="cleaning" className="cursor-pointer text-xs font-bold flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-sky-500" />
+                  <Brush className="h-3.5 w-3.5 text-sky-500" />
                   Em Limpeza
                 </Label>
               </div>

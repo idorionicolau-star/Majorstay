@@ -4,7 +4,7 @@ import { useState, useEffect, useContext, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Sparkles, RefreshCw } from 'lucide-react';
+import { TrendingUp, RefreshCw } from 'lucide-react';
 import { InventoryContext } from '@/context/inventory-context';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -113,10 +113,10 @@ export function StrategicSummary() {
             <div className="flex flex-row items-center justify-between w-full">
               <div className="text-left">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
-                  <Sparkles className="text-primary" />
+                  <TrendingUp className="text-primary" />
                   Relatório de Operações Estratégico
                 </h3>
-                <p className="text-sm text-muted-foreground">Análise da IA com base nos dados atuais.</p>
+                <p className="text-sm text-muted-foreground">Análise com base nos dados atuais.</p>
               </div>
               <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading} className="mr-2">
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />

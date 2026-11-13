@@ -47,9 +47,6 @@ export function useAuthActions(core: InventoryCore) {
   const loginWithGoogle = async (): Promise<boolean | { noCompany: string; displayName?: string }> => {
     // enquanto se verifica se a conta tem empresa, a abertura da sessão espera (sem "Sessão terminada" pelo meio)
     beginRegistration();
-    // conta Google sem empresa: a pessoa fica no ecrã do nome do hotel; a sessão não pode ser dada por perdida
-    // enquanto isso (o registo ou o cancelamento libertam a espera)
-    let holdGuard = false;
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -58,10 +55,10 @@ export function useAuthActions(core: InventoryCore) {
       if (firestore) {
         const userDoc = await getDoc(doc(firestore, `users/${result.user.uid}`));
         if (!userDoc.exists()) {
-          // Conta Google sem empresa: mantém o login activo no Firebase Auth (sem signOut forçado)
-          // para o utilizador apenas precisar de informar o nome do alojamento/hotel
-          holdGuard = true;
-          core.setLoading(false); // a sessão não fica a carregar: o ecrã do nome do hotel tem de aparecer
+          // Conta Google sem empresa: encerra a sessão imediatamente para não ficar órfã
+          // (evita "acesso negado" pelas regras do Firestore) e avisa que deve criar conta
+          try { await auth.signOut(); } catch {}
+          core.setLoading(false);
           return { noCompany: result.user.email || '', displayName: result.user.displayName || '' };
         }
       }
@@ -92,7 +89,7 @@ export function useAuthActions(core: InventoryCore) {
       toast({ variant: 'destructive', title: 'Erro de Login', description: message });
       return false;
     } finally {
-      if (!holdGuard) endRegistration();
+      endRegistration();
     }
   };
 

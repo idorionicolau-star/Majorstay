@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GitMerge, Search, AlertTriangle, ArrowRight, Wand2 } from 'lucide-react';
+import { GitMerge, Search, AlertTriangle, ArrowRight, RefreshCw } from 'lucide-react';
 import { normalizeString, levenshteinDistance } from '@/lib/utils';
 import { Product } from '@/lib/types';
 import {
@@ -137,7 +137,7 @@ export function AdminMergeTool() {
                         </CardDescription>
                     </div>
                     <Button onClick={handleScan} disabled={isScanning} className="w-full md:w-auto">
-                        {isScanning ? <Wand2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+                        {isScanning ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                         {isScanning ? 'A Analisar...' : 'Procurar Duplicatas'}
                     </Button>
                 </div>
@@ -145,7 +145,7 @@ export function AdminMergeTool() {
             <CardContent>
                 {scannedGroups.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-xl">
-                        <Wand2 className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                        <GitMerge className="mx-auto h-8 w-8 mb-2 opacity-50" />
                         <p>Clique em "Procurar Duplicatas" para iniciar a análise automática.</p>
                     </div>
                 ) : (

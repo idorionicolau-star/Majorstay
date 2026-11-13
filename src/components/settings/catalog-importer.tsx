@@ -3,7 +3,7 @@
 import { requireEmailConfirmed } from "@/components/billing/email-confirm";
 import { useMemo, useState } from "react";
 import Papa from "papaparse";
-import { Check, ClipboardCopy, FileSpreadsheet, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Check, ClipboardCopy, FileSpreadsheet, FileText, Camera, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -210,13 +210,13 @@ export function CatalogImporter({ existing, categories, onImport }: Props) {
             </div>
 
             <div className="space-y-2 rounded-xl border p-4">
-                <h3 className="flex items-center gap-2 font-semibold"><Wand2 className="h-4 w-4" /> 2. Colar uma lista</h3>
+                <h3 className="flex items-center gap-2 font-semibold"><FileText className="h-4 w-4" /> 2. Colar uma lista</h3>
                 <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={7} placeholder={"Cole aqui células do Excel, uma lista do WhatsApp…\nCimento 32.5N - 650\nBloco 15 - 45\nAreia fina: 1.200"} />
                 <Button onClick={() => analyse(parseText(text))} disabled={!text.trim()}>Analisar lista</Button>
             </div>
 
             <div className="space-y-2 rounded-xl border border-dashed p-4">
-                <h3 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4" /> Tenho um PDF ou fotografia</h3>
+                <h3 className="flex items-center gap-2 font-semibold"><Camera className="h-4 w-4" /> Tenho um PDF ou fotografia</h3>
                 <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
                     <li>Copie a instrução abaixo.</li>
                     <li>Abra a sua IA (Gemini, ChatGPT, Claude…), anexe o PDF ou as fotografias e cole a instrução.</li>

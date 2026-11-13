@@ -5,7 +5,7 @@ import {
   BedDouble,
   Clock,
   AlertTriangle,
-  Sparkles,
+  Brush,
   CheckCircle2,
   Plus,
   LogOut,
@@ -125,7 +125,7 @@ export function CleaningLiveSecondsCounter({
   return (
     <div className="flex items-center justify-between gap-2 text-[11px] font-mono tabular-nums">
       <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
-        <Sparkles className={cn("h-3 w-3 shrink-0", isDelayed ? "text-amber-500" : "text-sky-500")} />
+        <Brush className={cn("h-3 w-3 shrink-0", isDelayed ? "text-amber-500" : "text-sky-500")} />
         Decorrido: <strong className={cn("font-extrabold", isDelayed ? "text-amber-700 dark:text-amber-300" : "text-slate-800 dark:text-slate-200")}>{formatDurationSeconds(elapsedSeconds)}</strong>
       </span>
       <span
@@ -228,7 +228,7 @@ export function RoomCard({
         topAccent: 'bg-gradient-to-r from-sky-400 to-blue-500',
         badgeClass: 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800',
         badgeText: 'Em Limpeza',
-        Icon: Sparkles,
+        Icon: Brush,
         progressClass: '[&>div]:bg-sky-500',
       }
     : isMaintenance
@@ -468,7 +468,7 @@ export function RoomCard({
             <div className="mt-3.5 p-3.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900/50 text-xs text-sky-800 dark:text-sky-300 space-y-2">
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 rounded-xl bg-sky-100 dark:bg-sky-900/50 shrink-0 text-sky-600 dark:text-sky-300">
-                  <Sparkles className="h-4 w-4" />
+                  <Brush className="h-4 w-4" />
                 </div>
                 <div>
                   <p className="font-bold text-sky-900 dark:text-sky-100">Higienização e Troca de Roupa</p>
@@ -572,7 +572,7 @@ export function RoomCard({
               className="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold h-11 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
               onClick={() => markRoomCleaned(room.id)}
             >
-              <Sparkles className="h-4 w-4" />
+              <Brush className="h-4 w-4" />
               Concluir Limpeza (Libertar)
             </Button>
           )}

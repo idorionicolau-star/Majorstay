@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   BedDouble,
   Lock,
-  Sparkles,
+  Brush,
   CheckCircle2,
   DollarSign,
   TrendingUp,
@@ -298,7 +298,7 @@ export function HospitalityDashboard() {
           <Tile label="Livres" value={stats.free} icon={CheckCircle2} tone="free" href="/rooms?filtro=free" />
           <Tile label="Ocupados" value={stats.occupied} icon={BedDouble} tone="occupied" href="/rooms?filtro=occupied" />
           <Tile label="Tempo Excedido" value={stats.overtime} icon={AlertTriangle} tone="overtime" href="/rooms?filtro=overtime" />
-          <Tile label="Em Limpeza" value={stats.cleaning} icon={Sparkles} tone="cleaning" href="/rooms?filtro=cleaning" />
+          <Tile label="Em Limpeza" value={stats.cleaning} icon={Brush} tone="cleaning" href="/rooms?filtro=cleaning" />
         </div>
       </section>
 
@@ -336,7 +336,7 @@ export function HospitalityDashboard() {
                 )}
               >
                 <div className={cn("p-2 rounded-xl shrink-0", delayedCleaningCount > 0 ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" : "bg-[#DF9E42]/15 text-[#DF9E42]")}>
-                  <Sparkles className="h-5 w-5" />
+                  <Brush className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

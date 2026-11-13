@@ -58,9 +58,9 @@ import {
     Minus,
     Pencil,
     Plus,
+    PlusCircle,
     Search,
     Sheet,
-    Sparkles,
     X,
 } from "lucide-react";
 
@@ -1043,7 +1043,7 @@ export function QuickStock({ initialMode = "in" }: { initialMode?: QuickMode }) 
                         <button type="button" onClick={() => pick(undefined, parsed.term, parsed.qty)}
                             onMouseEnter={() => setHighlight(results.length + elsewhere.length)}
                             className={cn("flex w-full items-center gap-2 px-4 py-3 text-left text-sm", highlight === results.length + elsewhere.length && "bg-muted")}>
-                            <Sparkles className="h-4 w-4 text-primary" /> Criar produto novo <b>“{cleanProductName(parsed.term)}”</b>
+                            <PlusCircle className="h-4 w-4 text-primary" /> Criar produto novo <b>“{cleanProductName(parsed.term)}”</b>
                             {(() => { const sg = suggestCategory(parsed.term, categoryNames, liveProducts); return sg.source !== "none" ? <span className="text-xs text-muted-foreground">· {sg.category}</span> : null; })()}
                         </button>
                     )}

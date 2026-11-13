@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BedDouble, Sparkles, Clock, Coins } from 'lucide-react';
+import { BedDouble, Brush, Clock, Coins } from 'lucide-react';
 import type { Room, RoomType } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
@@ -248,7 +248,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           {/* Tempo de Limpeza Estimado & Alerta aos Administradores */}
           <div className="space-y-1.5">
             <Label htmlFor="cleaningMin" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-              <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+              <Brush className="w-3.5 h-3.5 text-sky-500" />
               Tempo Limite de Limpeza (minutos)
             </Label>
             <Input
