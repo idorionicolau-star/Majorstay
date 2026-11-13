@@ -16,6 +16,7 @@ import {
   Wine,
   QrCode,
   KeyRound,
+  Car,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -362,6 +363,12 @@ export function RoomCard({
                   <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono text-[11px] shrink-0 font-medium">
                     <Phone className="h-3 w-3 text-slate-400" />
                     {stay.clientPhone}
+                  </span>
+                )}
+                {stay.vehiclePlate && (
+                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono text-[11px] shrink-0 font-medium" title="Matrícula do veículo">
+                    <Car className="h-3 w-3 text-slate-400" />
+                    {stay.vehiclePlate}
                   </span>
                 )}
               </div>

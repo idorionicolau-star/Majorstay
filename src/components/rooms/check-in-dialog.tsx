@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BedDouble, Clock, User, Phone, CreditCard, Sparkles, Check, Moon, Search } from 'lucide-react';
+import { BedDouble, Clock, User, Phone, CreditCard, Sparkles, Check, Moon, Search, Car } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
@@ -60,6 +60,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const [clientName, setClientName] = useState<string>('Hóspede Particular');
   const [clientPhone, setClientPhone] = useState<string>('');
   const [clientDoc, setClientDoc] = useState<string>('');
+  const [vehiclePlate, setVehiclePlate] = useState<string>('');
   const [contractedHours, setContractedHours] = useState<number>(1);
   // pacote de preço fixo escolhido (só aparece se o quarto tiver o preço configurado); sem pacote cobra-se por hora
   const [pkg, setPkg] = useState<'pernoite' | 'diaria' | null>(null);
@@ -146,6 +147,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         clientName: clientName.trim() || 'Hóspede Particular',
         clientPhone: clientPhone.trim(),
         clientDoc: clientDoc.trim(),
+        vehiclePlate: vehiclePlate.trim(),
         contractedHours,
         ratePerHour,
         paymentMethod,
@@ -156,6 +158,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
       setClientName('Hóspede Particular');
       setClientPhone('');
       setClientDoc('');
+      setVehiclePlate('');
       setPkg(null);
       setContractedHours(selectedRoom?.minimumHours || 1);
       setNotes('');
@@ -454,6 +457,23 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                 onChange={(e) => setClientPhone(e.target.value)}
                 placeholder="84 / 82 / 87... (M-Pesa / Movitel)"
                 className="text-base sm:text-xs font-medium rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10"
+              />
+            </div>
+
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="vehiclePlate" className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <Car className="w-3.5 h-3.5 text-slate-400" />
+                Matrícula do Veículo <span className="text-slate-400 font-normal text-[10px]">(opcional)</span>
+              </Label>
+              <Input
+                id="vehiclePlate"
+                value={vehiclePlate}
+                onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())}
+                maxLength={12}
+                autoCapitalize="characters"
+                autoComplete="off"
+                placeholder="Ex: AAA 123 MC"
+                className="text-base sm:text-xs font-mono font-semibold uppercase rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10"
               />
             </div>
           </div>
