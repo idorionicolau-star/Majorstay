@@ -44,7 +44,7 @@ const iso = (v: any): string | null => {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 };
 
-function view(id: string, d: Record<string, any>) {
+function view(id: string, d: Record<string, any>, isManager: boolean) {
   return {
     id,
     employeeName: d.openedByName || '',
@@ -52,10 +52,11 @@ function view(id: string, d: Record<string, any>) {
     closedAt: iso(d.closedAt),
     status: d.status === 'closed' ? 'closed' : 'open',
     openingCash: Number(d.openingCash) || 0,
-    countedCash: d.countedCash ?? null,
-    expectedCash: d.expectedCash ?? null,
-    difference: d.difference ?? null,
-    totals: d.totals || null,
+    countedCash: isManager ? d.countedCash ?? null : null,
+    // contagem às cegas: quem não é gerente/dono nunca recebe o esperado nem a diferença
+    expectedCash: isManager ? d.expectedCash ?? null : null,
+    difference: isManager ? d.difference ?? null : null,
+    totals: isManager ? d.totals || null : null,
     notes: d.notes || '',
   };
 }
@@ -89,19 +90,22 @@ export async function GET(req: Request) {
     if ('error' in ctx) return ctx.error;
 
     const openDoc = await findOpen(ctx);
-    let current = null as null | (ReturnType<typeof view> & { live: { totals: any; expectedCash: number } });
+    let current = null as null | (ReturnType<typeof view> & { live?: { totals: any; expectedCash: number } });
     if (openDoc) {
       const data = openDoc.data();
-      const live = await liveTotals(ctx, data);
-      current = { ...view(openDoc.id, data), live: { totals: live.totals, expectedCash: live.expectedCash } };
+      current = view(openDoc.id, data, ctx.isManager);
+      if (ctx.isManager) {
+        const live = await liveTotals(ctx, data);
+        current = { ...current, live: { totals: live.totals, expectedCash: live.expectedCash } };
+      }
     }
     const todayDoc = await ctx.db.doc(`companies/${companyId}/shifts/${ctx.uid}_${dayKeyMaputo()}`).get();
-    const closedToday = todayDoc.exists && todayDoc.data()?.status === 'closed' ? view(todayDoc.id, todayDoc.data()!) : null;
+    const closedToday = todayDoc.exists && todayDoc.data()?.status === 'closed' ? view(todayDoc.id, todayDoc.data()!, ctx.isManager) : null;
 
     let recent: ReturnType<typeof view>[] | undefined;
     if (ctx.isManager) {
       const snap = await ctx.db.collection(`companies/${companyId}/shifts`).orderBy('openedAt', 'desc').limit(30).get();
-      recent = snap.docs.map((d) => view(d.id, d.data()));
+      recent = snap.docs.map((d) => view(d.id, d.data(), true));
     }
     return NextResponse.json({ current, closedToday, ...(recent ? { recent } : {}) });
   } catch (err) {
@@ -161,7 +165,11 @@ export async function POST(req: Request) {
         totals: live.totals,
         notes: String(body.notes || '').slice(0, 500),
       });
-      return NextResponse.json({ success: true, expectedCash, difference, totals: live.totals });
+      return NextResponse.json(
+        ctx.isManager
+          ? { success: true, expectedCash, difference, totals: live.totals }
+          : { success: true }
+      );
     }
 
     return NextResponse.json({ error: 'Ação inválida.' }, { status: 400 });

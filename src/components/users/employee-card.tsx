@@ -2,6 +2,7 @@
 'use client';
 
 import type { Employee } from '@/lib/types';
+import { profileLabel } from '@/lib/role-profiles';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ export function EmployeeCard({ employee, onDelete, currentUserId, isAdmin }: Emp
                         employee.role === 'Admin' && 'bg-[hsl(var(--chart-4))]/20 text-[hsl(var(--chart-4))]',
                         employee.role === 'Dono' && 'bg-[hsl(var(--chart-5))]/20 text-[hsl(var(--chart-5))]',
                         employee.role === 'Employee' && 'bg-muted text-muted-foreground'
-                    )}>{employee.role}</p>
+                    )}>{profileLabel(employee.role, employee.permissions)}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                         <Mail size={14} />
                         {employee.email}

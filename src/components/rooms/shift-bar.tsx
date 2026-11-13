@@ -76,7 +76,9 @@ export function ShiftBar() {
         const r = await authedFetch('/api/shifts', 'POST', { companyId, action: 'close', countedCash: counted, notes: notes.trim() });
         toast({
           title: 'Turno fechado',
-          description: r.difference === 0 ? 'A caixa está certa.' : `Diferença: ${formatCurrency(r.difference)} (${r.difference < 0 ? 'falta' : 'sobra'} dinheiro).`,
+          description: typeof r.difference === 'number'
+            ? (r.difference === 0 ? 'A caixa está certa.' : `Diferença: ${formatCurrency(r.difference)} (${r.difference < 0 ? 'falta' : 'sobra'} dinheiro).`)
+            : 'O valor contado foi registado. O gerente vai conferir.',
         });
       }
       setDialog(null); setAmount(''); setNotes('');
@@ -117,7 +119,7 @@ export function ShiftBar() {
           <DialogHeader className="px-5 pt-5">
             <DialogTitle>{dialog === 'open' ? 'Abrir turno' : 'Fechar turno'}</DialogTitle>
             <DialogDescription>
-              {dialog === 'open' ? 'Conte o dinheiro que tem na caixa agora (o fundo de caixa).' : 'Conte o dinheiro que tem na caixa e escreva o valor.'}
+              {dialog === 'open' ? 'Conte o dinheiro que tem na caixa agora (o fundo de caixa).' : 'Conte todo o dinheiro que tem na caixa e escreva o valor. O gerente confere depois.'}
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">

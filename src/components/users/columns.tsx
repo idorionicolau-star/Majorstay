@@ -1,5 +1,6 @@
 "use client"
 
+import { profileLabel } from '@/lib/role-profiles';
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table"
 import { Employee, ModulePermission, PermissionLevel } from "@/lib/types"
@@ -93,7 +94,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Employee>[] => {
                         role === 'Dono' && 'bg-[hsl(var(--chart-5))]/20 text-[hsl(var(--chart-5))]',
                         role === 'Employee' && 'bg-muted text-muted-foreground'
                     )}>
-                        {role}
+                        {profileLabel(role, row.original.permissions)}
                     </span>
                 )
             }
