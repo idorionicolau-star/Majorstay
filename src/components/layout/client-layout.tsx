@@ -112,7 +112,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       localStorage.setItem('majorstockx-last-path', pathname + (window.location.search || ''));
     }
 
-    if (isAuthenticated && isAuthPage) {
+    // só com empresa: uma conta Google nova ainda sem hotel fica no ecrã de entrada, a dar o nome do alojamento
+    if (isAuthenticated && isAuthPage && authContext?.companyId) {
       router.replace('/dashboard');
     }
 
@@ -139,7 +140,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       }
     }
 
-  }, [authContext?.loading, authContext?.firebaseUser, pathname, router, isAuthPage, isPublicPage]);
+  }, [authContext?.loading, authContext?.firebaseUser, authContext?.companyId, pathname, router, isAuthPage, isPublicPage]);
 
 
   // A app carrega por fases (sessão, depois os dados): entre elas, por um instante, parecia pronta. O ecrã de

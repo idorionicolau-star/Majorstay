@@ -403,6 +403,9 @@ export function useInventoryCore() {
         // entrou com uma conta real: acaba a sessão de convidado (os dados de teste só se apagam ao ativar a conta, no registo)
         exitGuestMode();
         setFirebaseUser(fbUser);
+        // uma nova sessão recomeça a carregar: depois de um logout o 'loading' ficava a falso e o ecrã de entrada
+        // levava logo ao painel, ainda sem empresa nem dados ("painel quase vazio" e, depois, sessão expulsa)
+        setLoading(true);
         // Registo a meio: a empresa está gravada só neste aparelho até o servidor confirmar. Abrir já a sessão lia essa
         // cópia local, os dados da empresa eram pedidos antes de ela existir no servidor (recusados → "Algo correu mal")
         // e, se a página fechasse, a gravação perdia-se: ficava a conta sem empresa ("email já está a ser utilizado").
@@ -410,6 +413,7 @@ export function useInventoryCore() {
         if (registering) {
           await registering;
           if (auth.currentUser?.uid !== fbUser.uid) return; // saiu entretanto (ex.: conta Google sem empresa)
+          setLoading(true); // a empresa acabou de ser criada: volta a carregar os dados dela
         }
         const userMapDocRef = doc(firestore, `users/${fbUser.uid}`);
         // Falha de rede ou replicação de novo registo: tenta de novo até 6 vezes antes de desistir.
