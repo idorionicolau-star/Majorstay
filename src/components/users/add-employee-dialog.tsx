@@ -37,6 +37,8 @@ import type { Employee, ModulePermission, PermissionLevel } from '@/lib/types';
 import { allPermissions } from '@/lib/data';
 import { Checkbox } from '../ui/checkbox';
 import { ScrollArea } from '../ui/scroll-area';
+import { ProfilePicker } from './profile-picker';
+import { permissionsForProfile, profileOf, getProfile, type ProfileId } from '@/lib/role-profiles';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { useDynamicPlaceholder } from '@/hooks/use-dynamic-placeholder';
 
@@ -71,11 +73,17 @@ function AddEmployeeDialogContent({ onAddEmployee, setOpen }: AddEmployeeDialogP
       email: "",
       password: "",
       role: 'Employee',
-      permissions: defaultPermissions,
+      permissions: permissionsForProfile('recepcionista') as Record<string, 'none' | 'read' | 'write'>,
     },
   });
 
   const role = form.watch('role');
+  const [profile, setProfile] = useState<ProfileId>('recepcionista');
+  const handleProfileChange = (id: ProfileId) => {
+    setProfile(id);
+    form.setValue('role', getProfile(id).role, { shouldDirty: true });
+    if (id !== 'personalizado') form.setValue('permissions', permissionsForProfile(id) as Record<string, 'none' | 'read' | 'write'>, { shouldDirty: true });
+  };
 
   const handlePermissionChange = (moduleId: ModulePermission, level: 'read' | 'write') => {
     const currentPermissions = form.getValues('permissions');
@@ -185,30 +193,9 @@ function AddEmployeeDialogContent({ onAddEmployee, setOpen }: AddEmployeeDialogP
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Função Principal</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a função" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Employee">Funcionário</SelectItem>
-                      <SelectItem value="Admin">Administrador</SelectItem>
-                      <SelectItem value="Dono">Dono (Apenas Leitura)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <ProfilePicker value={profile} onChange={handleProfileChange} />
 
-            {role === 'Employee' && (
+            {profile === 'personalizado' && (
               <FormItem>
                 <div className="mb-4">
                   <FormLabel className="text-base">Permissões de Acesso</FormLabel>
