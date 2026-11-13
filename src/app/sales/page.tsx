@@ -50,7 +50,7 @@ export default function SalesPage() {
 
   const {
     loading: inventoryLoading,
-    sales: contextSales,
+    sales: allSales,
     addSale,
     companyId,
     canEdit,
@@ -67,6 +67,15 @@ export default function SalesPage() {
     locations: [],
     isMultiLocation: false,
   };
+
+  // Quem não é gerente nem dono (ex.: recepcionista) vê só as vendas que fez: o histórico completo mostraria
+  // o que os outros receberam e deixava adivinhar o valor esperado do turno.
+  const sessionUser = inventoryContext?.user;
+  const seesAllSales = sessionUser?.role === 'Admin' || sessionUser?.role === 'Dono';
+  const contextSales = useMemo(
+    () => (seesAllSales ? allSales : (allSales || []).filter((s) => s.soldBy === sessionUser?.username)),
+    [allSales, seesAllSales, sessionUser?.username]
+  );
 
   const canEditSales = canEdit('sales');
   const canViewSales = canView('sales');
