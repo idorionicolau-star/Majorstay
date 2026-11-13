@@ -31,6 +31,7 @@ export function ShiftBar() {
   const { companyId, isGuest } = useInventory();
   const [current, setCurrent] = useState<Shift | null>(null);
   const [closedToday, setClosedToday] = useState<Shift | null>(null);
+  const [otherOpen, setOtherOpen] = useState<{ employeeName: string; openedAt: string | null } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [dialog, setDialog] = useState<'open' | 'close' | null>(null);
   const [amount, setAmount] = useState('');
@@ -48,6 +49,7 @@ export function ShiftBar() {
       const json = await res.json();
       setCurrent(json.current || null);
       setClosedToday(json.closedToday || null);
+      setOtherOpen(json.otherOpen || null);
       setLoaded(true);
     } catch {
       /* sem ligação: tenta na próxima vez */
@@ -99,6 +101,8 @@ export function ShiftBar() {
             <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">Turno aberto desde as {hhmm(current.openedAt)}</span>
           ) : closedToday ? (
             <span className="font-semibold text-slate-500 truncate">Turno de hoje fechado às {hhmm(closedToday.closedAt)}</span>
+          ) : otherOpen ? (
+            <span className="font-semibold text-slate-600 dark:text-slate-300 truncate">Turno de {otherOpen.employeeName || 'outro colega'} aberto desde as {hhmm(otherOpen.openedAt)}</span>
           ) : (
             <span className="font-semibold text-amber-700 dark:text-amber-400 truncate">Sem turno aberto</span>
           )}
@@ -107,6 +111,8 @@ export function ShiftBar() {
           <Button size="sm" variant="outline" className="h-9 rounded-full gap-1.5 text-xs" onClick={() => { setAmount(''); setDialog('close'); }}>
             <LogOut className="h-3.5 w-3.5" /> Fechar turno
           </Button>
+        ) : !closedToday && otherOpen ? (
+          <span className="text-[11px] text-slate-500">Abre depois de ele fechar</span>
         ) : !closedToday ? (
           <Button size="sm" className="h-9 rounded-full gap-1.5 text-xs bg-[#007bb9] hover:bg-[#006194] text-white" onClick={() => { setAmount(''); setDialog('open'); }}>
             <LogIn className="h-3.5 w-3.5" /> Abrir turno

@@ -6,6 +6,8 @@ import { ArrowLeft, ShieldAlert, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInventory } from '@/context/inventory-context';
 import { formatCurrency } from '@/lib/utils';
+import { authedFetch } from '@/lib/api-client';
+import { toast } from '@/hooks/use-toast';
 
 type Rejected = { id: string; roomName: string; total: number; items: { name: string; quantity: number }[]; reason: string; by: string; at: string };
 type ShiftRow = { id: string; employeeName: string; openedAt: string | null; closedAt: string | null; status: 'open' | 'closed'; openingCash: number; countedCash: number | null; expectedCash: number | null; difference: number | null; notes: string };
@@ -24,6 +26,9 @@ export default function ControloPage() {
   const [rejected, setRejected] = useState<Rejected[]>([]);
   const [removed, setRemoved] = useState<Removed[]>([]);
   const [shifts, setShifts] = useState<ShiftRow[]>([]);
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [closeAmount, setCloseAmount] = useState('');
+  const [closeBusy, setCloseBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +67,21 @@ export default function ControloPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // O gerente fecha o turno de quem se esqueceu: conta a caixa e o sistema regista a diferença
+  const closeShiftAsManager = async (shiftId: string) => {
+    try {
+      setCloseBusy(true);
+      const r = await authedFetch('/api/shifts', 'POST', { companyId, action: 'close', shiftId, countedCash: Number(closeAmount), notes: 'Fechado pelo gerente' });
+      toast({ title: 'Turno fechado', description: typeof r.difference === 'number' ? (r.difference === 0 ? 'A caixa está certa.' : `Diferença: ${formatCurrency(r.difference)} (${r.difference < 0 ? 'falta' : 'sobra'}).`) : undefined });
+      setClosingId(null);
+      await load();
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Não foi possível fechar o turno', description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setCloseBusy(false);
+    }
+  };
 
   // Resumo por funcionário: quantas vezes recusou/removeu e o valor envolvido
   const byEmployee = useMemo(() => {
@@ -126,7 +146,26 @@ export default function ControloPage() {
                           <span className="text-xs text-slate-400 shrink-0">{when(t.openedAt || '')}{t.closedAt ? ` → ${when(t.closedAt)}` : ''}</span>
                         </div>
                         {t.status === 'open' ? (
-                          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Turno aberto · fundo de caixa {formatCurrency(t.openingCash)}</p>
+                          <div className="mt-1 space-y-2">
+                            <p className="text-xs text-amber-700 dark:text-amber-400">Turno aberto · fundo de caixa {formatCurrency(t.openingCash)}</p>
+                            {closingId === t.id ? (
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="number" inputMode="numeric" min="0" value={closeAmount} onChange={(e) => setCloseAmount(e.target.value)}
+                                  placeholder="Dinheiro contado (MT)" aria-label="Dinheiro contado"
+                                  className="h-10 w-44 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent px-3 text-base"
+                                />
+                                <Button size="sm" className="h-10 rounded-xl" disabled={closeBusy || closeAmount === ''} onClick={() => closeShiftAsManager(t.id)}>
+                                  {closeBusy ? 'A fechar...' : 'Fechar turno'}
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-10 rounded-xl" disabled={closeBusy} onClick={() => setClosingId(null)}>Cancelar</Button>
+                              </div>
+                            ) : (
+                              <Button size="sm" variant="outline" className="h-9 rounded-full text-xs" onClick={() => { setClosingId(t.id); setCloseAmount(''); }}>
+                                Fechar este turno (conte a caixa)
+                              </Button>
+                            )}
+                          </div>
                         ) : (
                           <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                             Esperado {formatCurrency(t.expectedCash || 0)} · Contado {formatCurrency(t.countedCash || 0)} ·{' '}
