@@ -38,6 +38,8 @@ async function authorize(req: Request, companyId: string): Promise<{ error: Next
   return { uid: decoded.uid, name, isManager, db, companyId };
 }
 
+const busyMessage = (name: string) => `O turno de ${name} ainda está aberto. Há uma só caixa: ele fecha o turno primeiro (ou o gerente fecha-o) e só depois abre o seu.`;
+
 const iso = (v: any): string | null => {
   if (!v) return null;
   const d = typeof v.toDate === 'function' ? v.toDate() : new Date(v);
@@ -99,6 +101,15 @@ export async function GET(req: Request) {
         current = { ...current, live: { totals: live.totals, expectedCash: live.expectedCash } };
       }
     }
+    // há outro turno aberto (uma só caixa): quem não tem turno só vê o nome e a hora, para saber porque não pode abrir
+    let otherOpen: { employeeName: string; openedAt: string | null } | null = null;
+    if (!openDoc) {
+      const anyOpen = await ctx.db.collection(`companies/${companyId}/shifts`).where('status', '==', 'open').limit(1).get();
+      if (!anyOpen.empty) {
+        const d = anyOpen.docs[0].data();
+        otherOpen = { employeeName: String(d.openedByName || ''), openedAt: iso(d.openedAt) };
+      }
+    }
     const todayDoc = await ctx.db.doc(`companies/${companyId}/shifts/${ctx.uid}_${dayKeyMaputo()}`).get();
     const closedToday = todayDoc.exists && todayDoc.data()?.status === 'closed' ? view(todayDoc.id, todayDoc.data()!, ctx.isManager) : null;
 
@@ -107,7 +118,7 @@ export async function GET(req: Request) {
       const snap = await ctx.db.collection(`companies/${companyId}/shifts`).orderBy('openedAt', 'desc').limit(30).get();
       recent = snap.docs.map((d) => view(d.id, d.data(), true));
     }
-    return NextResponse.json({ current, closedToday, ...(recent ? { recent } : {}) });
+    return NextResponse.json({ current, closedToday, otherOpen, ...(recent ? { recent } : {}) });
   } catch (err) {
     console.error('Erro em GET /api/shifts:', err);
     return NextResponse.json({ error: 'Não foi possível carregar o turno.' }, { status: 500 });
@@ -130,10 +141,23 @@ export async function POST(req: Request) {
       if (await findOpen(ctx)) {
         return NextResponse.json({ error: 'Já tem um turno aberto.' }, { status: 409 });
       }
+      // uma só caixa: turnos abertos antes desta regra (sem trinco) também contam
+      const legacyOpen = await ctx.db.collection(`companies/${companyId}/shifts`).where('status', '==', 'open').limit(1).get();
+      if (!legacyOpen.empty) {
+        return NextResponse.json({ error: busyMessage(String(legacyOpen.docs[0].data().openedByName || 'outro colega')) }, { status: 409 });
+      }
       const ref = ctx.db.doc(`companies/${companyId}/shifts/${ctx.uid}_${dayKeyMaputo()}`);
+      const lockRef = ctx.db.doc(`companies/${companyId}/shiftLock/current`);
       await ctx.db.runTransaction(async (tx) => {
         const snap = await tx.get(ref);
+        const lockSnap = await tx.get(lockRef);
+        let lockedShift: FirebaseFirestore.DocumentSnapshot | null = null;
+        if (lockSnap.exists) lockedShift = await tx.get(ctx.db.doc(`companies/${companyId}/shifts/${lockSnap.data()?.shiftId}`));
         if (snap.exists) throw Object.assign(new Error('Já abriu (e fechou) o turno de hoje. Só é possível um turno por dia.'), { status: 409 });
+        if (lockSnap.exists && lockedShift?.exists && lockedShift.data()?.status === 'open') {
+          throw Object.assign(new Error(busyMessage(String(lockSnap.data()?.name || 'outro colega'))), { status: 409 });
+        }
+        tx.set(lockRef, { shiftId: ref.id, uid: ctx.uid, name: ctx.name, openedAt: admin.firestore.FieldValue.serverTimestamp() });
         tx.set(ref, {
           openedByUid: ctx.uid,
           openedByName: ctx.name,
@@ -151,13 +175,25 @@ export async function POST(req: Request) {
       if (!Number.isFinite(counted) || counted < 0 || counted > 1e9) {
         return NextResponse.json({ error: 'Dinheiro contado inválido.' }, { status: 400 });
       }
-      const openDoc = await findOpen(ctx);
+      let openDoc: FirebaseFirestore.DocumentSnapshot | null;
+      if (body.shiftId) {
+        // fechar o turno de outra pessoa (esqueceu-se de o fechar): só o gerente ou o dono, a contar a caixa
+        const snap = await ctx.db.doc(`companies/${companyId}/shifts/${String(body.shiftId)}`).get();
+        openDoc = snap.exists && snap.data()?.status === 'open' ? snap : null;
+        if (openDoc && openDoc.data()?.openedByUid !== ctx.uid && !ctx.isManager) {
+          return NextResponse.json({ error: 'Só o gerente ou o dono pode fechar o turno de outra pessoa.' }, { status: 403 });
+        }
+      } else {
+        openDoc = await findOpen(ctx);
+      }
       if (!openDoc) return NextResponse.json({ error: 'Não tem nenhum turno aberto.' }, { status: 404 });
-      const data = openDoc.data();
+      const data = openDoc.data()!;
       const live = await liveTotals(ctx, data);
       const { expectedCash, difference } = cashDifference(Number(data.openingCash) || 0, live.totals.cash, counted);
       await openDoc.ref.update({
         status: 'closed',
+        closedByUid: ctx.uid,
+        closedByName: ctx.name,
         closedAt: admin.firestore.FieldValue.serverTimestamp(),
         countedCash: counted,
         expectedCash,
@@ -165,6 +201,10 @@ export async function POST(req: Request) {
         totals: live.totals,
         notes: String(body.notes || '').slice(0, 500),
       });
+      // liberta a caixa para o próximo turno
+      const lockRef = ctx.db.doc(`companies/${companyId}/shiftLock/current`);
+      const lockSnap = await lockRef.get();
+      if (lockSnap.exists && lockSnap.data()?.shiftId === openDoc.id) await lockRef.delete();
       return NextResponse.json(
         ctx.isManager
           ? { success: true, expectedCash, difference, totals: live.totals }
