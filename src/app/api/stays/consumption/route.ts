@@ -60,6 +60,8 @@ interface AddItemPayload {
   productName?: string;
   quantity: number;
   unitPrice?: number;
+  notes?: string;
+  weightKg?: number;
 }
 
 export async function POST(req: Request) {
@@ -128,6 +130,8 @@ export async function POST(req: Request) {
             productId: it.productId,
             productName: it.productName,
             quantity: it.quantity,
+            notes: it.notes,
+            weightKg: it.weightKg,
           }));
         }
 
@@ -146,6 +150,26 @@ export async function POST(req: Request) {
         );
         const snaps = await Promise.all(productIds.map((id) => transaction.get(db.doc(`companies/${companyId}/products/${id}`))));
         productIds.forEach((id, idx) => productSnaps.set(id, snaps[idx]));
+
+        // Leitura prévia dos ingredientes de pratos (se existirem) ainda antes de qualquer escrita
+        const rawIngredientIds: string[] = [];
+        productSnaps.forEach((snap) => {
+          if (snap.exists) {
+            const d = snap.data() || {};
+            if (d.isDish && d.rawIngredientId && typeof d.rawIngredientId === 'string') {
+              const cleanRaw = d.rawIngredientId.trim();
+              if (cleanRaw && !productSnaps.has(cleanRaw)) {
+                rawIngredientIds.push(cleanRaw);
+              }
+            }
+          }
+        });
+        if (rawIngredientIds.length > 0) {
+          const uniqueRaw = Array.from(new Set(rawIngredientIds));
+          const rawSnaps = await Promise.all(uniqueRaw.map((id) => transaction.get(db.doc(`companies/${companyId}/products/${id}`))));
+          uniqueRaw.forEach((id, idx) => productSnaps.set(id, rawSnaps[idx]));
+        }
+
         const runningStock = new Map<string, number>();
 
         const newItems: StayConsumptionItem[] = [];
@@ -161,6 +185,7 @@ export async function POST(req: Request) {
 
           let resolvedUnitPrice = 0;
           let resolvedProductName = (rawItem.productName || '').trim();
+          let rawDeductionRecord: StayConsumptionItem['rawDeduction'] = undefined;
 
           if (rawItem.productId && typeof rawItem.productId === 'string' && rawItem.productId.trim() !== '') {
             // Produto do catálogo: lê da base de dados e ignora o unitPrice do cliente
@@ -178,38 +203,88 @@ export async function POST(req: Request) {
             resolvedUnitPrice = catalogPrice;
             resolvedProductName = prodData.name || resolvedProductName || 'Produto do Bar';
 
-            // Abate de stock com tolerância para stock insuficiente (apenas no registo do produto indicado)
-            const stockKey = rawItem.productId.trim();
-            const currentStock = runningStock.has(stockKey) ? (runningStock.get(stockKey) as number) : Number(prodData.stock) || 0;
-            let newStock = currentStock - qty;
+            const isDish = Boolean(prodData.isDish);
+            const rawIngId = prodData.rawIngredientId ? String(prodData.rawIngredientId).trim() : '';
+            const rawSnap = rawIngId ? productSnaps.get(rawIngId) : null;
 
-            if (currentStock < qty) {
-              newStock = 0;
-              const diff = qty - Math.max(0, currentStock);
-              underStockNotes.push(
-                `Stock insuficiente em "${resolvedProductName}": stock era ${currentStock}, pedido ${qty}. Abatido até 0 (diferença de ${diff} unidades em falta)`
-              );
+            if (isDish && rawIngId && rawSnap && rawSnap.exists) {
+              // --- PRATO CONFECIONADO: Abate matéria-prima alimentar em Kg na câmara fria/despensa ---
+              const rawData = rawSnap.data() || {};
+              const rawRef = db.doc(`companies/${companyId}/products/${rawIngId}`);
+              const rawUnit = String(rawData.unit || 'kg').toLowerCase();
+              const portionQty = Number(prodData.rawQuantityPerPortion) || 0.3; // ex: 300g por dose
+              const customWeight = typeof rawItem.weightKg === 'number' && rawItem.weightKg > 0 ? rawItem.weightKg : undefined;
+              const totalDeducted = customWeight ? customWeight : Math.round(portionQty * qty * 1000) / 1000;
+
+              const currentRawStock = runningStock.has(rawIngId) ? (runningStock.get(rawIngId) as number) : Number(rawData.stock) || 0;
+              const newRawStock = Math.max(0, Math.round((currentRawStock - totalDeducted) * 1000) / 1000);
+
+              if (currentRawStock < totalDeducted) {
+                underStockNotes.push(
+                  `Stock de cozinha insuficiente em "${rawData.name || 'Alimento'}": restavam ${currentRawStock} ${rawUnit}, pedido consumiu ${totalDeducted} ${rawUnit}.`
+                );
+              }
+
+              runningStock.set(rawIngId, newRawStock);
+              transaction.update(rawRef, {
+                stock: newRawStock,
+                lastUpdated: new Date().toISOString(),
+              });
+
+              // Movimento de saída do ingrediente alimentar em kg
+              const rawMoveRef = db.collection(`companies/${companyId}/stockMovements`).doc();
+              transaction.set(rawMoveRef, {
+                productId: rawIngId,
+                productName: rawData.name || 'Ingrediente Alimentar',
+                type: 'OUT',
+                quantity: -totalDeducted,
+                fromLocationId: rawData.location || 'Cozinha',
+                reason: `Confecção de ${qty}x ${resolvedProductName} (Quarto ${stayData.roomName || ''})`,
+                userId: decoded.uid,
+                userName: employeeName,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              rawDeductionRecord = {
+                ingredientId: rawIngId,
+                ingredientName: String(rawData.name || 'Alimento').trim(),
+                quantityDeducted: totalDeducted,
+                unit: rawUnit,
+              };
+            } else {
+              // --- PRODUTO CONVENCIONAL DE PRATELEIRA / BAR ---
+              const stockKey = rawItem.productId.trim();
+              const currentStock = runningStock.has(stockKey) ? (runningStock.get(stockKey) as number) : Number(prodData.stock) || 0;
+              let newStock = currentStock - qty;
+
+              if (currentStock < qty) {
+                newStock = 0;
+                const diff = qty - Math.max(0, currentStock);
+                underStockNotes.push(
+                  `Stock insuficiente em "${resolvedProductName}": stock era ${currentStock}, pedido ${qty}. Abatido até 0 (diferença de ${diff} unidades em falta)`
+                );
+              }
+
+              runningStock.set(stockKey, newStock);
+              transaction.update(prodRef, {
+                stock: newStock,
+                lastUpdated: new Date().toISOString(),
+              });
+
+              // Registar no stockMovements
+              const movementRef = db.collection(`companies/${companyId}/stockMovements`).doc();
+              transaction.set(movementRef, {
+                productId: rawItem.productId,
+                productName: resolvedProductName,
+                type: 'OUT',
+                quantity: -qty,
+                fromLocationId: prodData.location || 'Principal',
+                reason: `Consumo Quarto ${stayData.roomName || ''} (Estadia ${stayId})`,
+                userId: decoded.uid,
+                userName: employeeName,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
             }
-
-            runningStock.set(stockKey, newStock);
-            transaction.update(prodRef, {
-              stock: newStock,
-              lastUpdated: new Date().toISOString(),
-            });
-
-            // Registar no stockMovements
-            const movementRef = db.collection(`companies/${companyId}/stockMovements`).doc();
-            transaction.set(movementRef, {
-              productId: rawItem.productId,
-              productName: resolvedProductName,
-              type: 'OUT',
-              quantity: -qty,
-              fromLocationId: prodData.location || 'Principal',
-              reason: `Consumo Quarto ${stayData.roomName || ''} (Estadia ${stayId})`,
-              userId: decoded.uid,
-              userName: employeeName,
-              timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            });
           } else {
             // Item livre (sem productId): apenas Admin ou Dono
             if (!isAdminOrOwner) {
@@ -237,6 +312,9 @@ export async function POST(req: Request) {
             addedBy: decoded.uid,
             addedByName: employeeName,
             ...(orderRef ? { orderId: orderRef.id } : {}),
+            ...(rawItem.notes ? { notes: String(rawItem.notes).trim() } : {}),
+            ...(rawItem.weightKg ? { weightKg: Number(rawItem.weightKg) } : {}),
+            ...(rawDeductionRecord ? { rawDeduction: rawDeductionRecord } : {}),
           };
 
           newItems.push(consumptionItem);
@@ -268,8 +346,38 @@ export async function POST(req: Request) {
         }
         const targetItem = currentConsumptions[targetIndex];
 
-        // Devolução de stock se o item tiver productId
-        if (targetItem.productId) {
+        // Devolução de matéria-prima alimentar em Kg (se foi prato com dedução de cozinha)
+        if (targetItem.rawDeduction) {
+          const rawId = targetItem.rawDeduction.ingredientId;
+          const rawRef = db.doc(`companies/${companyId}/products/${rawId}`);
+          const rawSnap = await transaction.get(rawRef);
+          if (rawSnap.exists) {
+            const rawData = rawSnap.data() || {};
+            const currentStock = Number(rawData.stock) || 0;
+            const returnQty = targetItem.rawDeduction.quantityDeducted;
+            const newStock = Math.round((currentStock + returnQty) * 1000) / 1000;
+
+            transaction.update(rawRef, {
+              stock: newStock,
+              lastUpdated: new Date().toISOString(),
+            });
+
+            // Registar movimento de entrada/devolução do alimento em kg
+            const movementRef = db.collection(`companies/${companyId}/stockMovements`).doc();
+            transaction.set(movementRef, {
+              productId: rawId,
+              productName: targetItem.rawDeduction.ingredientName,
+              type: 'IN',
+              quantity: returnQty,
+              toLocationId: rawData.location || 'Cozinha',
+              reason: `Devolução por cancelamento de confecção (Estadia ${stayId}): ${cleanReason}`,
+              userId: decoded.uid,
+              userName: employeeName,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+        } else if (targetItem.productId) {
+          // Devolução de stock convencional se o item tiver productId
           const prodRef = db.doc(`companies/${companyId}/products/${targetItem.productId}`);
           const prodSnap = await transaction.get(prodRef);
           if (prodSnap.exists) {

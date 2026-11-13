@@ -59,9 +59,11 @@ export async function GET(req: Request) {
           { id: '3', name: 'Cerveja Heineken Long Neck', price: 150, category: 'Bebidas' },
           { id: '4', name: 'Água Mineral 500ml', price: 50, category: 'Bebidas' },
           { id: '5', name: 'Refrigerante Coca-Cola Lata', price: 70, category: 'Bebidas' },
-          { id: '6', name: 'Red Bull Energy Drink 250ml', price: 180, category: 'Energéticos' },
-          { id: '7', name: 'Porção de Amendoim Torrado', price: 100, category: 'Snacks' },
-          { id: '8', name: 'Batatas Fritas Crocantes', price: 120, category: 'Snacks' },
+          { id: '6', name: 'Bife de Vaca à MajorStay com Batata', price: 650, category: 'Pratos Principais', isDish: true },
+          { id: '7', name: 'Peixe Serra Grelhado com Arroz', price: 750, category: 'Pratos Principais', isDish: true },
+          { id: '8', name: 'Meio Frango no Churrasco', price: 450, category: 'Pratos Principais', isDish: true },
+          { id: '9', name: 'Dose de Camarão Nacional Grelhado', price: 850, category: 'Petiscos', isDish: true },
+          { id: '10', name: 'Batatas Fritas Crocantes', price: 150, category: 'Snacks' },
         ],
       });
     }
@@ -107,8 +109,8 @@ export async function GET(req: Request) {
       }
     }
 
-    // 4. Produtos do bar
-    const barProducts: { id: string; name: string; price: number; category?: string }[] = [];
+    // 4. Produtos do bar e cozinha
+    const barProducts: { id: string; name: string; price: number; category?: string; isDish?: boolean; soldByWeight?: boolean; unit?: string }[] = [];
     try {
       const prodSnap = await db
         .collection(`companies/${companyId}/products`)
@@ -131,7 +133,10 @@ export async function GET(req: Request) {
           id: docSnap.id,
           name,
           price,
-          category: p.category || 'Bar',
+          category: p.category || (p.isDish ? 'Cozinha' : 'Bar'),
+          isDish: Boolean(p.isDish),
+          soldByWeight: Boolean(p.soldByWeight),
+          unit: p.unit || 'un',
         });
 
         if (barProducts.length >= 30) break;

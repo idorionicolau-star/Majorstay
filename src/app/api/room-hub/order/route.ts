@@ -23,6 +23,7 @@ export async function POST(req: Request) {
     const companyId = typeof body.c === 'string' ? body.c.trim() : '';
     const roomId = typeof body.r === 'string' ? body.r.trim() : '';
     const pin = typeof body.pin === 'string' ? body.pin.trim() : '';
+    const orderNotes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 300) : '';
     const rawItems: unknown = body.items;
 
     if (!companyId || !roomId) {
@@ -35,15 +36,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Pedido vazio ou com itens a mais.' }, { status: 400 });
     }
 
-    // Juntar linhas repetidas do mesmo produto
+    // Juntar linhas repetidas do mesmo produto e recolher notas
     const wanted = new Map<string, number>();
+    const itemNotes = new Map<string, string>();
     for (const raw of rawItems) {
       const productId = typeof (raw as any)?.productId === 'string' ? (raw as any).productId.trim() : '';
       const quantity = (raw as any)?.quantity;
+      const n = typeof (raw as any)?.notes === 'string' ? (raw as any).notes.trim().slice(0, 150) : '';
       if (!productId || typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QTY) {
         return NextResponse.json({ error: `Item inválido. A quantidade deve ser um número inteiro entre 1 e ${MAX_QTY}.` }, { status: 400 });
       }
       wanted.set(productId, (wanted.get(productId) || 0) + quantity);
+      if (n) itemNotes.set(productId, n);
     }
     for (const qty of wanted.values()) {
       if (qty > MAX_QTY) {
@@ -86,6 +90,7 @@ export async function POST(req: Request) {
         quantity,
         unitPrice: price,
         totalPrice: price * quantity,
+        ...(itemNotes.has(productId) ? { notes: itemNotes.get(productId) } : {}),
       });
     }
 
@@ -106,6 +111,7 @@ export async function POST(req: Request) {
       roomId,
       roomName: String(roomData.name || 'Quarto'),
       items: lines,
+      ...(orderNotes ? { notes: orderNotes } : {}),
       total,
       status: 'pending',
       source: 'guest',

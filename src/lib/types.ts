@@ -157,6 +157,20 @@ export type Product = {
   ownCost?: boolean;
   /** Nomes que o produto já teve (ver lib/rename.ts): o histórico com esses nomes aparece com o nome actual. */
   formerNames?: string[];
+  /** Restauração e Cozinha: identifica prato confecionado pelo restaurante/cozinha */
+  isDish?: boolean;
+  /** Ingrediente principal da câmara fria / despensa abatido por dose (ex: ID da Carne de Vaca) */
+  rawIngredientId?: string;
+  /** Nome do ingrediente principal associado ao prato */
+  rawIngredientName?: string;
+  /** Quantidade do ingrediente abatida por dose (ex: 0.3 para 300g, 0.4 para 400g) */
+  rawQuantityPerPortion?: number;
+  /** Venda ao peso / kg (ex: Camarão ao kg, Peixe Vermelho ao peso) */
+  soldByWeight?: boolean;
+  /** Preço por kg quando vendido ao peso */
+  pricePerKg?: number;
+  /** Marca o item como alimento bruto / ingrediente gerido em kg na despensa/congelador */
+  isKitchenIngredient?: boolean;
 };
 
 
@@ -599,6 +613,47 @@ export type StayConsumptionItem = {
   addedBy: string;
   addedByName?: string;
   orderId?: string; // pedido do hóspede (QR do quarto) que deu origem a este consumo
+  /** Restauração: notas de confecção (ex: "Bem passado, sem cebola") */
+  notes?: string;
+  /** Venda ao peso: peso consumido em kg */
+  weightKg?: number;
+  /** Registo da dedução de matéria-prima alimentar em kg */
+  rawDeduction?: {
+    ingredientId: string;
+    ingredientName: string;
+    quantityDeducted: number;
+    unit: string;
+  };
+};
+
+export type RoomOrderItem = {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  notes?: string;
+  weightKg?: number;
+};
+
+export type RoomOrderStatus = 'pending' | 'preparing' | 'confirmed' | 'rejected';
+
+export type RoomOrder = {
+  id: string;
+  stayId: string;
+  roomId: string;
+  roomName: string;
+  items: RoomOrderItem[];
+  notes?: string;
+  total: number;
+  status: RoomOrderStatus;
+  source: 'guest' | 'reception' | 'pos';
+  createdAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  resolvedByName?: string;
+  rejectReason?: string;
+  companyId: string;
 };
 
 export type StayStatus = 'open' | 'closed' | 'cancelled';

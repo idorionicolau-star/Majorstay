@@ -26,6 +26,7 @@ import {
   Receipt,
   Hourglass,
   XCircle,
+  Utensils,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,9 @@ interface RoomHubData {
     name: string;
     price: number;
     category?: string;
+    isDish?: boolean;
+    soldByWeight?: boolean;
+    unit?: string;
   }[];
 }
 
@@ -62,6 +66,8 @@ interface StayConsumption {
   unitPrice: number;
   totalPrice: number;
   addedAt: string | null;
+  notes?: string;
+  weightKg?: number;
 }
 
 interface RoomOrderItem {
@@ -358,6 +364,23 @@ function QuartoPortalContent() {
       .filter((l): l is { id: string; name: string; qty: number; price: number } => l !== null);
   }, [cart, data?.barProducts]);
 
+  const [orderNotes, setOrderNotes] = useState('');
+  const [menuFilter, setMenuFilter] = useState<'all' | 'kitchen' | 'bar' | 'snacks'>('all');
+
+  const filteredBarProducts = useMemo(() => {
+    if (!data?.barProducts) return [];
+    if (menuFilter === 'kitchen') {
+      return data.barProducts.filter(p => p.isDish || ['cozinha', 'pratos', 'refeição', 'pratos principais', 'almoço', 'jantar'].some(c => (p.category || '').toLowerCase().includes(c)));
+    }
+    if (menuFilter === 'bar') {
+      return data.barProducts.filter(p => !p.isDish && ['bebidas', 'bar', 'vinhos', 'cervejas', 'alcoólicas', 'refrigerantes', 'sucos'].some(c => (p.category || '').toLowerCase().includes(c)));
+    }
+    if (menuFilter === 'snacks') {
+      return data.barProducts.filter(p => ['snacks', 'petiscos', 'aperitivos'].some(c => (p.category || '').toLowerCase().includes(c)));
+    }
+    return data.barProducts;
+  }, [data?.barProducts, menuFilter]);
+
   const openBarWhatsApp = (lines: { name: string; qty: number; price: number }[], total: number, orderId?: string) => {
     if (!data) return;
     const items = lines.map((l) => `• ${l.qty}x ${l.name} (${l.price * l.qty} MT)`).join('\n');
@@ -385,6 +408,7 @@ function QuartoPortalContent() {
           r: roomId,
           pin,
           items: cartLines.map((l) => ({ productId: l.id, quantity: l.qty })),
+          notes: orderNotes.trim(),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -404,6 +428,7 @@ function QuartoPortalContent() {
         lines: cartLines.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
       });
       setCart({});
+      setOrderNotes('');
       setConfirmOpen(false);
 
       // Atualiza o extrato do quarto imediatamente para mostrar o pedido pendente
@@ -911,21 +936,73 @@ function QuartoPortalContent() {
           </div>
         )}
 
-        {/* Menu do Bar & Pedidos Rápidos */}
+        {/* Menu do Restaurante & Bar (Pedidos Rápidos) */}
         {barProducts && barProducts.length > 0 && (
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Wine className="w-4 h-4 text-[#C58A2C]" />
+                <Utensils className="w-4 h-4 text-[#C58A2C]" />
                 <h3 className="font-bold text-sm text-[#251D18] dark:text-[#F5EFEB]">
-                  Bebidas & Bar do Quarto
+                  Restaurante & Bar do Quarto
                 </h3>
               </div>
-              <span className="text-[11px] text-stone-500 font-medium">Entrega direta ao quarto</span>
+              <span className="text-[11px] text-stone-500 font-medium">Serviço de quarto</span>
+            </div>
+
+            {/* Filtros de Categoria */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setMenuFilter('all')}
+                className={cn(
+                  "px-3 py-1 text-xs font-bold rounded-full transition-all shrink-0",
+                  menuFilter === 'all'
+                    ? "bg-[#C58A2C] text-white shadow-xs"
+                    : "bg-[#F4EFEA] dark:bg-[#25201B] text-stone-600 dark:text-stone-300 hover:bg-stone-200"
+                )}
+              >
+                Tudo
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuFilter('kitchen')}
+                className={cn(
+                  "px-3 py-1 text-xs font-bold rounded-full transition-all shrink-0 flex items-center gap-1",
+                  menuFilter === 'kitchen'
+                    ? "bg-[#C58A2C] text-white shadow-xs"
+                    : "bg-[#F4EFEA] dark:bg-[#25201B] text-stone-600 dark:text-stone-300 hover:bg-stone-200"
+                )}
+              >
+                🍽️ Pratos & Refeições
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuFilter('bar')}
+                className={cn(
+                  "px-3 py-1 text-xs font-bold rounded-full transition-all shrink-0 flex items-center gap-1",
+                  menuFilter === 'bar'
+                    ? "bg-[#C58A2C] text-white shadow-xs"
+                    : "bg-[#F4EFEA] dark:bg-[#25201B] text-stone-600 dark:text-stone-300 hover:bg-stone-200"
+                )}
+              >
+                🍷 Bebidas & Bar
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuFilter('snacks')}
+                className={cn(
+                  "px-3 py-1 text-xs font-bold rounded-full transition-all shrink-0 flex items-center gap-1",
+                  menuFilter === 'snacks'
+                    ? "bg-[#C58A2C] text-white shadow-xs"
+                    : "bg-[#F4EFEA] dark:bg-[#25201B] text-stone-600 dark:text-stone-300 hover:bg-stone-200"
+                )}
+              >
+                🍿 Petiscos & Snacks
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {barProducts.map((p) => {
+              {filteredBarProducts.map((p) => {
                 const qty = cart[p.id] || 0;
                 return (
                   <div
@@ -933,9 +1010,16 @@ function QuartoPortalContent() {
                     className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] flex items-center justify-between gap-3 shadow-xs"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-xs text-[#251D18] dark:text-[#F5EFEB] truncate">
-                        {p.name}
-                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-bold text-xs text-[#251D18] dark:text-[#F5EFEB] truncate">
+                          {p.name}
+                        </p>
+                        {p.isDish && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 shrink-0">
+                            Cozinha
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs font-extrabold text-[#C58A2C] dark:text-[#E88C4A]">
                         {formatCurrency(p.price)}
                       </span>
@@ -968,6 +1052,11 @@ function QuartoPortalContent() {
                 );
               })}
             </div>
+            {filteredBarProducts.length === 0 && (
+              <p className="text-center py-6 text-xs text-stone-500 italic">
+                Nenhum item nesta secção de momento.
+              </p>
+            )}
           </div>
         )}
       </main>
@@ -1018,6 +1107,18 @@ function QuartoPortalContent() {
               <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#E5DFD6] dark:border-[#2C3440]">
                 <span className="text-sm font-bold">Total</span>
                 <span className="text-lg font-black text-[#251D18] dark:text-[#F5EFEB]">{formatCurrency(cartTotal)}</span>
+              </div>
+              <div className="pt-2">
+                <label className="text-[11px] font-semibold text-stone-600 dark:text-stone-400 block mb-1">
+                  Observações para a cozinha / bar (opcional):
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Bem passado, sem cebola, copos com gelo..."
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] text-[#251D18] dark:text-white placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#C58A2C]"
+                />
               </div>
               {orderError && <p className="text-xs font-semibold text-rose-600">{orderError}</p>}
             </div>

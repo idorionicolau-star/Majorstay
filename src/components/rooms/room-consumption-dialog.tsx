@@ -306,7 +306,11 @@ export function RoomConsumptionDialog({
                         </div>
                         <p className="text-xs font-extrabold text-[#C58A2C] dark:text-[#E88C4A] mt-0.5">
                           {formatCurrency(item.price)}
-                          {item.stock !== null && (
+                          {(item as any).isDish ? (
+                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 ml-1.5 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                              🍽️ Prato {(item as any).rawQuantityPerPortion ? `(${((item as any).rawQuantityPerPortion * 1000)}g ${(item as any).rawIngredientName || 'alimento'})` : ''}
+                            </span>
+                          ) : item.stock !== null && (
                             <span className="text-[10px] font-normal text-[#827568] dark:text-[#B0A294] ml-1.5">
                               (disp: {item.stock})
                             </span>
@@ -413,6 +417,16 @@ export function RoomConsumptionDialog({
                         <p className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
                           {c.quantity}× {c.productName}
                         </p>
+                        {c.notes && (
+                          <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium italic mt-0.5">
+                            Nota: {c.notes}
+                          </p>
+                        )}
+                        {c.rawDeduction && (
+                          <p className="text-[10px] text-sky-700 dark:text-sky-400 font-medium mt-0.5">
+                            🍽️ Matéria-prima: -{c.rawDeduction.quantityDeducted} {c.rawDeduction.unit} de {c.rawDeduction.ingredientName}
+                          </p>
+                        )}
                         <p className="text-[11px] text-[#827568] dark:text-[#B0A294] mt-0.5">
                           {formatCurrency(c.unitPrice)} cada • Lançado por {c.addedByName || 'Recepção'}
                         </p>

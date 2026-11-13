@@ -11,6 +11,7 @@ import {
   Zap,
   CreditCard,
   Wine,
+  Utensils,
 } from 'lucide-react';
 
 export const mainNavItems: NavItem[] = [
@@ -19,6 +20,8 @@ export const mainNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', id: 'dashboard', icon: LayoutDashboard, group: 'inicio', also: ['/diagnostico'] },
   // Quartos: o quadro de quartos e estadias (fica no grupo Início, que não mostra título)
   { title: 'Quartos', href: '/rooms', id: 'rooms', icon: BedDouble, group: 'inicio' },
+  // Cozinha & Restaurante
+  { title: 'Cozinha & Restaurante', href: '/restaurante', id: 'rooms', icon: Utensils, group: 'vender' },
   // Lounge (as vendas do bar)
   { title: 'Lounge & Bar', href: '/pos', id: 'sales', icon: Wine, group: 'vender' },
   { title: 'Histórico de Transações', href: '/sales', id: 'sales', icon: ShoppingCart, group: 'vender' },
