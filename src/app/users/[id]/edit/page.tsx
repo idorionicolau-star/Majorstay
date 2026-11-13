@@ -33,6 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useDynamicPlaceholder } from '@/hooks/use-dynamic-placeholder';
 
 import type { Employee, ModulePermission, PermissionLevel } from '@/lib/types';
+import { ProfilePicker } from '@/components/users/profile-picker';
+import { permissionsForProfile, profileOf, getProfile, type ProfileId } from '@/lib/role-profiles';
 import { allPermissions } from '@/lib/data';
 import { InventoryContext } from "@/context/inventory-context";
 import { useFirestore, useMemoFirebase } from '@/firebase/provider';
@@ -82,6 +84,7 @@ export default function EditUserPage() {
     });
 
     // preenche o formulário uma vez por funcionário (uma actualização da lista não apaga o que está a ser escrito)
+    const [profile, setProfile] = useState<ProfileId>('personalizado');
     const filledFor = useRef<string | null>(null);
     useEffect(() => {
         if (employeeToEdit && filledFor.current !== employeeToEdit.id) {
@@ -92,11 +95,17 @@ export default function EditUserPage() {
                 permissions: employeeToEdit.permissions || {},
                 site: employeeToEdit.site || "",
             });
+            setProfile(profileOf(employeeToEdit.role, employeeToEdit.permissions));
         }
     }, [employeeToEdit, form]);
     const notFound = !isLoading && !!employees && !employeeToEdit;
 
     const role = form.watch('role');
+    const handleProfileChange = (id: ProfileId) => {
+        setProfile(id);
+        form.setValue('role', getProfile(id).role, { shouldDirty: true });
+        if (id !== 'personalizado') form.setValue('permissions', permissionsForProfile(id) as Record<string, 'none' | 'read' | 'write'>, { shouldDirty: true });
+    };
 
     const handlePermissionChange = (moduleId: ModulePermission, level: 'read' | 'write') => {
         const currentPermissions = form.getValues('permissions');
@@ -215,28 +224,7 @@ export default function EditUserPage() {
                                     </FormDescription>
                                 </FormItem>
 
-                                <FormField
-                                    control={form.control}
-                                    name="role"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Função no Sistema</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger className="h-12 bg-background/50">
-                                                        <SelectValue placeholder="Selecione a função" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="Employee">Funcionário Padrão</SelectItem>
-                                                    <SelectItem value="Admin">Administrador Total</SelectItem>
-                                                    <SelectItem value="Dono">Visualizador Global (Dono)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <ProfilePicker value={profile} onChange={handleProfileChange} />
                             </div>
 
                             <div className="space-y-4">
@@ -257,7 +245,7 @@ export default function EditUserPage() {
                                         )}
                                     />
                                 )}
-                                {role === 'Employee' && (
+                                {profile === 'personalizado' && (
                                     <div className="rounded-lg border p-4 bg-background/50 h-full">
                                         <div className="mb-4">
                                             <FormLabel className="text-base">Permissões de Módulos</FormLabel>
