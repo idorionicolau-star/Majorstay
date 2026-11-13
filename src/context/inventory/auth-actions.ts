@@ -61,6 +61,7 @@ export function useAuthActions(core: InventoryCore) {
           // Conta Google sem empresa: mantém o login activo no Firebase Auth (sem signOut forçado)
           // para o utilizador apenas precisar de informar o nome do alojamento/hotel
           holdGuard = true;
+          core.setLoading(false); // a sessão não fica a carregar: o ecrã do nome do hotel tem de aparecer
           return { noCompany: result.user.email || '', displayName: result.user.displayName || '' };
         }
       }
