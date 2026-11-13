@@ -237,6 +237,34 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
 
   // --- 3. Continuar com o Google (Universal: Entrar OU Criar Conta) ---
   const handleUniversalGoogleAuth = async () => {
+    const prefilledHotelName = activeTab === 'register' ? registerForm.getValues('companyName')?.trim() || '' : '';
+
+    // Se estiver na aba Criar Conta, exige o nome do alojamento antes de abrir o Google
+    if (activeTab === 'register') {
+      if (!prefilledHotelName || prefilledHotelName.length < 3) {
+        registerForm.setError('companyName', {
+          type: 'manual',
+          message: 'Por favor, insira o nome do seu alojamento (mín. 3 caracteres) antes de continuar com o Google.',
+        });
+        registerForm.setFocus('companyName');
+        toast({
+          variant: 'destructive',
+          title: 'Nome do Alojamento Obrigatório',
+          description: 'Por favor, insira o nome do seu Hotel, Pensão ou Alojamento antes de criar conta com o Google.',
+        });
+        return;
+      }
+      if (prefilledHotelName.includes('@')) {
+        registerForm.setError('companyName', {
+          type: 'manual',
+          message: 'O nome do alojamento não pode conter "@".',
+        });
+        registerForm.setFocus('companyName');
+        return;
+      }
+      registerForm.clearErrors('companyName');
+    }
+
     setIsGoogleLoading(true);
     if (!loginWithGoogle) {
       toast({ variant: 'destructive', title: 'Erro', description: 'Serviço de autenticação Google indisponível.' });
@@ -248,11 +276,31 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
       const res = await loginWithGoogle();
 
       if (res && typeof res === 'object' && res.noCompany) {
-        // Conta Google sem empresa: NÃO faz signOut! Permanece autenticada e mostra o campo do hotel
+        // Se já temos o nome do hotel (da aba de registo), cria a empresa imediatamente sem pedir o nome 2 vezes!
+        if (prefilledHotelName && prefilledHotelName.length >= 3 && registerCompanyWithGoogle) {
+          keepInvite();
+          const ok = await registerCompanyWithGoogle(prefilledHotelName, 'reseller');
+          if (ok) {
+            toast({
+              title: 'Alojamento Criado com Sucesso! 🎉',
+              description: `Bem-vindo ao ${BRAND.name}. A iniciar o seu período de teste grátis...`,
+            });
+            router.push('/dashboard');
+            return;
+          } else {
+            dropInvite();
+            beginRegistration();
+          }
+        }
+
+        // Se veio pela aba de login (sem nome prévio), abre o passo de confirmação do nome
         setGoogleSetup({
           email: res.noCompany,
           displayName: res.displayName || '',
         });
+        if (prefilledHotelName) {
+          setGoogleHotelName(prefilledHotelName);
+        }
         toast({
           title: 'Google autenticado com sucesso!',
           description: 'Falta apenas dar o nome ao seu Hotel ou Alojamento para começar.',
@@ -468,56 +516,9 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
                 </button>
               </div>
 
-              {/* BOTÃO UNIVERSAL GOOGLE: 1 CLIQUE RESOLVE TUDO */}
-              <Button
-                variant="outline"
-                type="button"
-                disabled={isLoading || isGoogleLoading || isGuestLoading}
-                onClick={handleUniversalGoogleAuth}
-                className="w-full h-11 bg-white hover:bg-stone-50 text-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800 border-stone-200 dark:border-stone-800 rounded-xl shadow-xs font-semibold text-xs transition-all active:scale-98"
-              >
-                {isGoogleLoading ? (
-                  'A autenticar...'
-                ) : (
-                  <>
-                    <svg className="mr-2 h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                      <path
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        fill="#4285F4"
-                      />
-                      <path
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        fill="#34A853"
-                      />
-                      <path
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        fill="#FBBC05"
-                      />
-                      <path
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        fill="#EA4335"
-                      />
-                      <path d="M1 1h22v22H1z" fill="none" />
-                    </svg>
-                    <span>{activeTab === 'register' ? 'Criar Conta com o Google' : 'Continuar com o Google'}</span>
-                  </>
-                )}
-              </Button>
-
-              <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-stone-200 dark:border-stone-800" />
-                </div>
-                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-                  <span className="bg-[#FFFDF9] dark:bg-[#1E1714] px-2 text-stone-400 font-medium">
-                    {activeTab === 'register' ? 'ou registe com email' : 'ou com email e senha'}
-                  </span>
-                </div>
-              </div>
-
-              {/* ABA 1: CRIAR CONTA (100% Hotelaria, sem Fábrica/Loja) */}
+              {/* ABA 1: CRIAR CONTA (100% Hotelaria: Nome do Hotel em 1º lugar) */}
               {activeTab === 'register' && (
-                <form onSubmit={registerForm.handleSubmit(handleRegisterSubmit)} className="space-y-3">
+                <div className="space-y-3">
                   {fromEscalepay && (
                     <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-2.5 text-xs text-emerald-800 dark:text-emerald-300">
                       <p className="font-semibold">Comprou na EscalePay? 🎉</p>
@@ -525,9 +526,10 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
                     </div>
                   )}
 
+                  {/* 1. Nome do Alojamento: pedido ANTES de escolher Google ou Email */}
                   <div className="space-y-1">
                     <Label htmlFor="companyName" className="text-xs font-bold text-stone-800 dark:text-stone-200">
-                      Nome do Hotel, Pensão ou Alojamento
+                      Nome do Hotel, Pensão ou Alojamento <span className="text-[#fd761a]">*</span>
                     </Label>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
@@ -539,75 +541,175 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
                       />
                     </div>
                     {registerForm.formState.errors.companyName && (
-                      <p className="text-[11px] text-red-500">{registerForm.formState.errors.companyName.message}</p>
+                      <p className="text-[11px] text-red-500 font-medium">{registerForm.formState.errors.companyName.message}</p>
                     )}
                   </div>
 
-                  <div className="space-y-1">
-                    <Label htmlFor="adminEmail" className="text-xs font-bold text-stone-800 dark:text-stone-200">
-                      Email do Administrador
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
-                      <Input
-                        id="adminEmail"
-                        type="email"
-                        {...registerForm.register('adminEmail')}
-                        placeholder="ex: admin@seualojamento.com"
-                        className="pl-9 h-10 rounded-xl bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-xs font-medium"
-                      />
-                    </div>
-                    {registerForm.formState.errors.adminEmail && (
-                      <p className="text-[11px] text-red-500">{registerForm.formState.errors.adminEmail.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label htmlFor="adminPassword" className="text-xs font-bold text-stone-800 dark:text-stone-200">
-                      Senha de Acesso
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
-                      <Input
-                        id="adminPassword"
-                        type={showPassword ? 'text' : 'password'}
-                        {...registerForm.register('adminPassword')}
-                        placeholder="Crie uma senha segura (mín. 6 letras)"
-                        className="pl-9 h-10 rounded-xl bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-xs font-medium"
-                      />
-                    </div>
-                    {registerForm.formState.errors.adminPassword && (
-                      <p className="text-[11px] text-red-500">{registerForm.formState.errors.adminPassword.message}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2 pt-0.5">
-                    <Checkbox
-                      id="show-password-reg"
-                      checked={showPassword}
-                      onCheckedChange={(checked) => setShowPassword(!!checked)}
-                    />
-                    <label
-                      htmlFor="show-password-reg"
-                      className="text-xs font-medium text-stone-600 dark:text-stone-400 cursor-pointer select-none"
+                  {/* 2. Opção Rápida: Criar logo com o Google num clique com o nome acima */}
+                  <div className="space-y-1 pt-0.5">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      disabled={isLoading || isGoogleLoading || isGuestLoading}
+                      onClick={handleUniversalGoogleAuth}
+                      className="w-full h-11 bg-white hover:bg-stone-50 text-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800 border-stone-200 dark:border-stone-800 rounded-xl shadow-xs font-semibold text-xs transition-all active:scale-98"
                     >
-                      Mostrar senha
-                    </label>
+                      {isGoogleLoading ? (
+                        'A criar o seu alojamento...'
+                      ) : (
+                        <>
+                          <svg className="mr-2 h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                            <path
+                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                              fill="#4285F4"
+                            />
+                            <path
+                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                              fill="#34A853"
+                            />
+                            <path
+                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                              fill="#FBBC05"
+                            />
+                            <path
+                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                              fill="#EA4335"
+                            />
+                            <path d="M1 1h22v22H1z" fill="none" />
+                          </svg>
+                          <span>Criar Conta com o Google</span>
+                        </>
+                      )}
+                    </Button>
                   </div>
 
-                  <Button
-                    type="submit"
-                    disabled={isLoading || isGoogleLoading || isGuestLoading}
-                    className="w-full h-11 rounded-xl bg-[#007bb9] hover:bg-[#006194] text-white font-bold text-xs shadow-md transition-all active:scale-95 mt-1"
-                  >
-                    {isLoading ? 'A criar a sua conta...' : 'Começar Teste Grátis (14 Dias) 🚀'}
-                  </Button>
-                </form>
+                  {/* 3. Divisor */}
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-stone-200 dark:border-stone-800" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                      <span className="bg-[#FFFDF9] dark:bg-[#1E1714] px-2 text-stone-400 font-medium">
+                        ou registe com email e senha
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 4. Formulário de Email e Senha */}
+                  <form onSubmit={registerForm.handleSubmit(handleRegisterSubmit)} className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="adminEmail" className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                        Email do Administrador
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                        <Input
+                          id="adminEmail"
+                          type="email"
+                          {...registerForm.register('adminEmail')}
+                          placeholder="ex: admin@seualojamento.com"
+                          className="pl-9 h-10 rounded-xl bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-xs font-medium"
+                        />
+                      </div>
+                      {registerForm.formState.errors.adminEmail && (
+                        <p className="text-[11px] text-red-500">{registerForm.formState.errors.adminEmail.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="adminPassword" className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                        Senha de Acesso
+                      </Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+                        <Input
+                          id="adminPassword"
+                          type={showPassword ? 'text' : 'password'}
+                          {...registerForm.register('adminPassword')}
+                          placeholder="Crie uma senha segura (mín. 6 letras)"
+                          className="pl-9 h-10 rounded-xl bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-xs font-medium"
+                        />
+                      </div>
+                      {registerForm.formState.errors.adminPassword && (
+                        <p className="text-[11px] text-red-500">{registerForm.formState.errors.adminPassword.message}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-0.5">
+                      <Checkbox
+                        id="show-password-reg"
+                        checked={showPassword}
+                        onCheckedChange={(checked) => setShowPassword(!!checked)}
+                      />
+                      <label
+                        htmlFor="show-password-reg"
+                        className="text-xs font-medium text-stone-600 dark:text-stone-400 cursor-pointer select-none"
+                      >
+                        Mostrar senha
+                      </label>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={isLoading || isGoogleLoading || isGuestLoading}
+                      className="w-full h-11 rounded-xl bg-[#007bb9] hover:bg-[#006194] text-white font-bold text-xs shadow-md transition-all active:scale-95 mt-1"
+                    >
+                      {isLoading ? 'A criar a sua conta...' : 'Começar Teste Grátis (14 Dias) 🚀'}
+                    </Button>
+                  </form>
+                </div>
               )}
 
               {/* ABA 2: INICIAR SESSÃO */}
               {activeTab === 'login' && (
-                <form onSubmit={loginForm.handleSubmit(handleLoginSubmit)} className="space-y-3">
+                <div className="space-y-3">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    disabled={isLoading || isGoogleLoading || isGuestLoading}
+                    onClick={handleUniversalGoogleAuth}
+                    className="w-full h-11 bg-white hover:bg-stone-50 text-stone-800 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800 border-stone-200 dark:border-stone-800 rounded-xl shadow-xs font-semibold text-xs transition-all active:scale-98"
+                  >
+                    {isGoogleLoading ? (
+                      'A autenticar...'
+                    ) : (
+                      <>
+                        <svg className="mr-2 h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                          <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4"
+                          />
+                          <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853"
+                          />
+                          <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05"
+                          />
+                          <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335"
+                          />
+                          <path d="M1 1h22v22H1z" fill="none" />
+                        </svg>
+                        <span>Continuar com o Google</span>
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="relative my-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-stone-200 dark:border-stone-800" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                      <span className="bg-[#FFFDF9] dark:bg-[#1E1714] px-2 text-stone-400 font-medium">
+                        ou com email e senha
+                      </span>
+                    </div>
+                  </div>
+
+                  <form onSubmit={loginForm.handleSubmit(handleLoginSubmit)} className="space-y-3">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="loginEmail" className="text-xs font-bold text-stone-800 dark:text-stone-200">
@@ -687,6 +789,7 @@ export function UnifiedAuthCard({ initialTab }: UnifiedAuthCardProps) {
                     {isLoading ? 'A entrar...' : 'Entrar no Sistema'}
                   </Button>
                 </form>
+              </div>
               )}
 
               {/* DEMO / MODO CONVIDADO */}
