@@ -28,6 +28,7 @@ import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { RoomCard } from '@/components/rooms/room-card';
 import { PendingRoomOrders } from '@/components/rooms/pending-orders';
+import { ShiftBar } from '@/components/rooms/shift-bar';
 import { CheckInDialog } from '@/components/rooms/check-in-dialog';
 import { ExtendStayDialog } from '@/components/rooms/extend-stay-dialog';
 import { CheckOutDialog } from '@/components/rooms/check-out-dialog';
@@ -461,6 +462,7 @@ function RoomsPageContent() {
         </div>
       </div>
 
+      <ShiftBar />
       <PendingRoomOrders />
 
       {/* Barra de Filtros e Pesquisa com Pílulas Suaves */}
