@@ -42,8 +42,8 @@ export function useAuthActions(core: InventoryCore) {
   };
 
 
-  /** true = entrou; { noCompany: email } = a conta Google ainda não tem empresa (a página leva ao registo); false = falhou. */
-  const loginWithGoogle = async (): Promise<boolean | { noCompany: string }> => {
+  /** true = entrou; { noCompany: email, displayName?: string } = a conta Google ainda não tem empresa; false = falhou. */
+  const loginWithGoogle = async (): Promise<boolean | { noCompany: string; displayName?: string }> => {
     // enquanto se verifica se a conta tem empresa, a abertura da sessão espera (sem "Sessão terminada" pelo meio)
     beginRegistration();
     try {
@@ -54,9 +54,9 @@ export function useAuthActions(core: InventoryCore) {
       if (firestore) {
         const userDoc = await getDoc(doc(firestore, `users/${result.user.uid}`));
         if (!userDoc.exists()) {
-          // Conta Google sem empresa: em vez de a pôr fora, leva-a a criar a empresa (só falta o nome)
-          await auth.signOut();
-          return { noCompany: result.user.email || '' };
+          // Conta Google sem empresa: mantém o login activo no Firebase Auth (sem signOut forçado)
+          // para o utilizador apenas precisar de informar o nome do alojamento/hotel
+          return { noCompany: result.user.email || '', displayName: result.user.displayName || '' };
         }
       }
 
@@ -154,7 +154,7 @@ export function useAuthActions(core: InventoryCore) {
 
 
   /** true = empresa criada; 'existing' = a conta já tinha empresa (entrou nela); false = falhou (já avisou). */
-  const registerCompany = async (companyName: string, adminUsername: string, adminEmail: string, adminPass: string, businessType: 'manufacturer' | 'reseller'): Promise<boolean | 'existing'> => {
+  const registerCompany = async (companyName: string, adminUsername: string, adminEmail: string, adminPass: string, businessType: 'manufacturer' | 'reseller' = 'reseller'): Promise<boolean | 'existing'> => {
     if (!firestore) return false;
 
     beginRegistration();
@@ -270,27 +270,29 @@ export function useAuthActions(core: InventoryCore) {
   };
 
 
-  const registerCompanyWithGoogle = async (companyName: string, businessType: 'manufacturer' | 'reseller'): Promise<boolean> => {
+  const registerCompanyWithGoogle = async (companyName: string, businessType: 'manufacturer' | 'reseller' = 'reseller'): Promise<boolean> => {
     if (!firestore) return false;
 
     beginRegistration();
     try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const newUserId = userCredential.user.uid;
-      const adminEmail = userCredential.user.email || '';
-      const adminUsername = userCredential.user.displayName || 'Admin';
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        const provider = new GoogleAuthProvider();
+        const userCredential = await signInWithPopup(auth, provider);
+        currentUser = userCredential.user;
+      }
+      const newUserId = currentUser.uid;
+      const adminEmail = currentUser.email || '';
+      const adminUsername = currentUser.displayName || 'Admin';
 
       // Check if user already has a company
       const existingUserMap = await getDoc(doc(firestore, `users/${newUserId}`));
       if (existingUserMap.exists()) {
-        await auth.signOut();
         toast({
-          variant: 'destructive',
-          title: 'Erro no Registo',
-          description: 'Esta conta Google já está associada a uma empresa. Por favor, faça login em vez de se registar.'
+          title: 'Bem-vindo de volta!',
+          description: 'A sua conta já tem um alojamento registado. A entrar...',
         });
-        return false;
+        return true;
       }
 
       // (sem verificação do nome da empresa: ver registerCompany)

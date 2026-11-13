@@ -400,12 +400,12 @@ export interface InventoryContextType {
   renewInDays?: number | null;
   subscriptionReason?: 'trial_expired' | 'suspended' | 'expired' | null;
   login: (email: string, pass: string) => Promise<boolean>;
-  loginWithGoogle: () => Promise<boolean | { noCompany: string }>;
+  loginWithGoogle: () => Promise<boolean | { noCompany: string; displayName?: string }>;
   logout: () => void;
   resetPassword: (email: string) => Promise<void>;
   changePassword: (currentPass: string, newPass: string) => Promise<boolean>;
-  registerCompany: (companyName: string, adminUsername: string, adminEmail: string, adminPass: string, businessType: 'manufacturer' | 'reseller') => Promise<boolean | 'existing'>;
-  registerCompanyWithGoogle: (companyName: string, businessType: 'manufacturer' | 'reseller') => Promise<boolean>;
+  registerCompany: (companyName: string, adminUsername: string, adminEmail: string, adminPass: string, businessType?: 'manufacturer' | 'reseller') => Promise<boolean | 'existing'>;
+  registerCompanyWithGoogle: (companyName: string, businessType?: 'manufacturer' | 'reseller') => Promise<boolean>;
   profilePicture: string | null;
   setProfilePicture: (url: string) => void;
 
