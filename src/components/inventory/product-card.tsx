@@ -10,6 +10,8 @@ import { getStockStatus } from "./columns";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { AuditStockDialog } from "./audit-stock-dialog";
+import { useInventory } from "@/context/inventory-context";
+import { availableUnits, formatAvailable, isDishProduct } from "@/lib/dish-stock";
 import { ReservedBadge } from "./reserved-dialog";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +45,11 @@ export function ProductCard({ product, onProductUpdate, onAttemptDelete, viewMod
     }
 
     const isCondensed = viewMode === 'condensed';
-    const availableStock = product.stock - product.reservedStock;
+    const { products: allProducts } = useInventory();
+    const dish = isDishProduct(product);
+    const units = availableUnits(product, allProducts);
+    const availableStock = dish ? (units === null ? "—" : formatAvailable(units)) : product.stock - product.reservedStock;
+    const stockUnit = dish ? (product.soldByWeight ? "kg" : "doses") : (product.unit || "un");
 
     return (
         <Card data-tour="inv-card" className="glass-card flex flex-col h-full group p-2 sm:p-4 shadow-sm">
@@ -63,7 +69,7 @@ export function ProductCard({ product, onProductUpdate, onAttemptDelete, viewMod
                     isCondensed ? "flex-col" : ""
                 )}>
                     <span className={cn("font-black", statusInfo[status], isCondensed ? "text-xl" : "text-3xl")}>{availableStock}</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-muted-foreground">/{product.unit || 'un'}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-muted-foreground">/{stockUnit}</span>
                 </div>
                 {product.reservedStock > 0 && (
                     <ReservedBadge product={product} className="flex items-center justify-center gap-1.5 text-xs text-primary font-semibold cursor-pointer hover:underline">

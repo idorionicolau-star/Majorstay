@@ -32,6 +32,7 @@ import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { toast } from '@/hooks/use-toast';
 import { ServicesManagerDialog } from './services-manager-dialog';
+import { availableUnits, isDishProduct } from '@/lib/dish-stock';
 
 interface RoomConsumptionDialogProps {
   open: boolean;
@@ -97,7 +98,12 @@ export function RoomConsumptionDialog({
         name: p.name,
         category: p.category || 'Geral',
         price: p.price || 0,
-        stock: p.stock ?? null,
+        // Quantidade real: nos pratos, as doses que a matéria-prima ainda dá (nada de números de enchimento)
+        stock: availableUnits(p, products),
+        isDish: isDishProduct(p),
+        rawIngredientId: p.rawIngredientId,
+        rawIngredientName: p.rawIngredientName,
+        rawQuantityPerPortion: p.rawQuantityPerPortion,
         soldByWeight: Boolean(p.soldByWeight),
       }));
     }
@@ -446,6 +452,7 @@ export function RoomConsumptionDialog({
                                 const asKg = !ing || (ing.unit || 'kg').toLowerCase().startsWith('k');
                                 return `(${asKg ? `${Math.round(q * 1000)}g` : `${q} un`} ${(item as any).rawIngredientName || 'alimento'})`;
                               })() : ''}
+                              {item.stock !== null && ` · ${weighed ? `${item.stock} kg` : `${item.stock} doses`}`}
                             </span>
                           ) : item.stock !== null && (
                             <span className="text-[10px] font-normal text-[#827568] dark:text-[#B0A294] ml-1.5">

@@ -59,6 +59,9 @@ type Line = {
 const PAYMENTS = ["Numerário", "M-Pesa", "e-Mola", "Transferência", "POS / Cartão"];
 const DOCS: Sale["documentType"][] = ["Venda a Dinheiro", "Factura", "Recibo", "Guia de Remessa", "Factura Proforma"];
 const fmtQ = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleString("pt-PT", { maximumFractionDigits: 2 }));
+/** Prato sem stock próprio: serve só para a lógica (nunca mostrar este número). */
+const NO_LIMIT = 1_000_000;
+const shown = (n: number) => (n >= NO_LIMIT ? "" : fmtQ(n));
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 function load<T>(key: string, fallback: T): T {
@@ -170,8 +173,7 @@ export function FastSale() {
                 const portion = Number(p.rawQuantityPerPortion) || 0.3;
                 return Math.max(0, Math.floor(rawStock / portion));
             }
-            const s = (p.stock || 0) - (p.reservedStock || 0);
-            return s > 0 && s < 900 ? s : 50;
+            return NO_LIMIT; // prato sem matéria-prima ligada: não há número real, nunca fica "esgotado"
         }
         return (p.stock || 0) - (p.reservedStock || 0);
     }, [products]);
@@ -324,7 +326,7 @@ export function FastSale() {
     useEffect(() => setChoice(null), [parsed.term]);
     const choiceRows = (choice?.options || []).map((p) => {
         const a = avail(p);
-        return { key: p.instanceId, label: variantLabel(p), sub: a <= 0 ? "Esgotado" : `${fmtQ(a)} ${p.unit || "un"}`, right: priceOf(p) ? formatCurrency(priceOf(p)) : undefined, disabled: a <= 0 };
+        return { key: p.instanceId, label: variantLabel(p), sub: a <= 0 ? "Esgotado" : a >= NO_LIMIT ? "" : `${fmtQ(a)} ${p.unit || "un"}`, right: priceOf(p) ? formatCurrency(priceOf(p)) : undefined, disabled: a <= 0 };
     });
     const pickChoice = (key: string) => {
         const p = choice?.options.find((o) => o.instanceId === key);
@@ -569,7 +571,7 @@ export function FastSale() {
                 <VoiceConfirm
                     asks={voiceAsks}
                     fmt={fmtQ}
-                    note={(p) => (avail(p) <= 0 ? "Esgotado" : `Disponível: ${fmtQ(avail(p))} ${p.unit || "un"}`)}
+                    note={(p) => (avail(p) <= 0 ? "Esgotado" : avail(p) >= NO_LIMIT ? "" : `Disponível: ${fmtQ(avail(p))} ${p.isDish ? (p.soldByWeight ? "kg" : "doses") : p.unit || "un"}`)}
                     onClose={() => setVoiceAsks([])}
                     onSkip={(a) => setVoiceAsks((q) => q.filter((x) => x.id !== a.id))}
                     onPick={(a, prod) => {
@@ -630,7 +632,7 @@ export function FastSale() {
                             {favourites.map((p) => (
                                 <button key={p.instanceId} type="button" data-tour="pos-favourite" onClick={() => add(p)} className="shrink-0 whitespace-nowrap rounded-full border bg-card px-3 py-2 text-left text-sm hover:border-primary">
                                     <span className="font-medium">{p.name}</span>
-                                    <span className="ml-1.5 text-xs text-muted-foreground">{formatCurrency(priceOf(p))} · {p.isDish && !p.rawIngredientId ? 'Cozinha' : `${fmtQ(avail(p))} ${p.isDish ? 'doses' : 'disp.'}`}</span>
+                                    <span className="ml-1.5 text-xs text-muted-foreground">{formatCurrency(priceOf(p))} · {avail(p) >= NO_LIMIT ? 'Cozinha' : `${shown(avail(p))} ${p.isDish ? (p.soldByWeight ? 'kg' : 'doses') : 'disp.'}`}</span>
                                 </button>
                             ))}
                         </div>
