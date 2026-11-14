@@ -350,8 +350,8 @@ export async function POST(req: Request) {
           const totalPrice = weighedKg ? Math.round(weighedKg * resolvedUnitPrice * 100) / 100 : qty * resolvedUnitPrice;
           const consumptionItem: StayConsumptionItem = {
             id: `cons-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
-            productId: rawItem.productId || undefined,
-            serviceId: resolvedServiceId,
+            ...(rawItem.productId ? { productId: rawItem.productId } : {}),
+            ...(resolvedServiceId ? { serviceId: resolvedServiceId } : {}),
             isService: isService || Boolean(resolvedServiceId),
             productName: resolvedProductName,
             quantity: qty,
