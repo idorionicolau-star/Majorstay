@@ -58,3 +58,16 @@ describe('impressão térmica', () => {
     expect(html).not.toContain(' MT');
   });
 });
+
+describe('recibo no check-in', () => {
+  it('sem saída real, é "recibo de pagamento" com a saída prevista', () => {
+    const doc = buildStayReceipt({
+      hotel: 'H', roomName: 'Q1', checkIn: new Date('2026-11-14T10:00:00'),
+      expectedCheckOut: new Date('2026-11-14T13:00:00'), stayLabel: '3h de estadia', stayAmount: 900,
+      consumptions: [], total: 900, paid: 900, paymentMethod: 'Dinheiro', final: true,
+    });
+    expect(doc.title).toBe('RECIBO DE PAGAMENTO');
+    expect(doc.meta.some((m) => m.startsWith('Saída prevista'))).toBe(true);
+    expect(doc.totals.some((t) => t.left === 'Em falta')).toBe(false);
+  });
+});

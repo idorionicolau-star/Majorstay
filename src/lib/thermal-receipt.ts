@@ -127,6 +127,8 @@ export type StayReceiptInput = {
   vehiclePlate?: string;
   checkIn: Date;
   checkOut?: Date | null;
+  /** Saída prevista (recibo passado no check-in) */
+  expectedCheckOut?: Date | null;
   /** Descrição do alojamento (ex.: "3h de estadia", "Pernoite") */
   stayLabel: string;
   stayAmount: number;
@@ -146,6 +148,7 @@ export function buildStayReceipt(i: StayReceiptInput): ReceiptDoc {
     ...(i.vehiclePlate ? [`Matrícula: ${i.vehiclePlate}`] : []),
     `Entrada: ${fmtDate(i.checkIn)} ${fmtTime(i.checkIn)}`,
     ...(i.checkOut ? [`Saída: ${fmtDate(i.checkOut)} ${fmtTime(i.checkOut)}`] : []),
+    ...(!i.checkOut && i.expectedCheckOut ? [`Saída prevista: ${fmtTime(i.expectedCheckOut)}`] : []),
   ];
   const lines: ReceiptLine[] = [{ left: i.stayLabel, right: money(i.stayAmount) }];
   for (const c of i.consumptions) {
@@ -163,7 +166,7 @@ export function buildStayReceipt(i: StayReceiptInput): ReceiptDoc {
   if (i.operator) meta.push(`Atendido por: ${i.operator}`);
   return {
     hotel: i.hotel,
-    title: i.final ? 'RECIBO DE ESTADIA' : 'CONTA DO QUARTO (provisória)',
+    title: i.final ? (i.checkOut ? 'RECIBO DE ESTADIA' : 'RECIBO DE PAGAMENTO') : 'CONTA DO QUARTO (provisória)',
     meta,
     lines,
     totals,
