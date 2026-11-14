@@ -290,4 +290,16 @@ describe('Gestão de Restauração e Dedução de Alimentos em Kg', () => {
     expect(res.status).toBe(200);
     expect(fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions).toHaveLength(1);
   });
+
+  it('recepcionista lança um serviço do catálogo na conta do quarto (preço vem do catálogo)', async () => {
+    fakeDatabase[`companies/${companyId}/employees/user-admin`] = { username: 'Maria', role: 'Employee', permissions: { rooms: 'write', sales: 'write' } };
+    fakeDatabase[`companies/${companyId}/services/srv-lav`] = { name: 'Lavandaria', price: 250, category: 'Lavandaria' };
+    const res = await post([{ serviceId: 'srv-lav', isService: true, productName: 'Lavandaria', quantity: 2, unitPrice: 1 }]);
+    const json = await res.json();
+    expect(json.error).toBeUndefined();
+    expect(res.status).toBe(200);
+    const c = fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions[0];
+    expect(c.totalPrice).toBe(500);
+    expect(c.unitPrice).toBe(250);
+  });
 });
