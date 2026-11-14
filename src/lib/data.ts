@@ -15,6 +15,8 @@ import {
   ConciergeBell,
 } from 'lucide-react';
 
+import { KITCHEN_ENABLED } from '@/lib/features';
+
 export const mainNavItems: NavItem[] = [
   // Início
   // o Diagnóstico (a análise completa) abre-se do Painel
@@ -24,7 +26,7 @@ export const mainNavItems: NavItem[] = [
   // Serviços de Alojamento (Lavandaria, Massagens, Transfers, Limpeza extra, etc.)
   { title: 'Serviços', href: '/services', id: 'rooms', icon: ConciergeBell, group: 'inicio' },
   // Cozinha & Restaurante
-  { title: 'Cozinha & Restaurante', href: '/restaurante', id: 'rooms', icon: Utensils, group: 'vender' },
+  ...(KITCHEN_ENABLED ? [{ title: 'Cozinha & Restaurante', href: '/restaurante', id: 'rooms', icon: Utensils, group: 'vender' } as NavItem] : []),
   // Lounge (as vendas do bar)
   { title: 'Lounge & Bar', href: '/pos', id: 'sales', icon: Wine, group: 'vender' },
   { title: 'Histórico de Transações', href: '/sales', id: 'sales', icon: ShoppingCart, group: 'vender' },

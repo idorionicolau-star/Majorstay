@@ -7,6 +7,7 @@ const mockDocGet = vi.fn();
 const mockDocUpdate = vi.fn();
 const mockDocSet = vi.fn();
 
+vi.mock('@/lib/features', async (orig) => ({ ...(await orig<typeof import('@/lib/features')>()), KITCHEN_ENABLED: true }));
 vi.mock('@/lib/firebase-admin', () => {
   const firestoreInstance = () => ({
     doc: (path: string) => ({

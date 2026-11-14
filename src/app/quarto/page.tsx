@@ -971,7 +971,8 @@ function QuartoPortalContent() {
               >
                 Tudo
               </button>
-              <button
+              {barProducts.some((p) => p.isDish) && (
+<button
                 type="button"
                 onClick={() => setMenuFilter('kitchen')}
                 className={cn(
@@ -983,6 +984,7 @@ function QuartoPortalContent() {
               >
                 🍽️ Pratos & Refeições
               </button>
+)}
               <button
                 type="button"
                 onClick={() => setMenuFilter('bar')}

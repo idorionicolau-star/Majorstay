@@ -1,4 +1,5 @@
 'use client';
+import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { inScope, scopeFor } from "@/lib/sites";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -678,7 +679,8 @@ export function useInventoryCore() {
     const productMap = new Map<string, Product & { sourceIds: string[] }>();
 
     // Filter out deleted items FIRST
-    const activeProducts = productsData.filter(p => !p.deletedAt);
+    // Cozinha desligada (lib/features): pratos e matérias-primas ficam escondidos em toda a app
+    const activeProducts = productsData.filter(p => !p.deletedAt && (KITCHEN_ENABLED || !isKitchenProduct(p)));
 
     activeProducts.forEach(p => {
       // "Principal" e "sem local" são o mesmo sítio (o Stock Rápido criava com ""): sem isto o mesmo produto aparecia em dois cartões
