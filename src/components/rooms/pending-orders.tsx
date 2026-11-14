@@ -9,12 +9,13 @@ import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 
-type OrderLine = { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number };
+type OrderLine = { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; notes?: string };
 type PendingOrder = {
   id: string;
   stayId: string;
   roomName: string;
   items: OrderLine[];
+  notes?: string;
   total: number;
   createdAt: string;
 };
@@ -113,12 +114,16 @@ export function PendingRoomOrders() {
             </div>
             <ul className="space-y-0.5 text-xs text-slate-600 dark:text-slate-300">
               {o.items.map((l) => (
-                <li key={l.productId} className="flex justify-between gap-2">
-                  <span className="truncate">{l.quantity}× {l.productName}</span>
-                  <span className="shrink-0 font-semibold">{formatCurrency(l.totalPrice)}</span>
+                <li key={l.productId}>
+                  <div className="flex justify-between gap-2">
+                    <span className="truncate">{l.quantity}× {l.productName}</span>
+                    <span className="shrink-0 font-semibold">{formatCurrency(l.totalPrice)}</span>
+                  </div>
+                  {l.notes && <p className="text-[11px] italic text-amber-700 dark:text-amber-300">Obs: {l.notes}</p>}
                 </li>
               ))}
             </ul>
+            {o.notes && <p className="text-[11px] rounded-lg bg-slate-100 dark:bg-slate-800/60 p-1.5 text-slate-600 dark:text-slate-300">Nota do quarto: {o.notes}</p>}
             <div className="flex justify-between text-sm font-extrabold border-t border-slate-100 dark:border-slate-800 pt-2">
               <span>Total</span>
               <span>{formatCurrency(o.total)}</span>
