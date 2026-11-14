@@ -1097,7 +1097,7 @@ function QuartoPortalContent() {
 
       {/* Confirmação do pedido antes de enviar */}
       {confirmOpen && (
-        <div role="dialog" aria-modal="true" aria-label="Confirmar pedido" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3">
+        <div role="dialog" aria-modal="true" aria-label="Confirmar pedido" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3">
           <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-[#FFFDF9] dark:bg-[#191E25] border border-[#E5DFD6] dark:border-[#2C3440] shadow-2xl overflow-hidden">
             <div className="px-5 pt-5 pb-3 shrink-0">
               <h3 className="font-extrabold text-base text-[#251D18] dark:text-[#F5EFEB]">Confirmar pedido</h3>
@@ -1144,7 +1144,7 @@ function QuartoPortalContent() {
 
       {/* Pedido enviado (pendente até a receção confirmar) */}
       {orderSent && (
-        <div role="dialog" aria-modal="true" aria-label="Pedido enviado" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-3">
+        <div role="dialog" aria-modal="true" aria-label="Pedido enviado" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-3">
           <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] dark:bg-[#191E25] border border-[#E5DFD6] dark:border-[#2C3440] shadow-2xl p-5 space-y-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center shrink-0">
