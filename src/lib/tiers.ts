@@ -46,6 +46,7 @@ export const TIERS: Tier[] = [
         features: PRO_FEATURES,
         highlights: [
             'Até 15 quartos e estadias em tempo real',
+            'Visor QR Code e cartão de mesa para quartos',
             'Cobrança por hora e pernoita',
             'Lounge & Bar com comanda digital',
             'Serviços de alojamento sem limites',
@@ -111,7 +112,7 @@ export const tierById = (id: unknown): Tier | undefined => {
             maxRooms: 15,
             maxUsers: 1,
             features: PRO_FEATURES,
-            highlights: ['1 utilizador', 'Até 15 quartos', 'Quadro de Quartos e Bar', 'Cobrança por hora'],
+            highlights: ['1 utilizador', 'Até 15 quartos', 'Visor QR Code para quartos', 'Quadro de Quartos e Bar', 'Cobrança por hora'],
         };
     }
     return TIERS.find((t) => t.id === id);
