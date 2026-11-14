@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { verifyRoomPin } from '@/lib/room-pin';
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
     for (const [productId, quantity] of wanted) {
       const snap = await db.doc(`companies/${companyId}/products/${productId}`).get();
       const data = snap.exists ? snap.data() || {} : null;
-      if (!data || data.deletedAt) {
+      if (!data || data.deletedAt || (!KITCHEN_ENABLED && isKitchenProduct(data))) {
         return NextResponse.json({ error: 'Um dos produtos já não está disponível. Atualize a página.' }, { status: 400 });
       }
       const price = Number(data.price !== undefined ? data.price : data.salePrice);

@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
@@ -59,10 +60,6 @@ export async function GET(req: Request) {
           { id: '3', name: 'Cerveja Heineken Long Neck', price: 150, category: 'Bebidas' },
           { id: '4', name: 'Água Mineral 500ml', price: 50, category: 'Bebidas' },
           { id: '5', name: 'Refrigerante Coca-Cola Lata', price: 70, category: 'Bebidas' },
-          { id: '6', name: 'Bife de Vaca à MajorStay com Batata', price: 650, category: 'Pratos Principais', isDish: true },
-          { id: '7', name: 'Peixe Serra Grelhado com Arroz', price: 750, category: 'Pratos Principais', isDish: true },
-          { id: '8', name: 'Meio Frango no Churrasco', price: 450, category: 'Pratos Principais', isDish: true },
-          { id: '9', name: 'Dose de Camarão Nacional Grelhado', price: 850, category: 'Petiscos', isDish: true },
           { id: '10', name: 'Batatas Fritas Crocantes', price: 150, category: 'Snacks' },
         ],
       });
@@ -121,6 +118,7 @@ export async function GET(req: Request) {
       for (const docSnap of prodSnap.docs) {
         const p = docSnap.data() || {};
         if (p.deletedAt) continue;
+        if (!KITCHEN_ENABLED && isKitchenProduct(p)) continue;
         const price = Number(p.price !== undefined ? p.price : (p.salePrice !== undefined ? p.salePrice : 0));
         if (!Number.isFinite(price) || price <= 0) continue;
 

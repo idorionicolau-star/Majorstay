@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
 import type { StayConsumptionItem } from '@/lib/types';
@@ -223,6 +224,9 @@ export async function POST(req: Request) {
             resolvedUnitPrice = catalogPrice;
             resolvedProductName = prodData.name || resolvedProductName || 'Produto do Bar';
 
+            if (!KITCHEN_ENABLED && isKitchenProduct(prodData)) {
+              throw new Error(`"${resolvedProductName}" não está disponível (a cozinha está desativada).`);
+            }
             const isDish = Boolean(prodData.isDish);
             if (prodData.soldByWeight) {
               const w = Number(rawItem.weightKg);
