@@ -147,7 +147,8 @@ export function FastSale() {
 
     const scoped = useMemo(() => {
         if (demo) return DEMO_PRODUCTS;
-        const list = products.filter((p) => !p.deletedAt);
+        // Ingredientes alimentares crus da câmara frigorífica/despensa não são vendidos diretamente no balcão
+        const list = products.filter((p) => !p.deletedAt && !p.isKitchenIngredient && p.category !== 'Cozinha / Alimentos');
         return isMultiLocation && location ? list.filter((p) => (p.location || "") === location) : list;
     }, [products, isMultiLocation, location, demo]);
 
@@ -157,7 +158,23 @@ export function FastSale() {
         return m;
     }, [catalogProducts]);
     const priceOf = useCallback((p: Product) => p.price || catalogPrice.get(normalizeString(p.name)) || 0, [catalogPrice]);
-    const avail = (p: Product) => (p.stock || 0) - (p.reservedStock || 0);
+    
+    // Disponibilidade real: pratos confecionados calculam doses disponíveis a partir da matéria-prima na arca
+    const avail = useCallback((p: Product) => {
+        if (p.isDish) {
+            if (p.rawIngredientId) {
+                const raw = products.find((r) => (r.id === p.rawIngredientId || r.instanceId === p.rawIngredientId) && !r.deletedAt);
+                if (!raw) return 0;
+                const rawStock = Math.max(0, (raw.stock || 0) - (raw.reservedStock || 0));
+                if (p.soldByWeight) return Math.floor(rawStock);
+                const portion = Number(p.rawQuantityPerPortion) || 0.3;
+                return Math.max(0, Math.floor(rawStock / portion));
+            }
+            const s = (p.stock || 0) - (p.reservedStock || 0);
+            return s > 0 && s < 900 ? s : 50;
+        }
+        return (p.stock || 0) - (p.reservedStock || 0);
+    }, [products]);
 
     // Most sold in the last 90 days — one tap away when the search is empty
     const favourites = useMemo(() => {
@@ -597,7 +614,7 @@ export function FastSale() {
                                 className={cn("flex w-full items-center justify-between gap-3 border-b px-4 py-3 text-left last:border-0 disabled:opacity-50", i === highlight && "bg-muted")}>
                                 <div className="min-w-0">
                                     <p className="truncate font-medium">{p.name}</p>
-                                    <p className={cn("text-xs", a <= 0 ? "text-red-500" : "text-muted-foreground")}>{a <= 0 ? "Esgotado" : `${fmtQ(a)} ${p.unit || "un"} disponíveis`}{curingInfo.enabled && curingInfo.curing(p.name, p.location) > 0 ? ` · ${fmtQ(Math.min(a, curingInfo.curing(p.name, p.location)))} a secar` : ""}{c ? ` · no carrinho: ${fmtQ(c.qty)}` : ""}</p>
+                                    <p className={cn("text-xs", a <= 0 ? "text-red-500" : "text-muted-foreground")}>{a <= 0 ? "Esgotado" : p.isDish && !p.rawIngredientId ? "Prato confecionado" : `${fmtQ(a)} ${p.isDish ? 'doses' : (p.unit || 'un')} disponíveis`}{curingInfo.enabled && curingInfo.curing(p.name, p.location) > 0 ? ` · ${fmtQ(Math.min(a, curingInfo.curing(p.name, p.location)))} a secar` : ""}{c ? ` · no carrinho: ${fmtQ(c.qty)}` : ""}</p>
                                 </div>
                                 <span className={cn("shrink-0 font-semibold tabular-nums", !priceOf(p) && "text-red-500")}>{priceOf(p) ? formatCurrency(priceOf(p)) : "sem preço"}</span>
                             </button>
@@ -613,7 +630,7 @@ export function FastSale() {
                             {favourites.map((p) => (
                                 <button key={p.instanceId} type="button" data-tour="pos-favourite" onClick={() => add(p)} className="shrink-0 whitespace-nowrap rounded-full border bg-card px-3 py-2 text-left text-sm hover:border-primary">
                                     <span className="font-medium">{p.name}</span>
-                                    <span className="ml-1.5 text-xs text-muted-foreground">{formatCurrency(priceOf(p))} · {fmtQ(avail(p))} disp.</span>
+                                    <span className="ml-1.5 text-xs text-muted-foreground">{formatCurrency(priceOf(p))} · {p.isDish && !p.rawIngredientId ? 'Cozinha' : `${fmtQ(avail(p))} ${p.isDish ? 'doses' : 'disp.'}`}</span>
                                 </button>
                             ))}
                         </div>

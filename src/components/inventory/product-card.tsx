@@ -72,7 +72,13 @@ export function ProductCard({ product, onProductUpdate, onAttemptDelete, viewMod
                     </ReservedBadge>
                 )}
                 <div className="text-center">
-                    <p className={cn("font-medium text-muted-foreground", isCondensed ? "text-xs" : "text-sm")}>{formatCurrency(product.price)}</p>
+                    {product.isKitchenIngredient || product.category === 'Cozinha / Alimentos' ? (
+                        <p className={cn("font-semibold text-amber-700 dark:text-amber-400", isCondensed ? "text-xs" : "text-sm")}>
+                            Custo: {formatCurrency(product.cost || 0)}/{product.unit || 'kg'}
+                        </p>
+                    ) : (
+                        <p className={cn("font-medium text-muted-foreground", isCondensed ? "text-xs" : "text-sm")}>{formatCurrency(product.price)}</p>
+                    )}
                     {(product.cost === undefined || product.cost <= 0) && (
                         canEdit ? (
                             <Link href={`/inventory/${product.instanceId || product.id}/edit`} className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:underline">

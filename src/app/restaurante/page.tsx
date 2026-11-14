@@ -469,7 +469,7 @@ export default function RestaurantePage() {
         cost: selectedIng ? Math.round(((selectedIng.cost || 0) * (newDishByWeight ? 1 : perPortion)) * 100) / 100 : 0,
         unit: newDishByWeight ? 'kg' : 'dose',
         location: 'Cozinha',
-        stock: 999, // Pratos confecionados não têm stock fixo na prateleira; consomem a carne
+        stock: selectedIng ? (newDishByWeight ? Math.floor(selectedIng.stock || 0) : Math.floor((selectedIng.stock || 0) / (perPortion || 1))) : 0,
         lowStockThreshold: 0,
         criticalStockThreshold: 0,
         isDish: true,

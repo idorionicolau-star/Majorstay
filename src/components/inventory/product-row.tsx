@@ -18,20 +18,41 @@ const STATUS_LABEL = { baixo: "Baixo", critico: "Crítico", "sem-estoque": "Esgo
 
 /** Linha compacta do inventário — mostra 3 a 4 vezes mais produtos por ecrã do que os cartões. */
 export function ProductRow({ product, canEdit, locationName }: { product: Product; canEdit: boolean; locationName?: string }) {
-    const status = getStockStatus(product);
+        const status = getStockStatus(product);
+    const isIngredient = Boolean(product.isKitchenIngredient || product.category === 'Cozinha / Alimentos');
+    const isDish = Boolean(product.isDish || (product.category || '').toLowerCase().includes('prato'));
     const available = product.stock - product.reservedStock;
-    const noCost = product.cost === undefined || product.cost <= 0;
+    const noCost = !isIngredient && (product.cost === undefined || product.cost <= 0);
     const href = canEdit
-        ? `/inventory/${product.instanceId || product.id}/edit`
+        ? (isDish || isIngredient ? '/restaurante' : `/inventory/${product.instanceId || product.id}/edit`)
         : `/inventory/history?productName=${encodeURIComponent(product.name)}`;
 
     return (
         <Link href={href} className="flex items-center gap-3 border-b border-border/60 px-3 py-2.5 hover:bg-muted/50 active:bg-muted">
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{product.name}</p>
+                <p className="truncate text-sm font-semibold flex items-center gap-1.5">
+                    <span>{product.name}</span>
+                    {isIngredient && (
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                            🥩 Matéria-Prima
+                        </span>
+                    )}
+                    {isDish && (
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                            🍽️ Prato
+                        </span>
+                    )}
+                </p>
                 <p className="truncate text-[11px] text-muted-foreground">
-                    {formatCurrency(product.price)}
-                    {product.category && ` · ${product.category}`}
+                    {isIngredient ? (
+                        <span className="font-semibold text-amber-700 dark:text-amber-400">
+                            Custo: {formatCurrency(product.cost || 0)}/{product.unit || 'kg'} (Câmara Fria)
+                        </span>
+                    ) : (
+                        formatCurrency(product.price)
+                    )}
+                    {isDish && product.rawIngredientName && ` · Abate: ${product.rawIngredientName}`}
+                    {product.category && !isIngredient && ` · ${product.category}`}
                     {locationName && ` · ${locationName}`}
                     {noCost && <span className="text-amber-600 dark:text-amber-400"> · sem custo</span>}
                     {product.reservedStock > 0 && <> · <ReservedBadge product={product} className="text-primary underline decoration-dotted underline-offset-2">{product.reservedStock} reservado{product.reservedStock === 1 ? "" : "s"}</ReservedBadge></>}

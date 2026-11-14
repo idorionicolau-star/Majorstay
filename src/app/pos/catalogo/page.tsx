@@ -193,7 +193,15 @@ export default function POSPage() {
             ? products.filter(p => p.location === selectedLocation)
             : products;
 
-        const inStock = productsForLocation.filter(p => (p.stock - p.reservedStock) > 0);
+        // Excluir matérias-primas da cozinha do catálogo de venda direta no balcão
+        const sellable = productsForLocation.filter(p => !p.isKitchenIngredient && p.category !== 'Cozinha / Alimentos');
+        const inStock = sellable.filter(p => {
+            if (p.isDish && p.rawIngredientId) {
+                const raw = products.find(r => (r.id === p.rawIngredientId || r.instanceId === p.rawIngredientId) && !r.deletedAt);
+                return raw ? (raw.stock || 0) > 0 : false;
+            }
+            return (p.stock - p.reservedStock) > 0;
+        });
         const inStockMap = new Map<string, Product>();
         inStock.forEach(p => { if (!inStockMap.has(p.name)) inStockMap.set(p.name, p); });
 
@@ -205,7 +213,16 @@ export default function POSPage() {
                     ...cp,
                     imageUrl: cp.imageUrl || inventoryProduct.imageUrl,
                     stockInstance: inventoryProduct,
-                    availableStock: (inventoryProduct.stock || 0) - (inventoryProduct.reservedStock || 0),
+                    availableStock: (() => {
+                        if (inventoryProduct.isDish && inventoryProduct.rawIngredientId) {
+                            const raw = products.find(r => (r.id === inventoryProduct.rawIngredientId || r.instanceId === inventoryProduct.rawIngredientId) && !r.deletedAt);
+                            if (raw) {
+                                const rawStock = Math.max(0, (raw.stock || 0) - (raw.reservedStock || 0));
+                                return inventoryProduct.soldByWeight ? Math.floor(rawStock) : Math.max(0, Math.floor(rawStock / (Number(inventoryProduct.rawQuantityPerPortion) || 0.3)));
+                            }
+                        }
+                        return (inventoryProduct.stock || 0) - (inventoryProduct.reservedStock || 0);
+                    })(),
                 };
             });
     }, [products, catalogProducts, selectedLocation, isMultiLocation]);
