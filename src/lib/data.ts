@@ -12,6 +12,7 @@ import {
   CreditCard,
   Wine,
   Utensils,
+  ConciergeBell,
 } from 'lucide-react';
 
 export const mainNavItems: NavItem[] = [
@@ -20,6 +21,8 @@ export const mainNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', id: 'dashboard', icon: LayoutDashboard, group: 'inicio', also: ['/diagnostico'] },
   // Quartos: o quadro de quartos e estadias (fica no grupo Início, que não mostra título)
   { title: 'Quartos', href: '/rooms', id: 'rooms', icon: BedDouble, group: 'inicio' },
+  // Serviços de Alojamento (Lavandaria, Massagens, Transfers, Limpeza extra, etc.)
+  { title: 'Serviços', href: '/services', id: 'rooms', icon: ConciergeBell, group: 'inicio' },
   // Cozinha & Restaurante
   { title: 'Cozinha & Restaurante', href: '/restaurante', id: 'rooms', icon: Utensils, group: 'vender' },
   // Lounge (as vendas do bar)
