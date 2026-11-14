@@ -91,12 +91,53 @@ export function saleOnDay(date: unknown, day: string): boolean {
  * Hobby da Vercel o cron corre algures dentro dessa hora UTC, por isso o email diz sempre "até às HH:MM".
  */
 export const REPORT_TIMES = ['17:30', '18:30', '19:30', '20:30', '21:30', '22:30'] as const;
-export type ReportTime = (typeof REPORT_TIMES)[number];
-export const DEFAULT_REPORT_TIME: ReportTime = '21:30';
+export type ReportTime = string;
+export const DEFAULT_REPORT_TIME = '21:30';
 
-/** A hora escolhida pela empresa (ou a padrão, se não escolheu ou o valor não serve). */
-export const reportTime = (v: unknown): ReportTime =>
-    (REPORT_TIMES as readonly string[]).includes(String(v)) ? (v as ReportTime) : DEFAULT_REPORT_TIME;
+/** Valida se a string representa uma hora válida no formato HH:mm (00:00 a 23:59). */
+export function isValidTime(v: unknown): boolean {
+    if (typeof v !== 'string') return false;
+    return /^([01]?\d|2[0-3]):[0-5]\d$/.test(v.trim());
+}
+
+/** Normaliza "H:mm" para "HH:mm". */
+export function normalizeTime(v: string): string {
+    const trimmed = v.trim();
+    const parts = trimmed.split(':');
+    if (parts.length !== 2) return DEFAULT_REPORT_TIME;
+    const h = parts[0].padStart(2, '0');
+    const m = parts[1].padStart(2, '0');
+    return `${h}:${m}`;
+}
+
+/** A hora escolhida pela empresa livremente (ex: "23:00", "20:00"), ou padrão se inválida. */
+export const reportTime = (v: unknown): string => {
+    if (typeof v === 'string' && isValidTime(v)) {
+        return normalizeTime(v);
+    }
+    return DEFAULT_REPORT_TIME;
+};
+
+/** Atribui uma hora livre ao slot de cron mais próximo em vercel.json. */
+export function closestReportSlot(companyTime: string, slots: readonly string[] = REPORT_TIMES): string {
+    const toMinutes = (t: string) => {
+        const parts = t.split(':').map(Number);
+        const h = Number.isFinite(parts[0]) ? parts[0] : 0;
+        const m = Number.isFinite(parts[1]) ? parts[1] : 0;
+        return h * 60 + m;
+    };
+    const cMin = toMinutes(companyTime);
+    let closest = slots[0];
+    let minDiff = Infinity;
+    for (const s of slots) {
+        const diff = Math.abs(cMin - toMinutes(s));
+        if (diff < minDiff) {
+            minDiff = diff;
+            closest = s;
+        }
+    }
+    return closest;
+}
 
 /** "21:30" → "21h30" para mostrar. */
-export const reportTimeLabel = (t: string) => t.replace(':', 'h');
+export const reportTimeLabel = (t: string) => (t ? t.replace(':', 'h') : '21h30');

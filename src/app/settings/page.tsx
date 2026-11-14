@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, Building, Book, Palette, User as UserIcon, MapPin, Mail, Code, RefreshCw, Trash2, ShieldCheck, ImagePlus, X, Tag, Hash, FileText } from "lucide-react";
+import { Clock, Send, Menu, Building, Book, Palette, User as UserIcon, MapPin, Mail, Code, RefreshCw, Trash2, ShieldCheck, ImagePlus, X, Tag, Hash, FileText } from "lucide-react";
 
 import { LocationsManager } from "@/components/settings/locations-manager";
 import { AdminMergeTool } from "@/components/admin/admin-merge-tool";
@@ -415,6 +415,81 @@ export default function SettingsPage() {
     setCompanyDetails(prev => ({ ...prev, [id]: value }));
   }
 
+  const [sendingTestReport, setSendingTestReport] = useState(false);
+
+  const handleSendTestReport = async () => {
+    const eodEmails = (companyDetails?.notificationSettings?.emails || [])
+      .filter((e) => e.onEndOfDayReport && e.email && e.email.trim())
+      .map((e) => e.email.trim());
+
+    if (eodEmails.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Nenhum e-mail selecionado",
+        description: "Ative a opção 'Relatório Fecho do Dia' em pelo menos um e-mail abaixo antes de enviar o teste.",
+      });
+      return;
+    }
+
+    try {
+      setSendingTestReport(true);
+      const fbToken = await getAuth().currentUser?.getIdToken();
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todaySales = (inventoryContext?.sales || []).filter((s: any) => {
+        return s.date && String(s.date).slice(0, 10) === todayStr;
+      });
+      const todayTotal = todaySales.reduce((acc: number, s: any) => acc + (Number(s.totalValue || s.amountPaid) || 0), 0);
+      
+      const criticalCount = (inventoryContext?.products || []).filter((p: any) => {
+        if (p.deletedAt) return false;
+        const avail = (Number(p.stock) || 0) - (Number(p.reservedStock) || 0);
+        return avail <= (Number(p.criticalStockThreshold) || 0);
+      }).length;
+
+      const formattedToday = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      const res = await fetch('/api/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${fbToken}`,
+        },
+        body: JSON.stringify({
+          to: eodEmails,
+          type: 'END_OF_DAY_REPORT',
+          companyId,
+          subject: `📊 Relatório de Fecho do Dia — ${companyDetails.name || 'MajorStay'} (${formattedToday})`,
+          body: {
+            totalSales: todaySales.length,
+            salesValue: todayTotal,
+            criticalItemsCount: criticalCount,
+            date: formattedToday,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Falha ao enviar relatório.');
+      }
+
+      toast({
+        title: "Relatório de fecho do dia enviado!",
+        description: `Resumo enviado com sucesso para ${eodEmails.join(', ')}.`,
+      });
+    } catch (err: any) {
+      console.error("Erro ao enviar relatório de teste:", err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar relatório",
+        description: err.message || "Não foi possível enviar o relatório por e-mail.",
+      });
+    } finally {
+      setSendingTestReport(false);
+    }
+  };
+
   const handleEmailSettingsChange = (index: number, field: string, value: any) => {
     setCompanyDetails(prev => {
       const newEmails = [...(prev.notificationSettings?.emails || [])];
@@ -783,20 +858,96 @@ export default function SettingsPage() {
                           </Button>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 bg-card" data-tour="eod-time">
-                          <div className="min-w-[12rem] flex-1">
-                            <Label htmlFor="endOfDayTime" className="text-sm">Hora do Relatório Fecho do Dia</Label>
-                            <p className="text-xs text-muted-foreground">Conta as vendas de hoje até essa hora, iguais ao Financeiro. O envio pode variar uns 30 minutos.</p>
+                        <div className="rounded-2xl border p-4 bg-card space-y-4" data-tour="eod-time">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor="endOfDayTime" className="text-sm font-semibold flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-primary" />
+                                Hora do Relatório Fecho do Dia
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Escolha livremente a hora em que pretende receber o resumo diário de vendas e stocks por e-mail.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="endOfDayTime"
+                                type="time"
+                                value={companyDetails.notificationSettings.endOfDayTime || "21:30"}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setCompanyDetails((prev) => ({
+                                    ...prev,
+                                    notificationSettings: {
+                                      ...prev.notificationSettings,
+                                      endOfDayTime: val ? reportTime(val) : "21:30",
+                                    },
+                                  }));
+                                }}
+                                className="w-32 h-10 font-bold text-center text-sm rounded-xl"
+                                aria-label="Hora do fecho do dia"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleSendTestReport}
+                                disabled={sendingTestReport}
+                                className="h-10 text-xs font-semibold rounded-xl gap-1.5"
+                                title="Enviar o relatório com os dados de hoje imediatamente para os e-mails ativos"
+                              >
+                                <Send className="h-3.5 w-3.5 text-primary" />
+                                {sendingTestReport ? 'A enviar...' : 'Enviar Agora'}
+                              </Button>
+                            </div>
                           </div>
-                          <Select
-                            value={companyDetails.notificationSettings.endOfDayTime}
-                            onValueChange={(v) => setCompanyDetails(prev => ({ ...prev, notificationSettings: { ...prev.notificationSettings, endOfDayTime: reportTime(v) } }))}
-                          >
-                            <SelectTrigger id="endOfDayTime" className="w-32" aria-label="Hora do relatório"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {REPORT_TIMES.map((t) => <SelectItem key={t} value={t}>{reportTimeLabel(t)}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+
+                          {/* Sugestões rápidas de horário */}
+                          <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/50">
+                            <span className="text-[11px] text-muted-foreground font-medium mr-1">Horas comuns:</span>
+                            {['18:00', '19:30', '20:00', '21:00', '21:30', '22:00', '23:00', '00:00'].map((preset) => (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => {
+                                  setCompanyDetails((prev) => ({
+                                    ...prev,
+                                    notificationSettings: {
+                                      ...prev.notificationSettings,
+                                      endOfDayTime: preset,
+                                    },
+                                  }));
+                                }}
+                                className={cn(
+                                  "px-2.5 py-1 text-xs rounded-lg border transition-colors",
+                                  companyDetails.notificationSettings.endOfDayTime === preset
+                                    ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"
+                                    : "bg-muted/40 hover:bg-muted text-muted-foreground"
+                                )}
+                              >
+                                {preset.replace(':', 'h')}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Resumo dos destinatários */}
+                          <div className="text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-2 pt-1">
+                            {(() => {
+                              const activeCount = (companyDetails?.notificationSettings?.emails || []).filter(
+                                (e) => e.onEndOfDayReport && e.email && e.email.trim()
+                              ).length;
+                              return activeCount > 0 ? (
+                                <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                                  ✓ {activeCount} {activeCount === 1 ? 'e-mail ativo' : 'e-mails ativos'} para receber o fecho do dia
+                                </span>
+                              ) : (
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                  ⚠️ Nenhum e-mail ativo — marque a opção "Relatório Fecho do Dia" abaixo
+                                </span>
+                              );
+                            })()}
+                            <span className="text-[11px] text-slate-400">Fuso horário: Maputo (UTC+2)</span>
+                          </div>
                         </div>
 
                         {(!companyDetails?.notificationSettings?.emails || companyDetails.notificationSettings.emails.length === 0) ? (

@@ -7,7 +7,7 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { Resend } from 'resend';
 import { formatCurrency } from '@/lib/utils';
 import { isCountableSale, saleIncome } from '@/lib/sale-filters';
-import { criticalProducts, escapeHtml, reportDay, reportTime, saleOnDay, topProducts } from '@/lib/daily-report';
+import { criticalProducts, escapeHtml, reportDay, reportTime, closestReportSlot, saleOnDay, topProducts } from '@/lib/daily-report';
 import { runFollowups } from '@/lib/followups-run';
 
 const APP_URL = 'https://stock.majorgroup.app';
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
                 targetEmails.push(...settings.emails.filter((e: any) => e.onEndOfDayReport && e.email && e.email.trim() !== ''));
             }
 
-            if (targetEmails.length > 0 && reportTime(settings?.endOfDayTime) === slot) {
+            if (targetEmails.length > 0 && closestReportSlot(reportTime(settings?.endOfDayTime)) === slot) {
                 // We need to fetch stats for this company
                 const companyId = companyDoc.id;
 

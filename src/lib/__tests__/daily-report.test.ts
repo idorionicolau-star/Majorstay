@@ -72,11 +72,14 @@ describe('reportDay / saleOnDay (o dia de Maputo, como o Financeiro)', () => {
 });
 
 describe('Hora do relatório', () => {
-    it('sem escolha (ou valor estranho) é 21:30', () => {
+    it('permite escolha livre da hora, e sem escolha (ou valor estranho) usa 21:30', () => {
         expect(DEFAULT_REPORT_TIME).toBe('21:30');
         expect(reportTime(undefined)).toBe('21:30');
-        expect(reportTime('03:00')).toBe('21:30');
+        expect(reportTime('valor-invalido')).toBe('21:30');
+        expect(reportTime('99:99')).toBe('21:30');
+        expect(reportTime('03:00')).toBe('03:00');
         expect(reportTime('18:30')).toBe('18:30');
+        expect(reportTime('23:45')).toBe('23:45');
         expect(reportTimeLabel('21:30')).toBe('21h30');
     });
 
