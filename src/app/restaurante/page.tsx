@@ -318,7 +318,7 @@ export default function RestaurantePage() {
         unit: 'kg',
         lowStockThreshold: 3,
         criticalStockThreshold: 1,
-        location: newIngLocation,
+        location: 'Principal',
         isKitchenIngredient: true,
       } as any);
       toast({ title: 'Ingrediente cadastrado', description: `${newIngName} criado com ${newIngStockKg} kg.` });
@@ -335,19 +335,25 @@ export default function RestaurantePage() {
     if (!newDishName.trim()) return;
     const selectedIng = rawIngredients.find((r) => r.id === newDishRawId);
     try {
+      // O Firestore rejeita campos `undefined`: só se incluem os campos do ingrediente quando existe um.
       await addProduct({
         name: newDishName.trim(),
         category: 'Pratos Principais',
         price: newDishPrice,
         cost: selectedIng ? Math.round(((selectedIng.cost || 0) * (newDishGrams / 1000)) * 100) / 100 : 0,
         unit: 'dose',
+        location: 'Principal',
         stock: 999, // Pratos confecionados não têm stock fixo na prateleira; consomem a carne
         lowStockThreshold: 0,
         criticalStockThreshold: 0,
         isDish: true,
-        rawIngredientId: selectedIng?.id || undefined,
-        rawIngredientName: selectedIng?.name || undefined,
-        rawQuantityPerPortion: newDishGrams / 1000,
+        ...(selectedIng
+          ? {
+              rawIngredientId: selectedIng.id,
+              rawIngredientName: selectedIng.name,
+              rawQuantityPerPortion: newDishGrams / 1000,
+            }
+          : {}),
       } as any);
       toast({
         title: 'Prato criado com sucesso',
