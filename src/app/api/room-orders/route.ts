@@ -32,6 +32,7 @@ async function authorize(req: Request, companyId: string, level: 'read' | 'write
         role === 'Admin' ||
         (role === 'Dono' && level === 'read') ||
         perm === 'write' ||
+        d.permissions?.['raw-materials'] === 'write' || // cozinha: assume e entrega os pedidos
         (level === 'read' && perm === 'read');
     }
   }

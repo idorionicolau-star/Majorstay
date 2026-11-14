@@ -262,4 +262,32 @@ describe('Gestão de Restauração e Dedução de Alimentos em Kg', () => {
     const item = fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions[0];
     expect(item.rawDeduction).toMatchObject({ quantityDeducted: 1.5, unit: 'un' });
   });
+
+  it('Dono (só vê) não consegue lançar consumos', async () => {
+    fakeDatabase[`companies/${companyId}/employees/user-admin`] = { username: 'Boss', role: 'Dono', permissions: { rooms: 'read' } };
+    const res = await post([{ productId: dishId, quantity: 1 }]);
+    expect(res.status).toBe(403);
+    expect(fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions).toHaveLength(0);
+  });
+
+  it('cozinha (matérias-primas: escrita) entrega pedido de hóspede, mas não lança consumo avulso', async () => {
+    fakeDatabase[`companies/${companyId}/employees/user-admin`] = {
+      username: 'Cozinheiro', role: 'Employee', permissions: { rooms: 'read', 'raw-materials': 'write' },
+    };
+    const avulso = await post([{ productId: dishId, quantity: 1 }]);
+    expect(avulso.status).toBe(403);
+
+    fakeDatabase[`companies/${companyId}/roomOrders/ord-1`] = {
+      stayId, status: 'pending', items: [{ productId: dishId, productName: 'Bife', quantity: 1 }],
+    };
+    const res = await POST(
+      new Request('http://localhost/api/stays/consumption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, stayId, action: 'add', orderId: 'ord-1' }),
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions).toHaveLength(1);
+  });
 });

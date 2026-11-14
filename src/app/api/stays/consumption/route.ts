@@ -14,7 +14,7 @@ interface AuthorizeResult {
   admin: ReturnType<typeof initializeAdmin>;
 }
 
-async function authorizeUser(req: Request, companyId: string): Promise<{ error: NextResponse } | AuthorizeResult> {
+async function authorizeUser(req: Request, companyId: string, kitchenOrderOnly = false): Promise<{ error: NextResponse } | AuthorizeResult> {
   const decoded = (await verifyIdToken(req)) as AuthorizeResult['decoded'] | null;
   if (!decoded) {
     return { error: NextResponse.json({ error: 'Sessão expirada. Por favor autentique-se novamente.' }, { status: 401 }) };
@@ -40,7 +40,8 @@ async function authorizeUser(req: Request, companyId: string): Promise<{ error: 
       employeeName = (empData.username as string) || employeeName;
       role = (empData.role as string) || role;
       const perm = empData.permissions?.rooms;
-      if (['Admin', 'Dono'].includes(role) || perm === 'write') {
+      // O Dono só vê (não lança nem apaga consumos). A cozinha só pode entregar pedidos de hóspedes.
+      if (role === 'Admin' || perm === 'write' || (kitchenOrderOnly && empData.permissions?.['raw-materials'] === 'write')) {
         isAuthorized = true;
       }
     }
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const auth = await authorizeUser(req, companyId);
+    const auth = await authorizeUser(req, companyId, action === 'add' && typeof orderId === 'string' && orderId.length > 0);
     if ('error' in auth) return auth.error;
     const { decoded, employeeName, isAdminOrOwner, db, admin } = auth;
 
