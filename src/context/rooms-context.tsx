@@ -90,6 +90,7 @@ interface RoomsContextType {
       productName: string;
       quantity: number;
       unitPrice: number;
+      weightKg?: number;
     }
   ) => Promise<void>;
   addStayConsumptionsBulk: (
@@ -643,6 +644,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       productName: string;
       quantity: number;
       unitPrice: number;
+      weightKg?: number;
     }
   ): Promise<void> => {
     const currentStay = stays.find((s) => s.id === stayId);
@@ -650,7 +652,8 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     const qty = Math.max(1, item.quantity || 1);
     const price = Math.max(0, item.unitPrice || 0);
-    const totalPrice = qty * price;
+    const weightKg = item.weightKg && item.weightKg > 0 ? item.weightKg : undefined;
+    const totalPrice = weightKg ? Math.round(weightKg * price * 100) / 100 : qty * price;
 
     if (isGuest) {
       const newConsumption: StayConsumptionItem = {
@@ -660,6 +663,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         quantity: qty,
         unitPrice: price,
         totalPrice,
+        ...(weightKg ? { weightKg } : {}),
         addedAt: new Date().toISOString(),
         addedBy: user?.id || 'unknown',
         addedByName: user?.username || 'Barman / Receção',
@@ -692,13 +696,14 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
           productName: item.productName,
           quantity: qty,
           unitPrice: price,
+          ...(weightKg ? { weightKg } : {}),
         },
       ],
     });
 
     toast({
       title: 'Consumo registado no quarto!',
-      description: `${qty}× ${item.productName} (${formatCurrency(totalPrice)})`,
+      description: `${weightKg ? `${weightKg} kg de` : `${qty}×`} ${item.productName} (${formatCurrency(totalPrice)})`,
     });
   };
 

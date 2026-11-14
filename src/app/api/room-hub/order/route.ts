@@ -15,6 +15,7 @@ import { verifyRoomPin } from '@/lib/room-pin';
  */
 const MAX_LINES = 15;
 const MAX_QTY = 20;
+const MAX_WEIGHT_KG = 20;
 const MAX_PENDING_PER_STAY = 5;
 
 export async function POST(req: Request) {
@@ -39,12 +40,20 @@ export async function POST(req: Request) {
     // Juntar linhas repetidas do mesmo produto e recolher notas
     const wanted = new Map<string, number>();
     const itemNotes = new Map<string, string>();
+    const itemWeights = new Map<string, number>();
     for (const raw of rawItems) {
       const productId = typeof (raw as any)?.productId === 'string' ? (raw as any).productId.trim() : '';
       const quantity = (raw as any)?.quantity;
       const n = typeof (raw as any)?.notes === 'string' ? (raw as any).notes.trim().slice(0, 150) : '';
       if (!productId || typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QTY) {
         return NextResponse.json({ error: `Item inválido. A quantidade deve ser um número inteiro entre 1 e ${MAX_QTY}.` }, { status: 400 });
+      }
+      const w = (raw as any)?.weightKg;
+      if (w !== undefined) {
+        if (typeof w !== 'number' || !Number.isFinite(w) || w < 0.1 || w > MAX_WEIGHT_KG) {
+          return NextResponse.json({ error: `Peso inválido. Indique entre 0,1 e ${MAX_WEIGHT_KG} kg.` }, { status: 400 });
+        }
+        itemWeights.set(productId, Math.round(((itemWeights.get(productId) || 0) + w) * 1000) / 1000);
       }
       wanted.set(productId, (wanted.get(productId) || 0) + quantity);
       if (n) itemNotes.set(productId, n);
@@ -73,7 +82,7 @@ export async function POST(req: Request) {
     const { stayId, roomData } = pinResult;
 
     // Produtos do catálogo (preço e nome da base de dados)
-    const lines: { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number }[] = [];
+    const lines: { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; weightKg?: number; notes?: string }[] = [];
     for (const [productId, quantity] of wanted) {
       const snap = await db.doc(`companies/${companyId}/products/${productId}`).get();
       const data = snap.exists ? snap.data() || {} : null;
@@ -84,12 +93,19 @@ export async function POST(req: Request) {
       if (!Number.isFinite(price) || price <= 0) {
         return NextResponse.json({ error: 'Um dos produtos não tem preço definido.' }, { status: 400 });
       }
+      // Prato vendido ao peso: o preço é por kg e o peso é obrigatório (quantidade fica 1)
+      const weighed = Boolean(data.soldByWeight);
+      const weightKg = itemWeights.get(productId);
+      if (weighed && !weightKg) {
+        return NextResponse.json({ error: `Indique o peso (kg) de "${String(data.name || 'prato')}".` }, { status: 400 });
+      }
       lines.push({
         productId,
         productName: String(data.name || 'Produto').trim(),
-        quantity,
+        quantity: weighed ? 1 : quantity,
         unitPrice: price,
-        totalPrice: price * quantity,
+        totalPrice: weighed && weightKg ? Math.round(price * weightKg * 100) / 100 : price * quantity,
+        ...(weighed && weightKg ? { weightKg } : {}),
         ...(itemNotes.has(productId) ? { notes: itemNotes.get(productId) } : {}),
       });
     }

@@ -215,4 +215,51 @@ describe('Gestão de Restauração e Dedução de Alimentos em Kg', () => {
     expect(fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions).toHaveLength(0);
     expect(fakeDatabase[`companies/${companyId}/stays/${stayId}`].totalAmountDue).toBe(600);
   });
+
+  const post = (items: unknown[]) =>
+    POST(
+      new Request('http://localhost/api/stays/consumption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, stayId, action: 'add', items }),
+      })
+    );
+
+  it('prato vendido ao peso: 0,5 kg a 800 MT/kg fatura 400 MT e abate 0,5 kg', async () => {
+    fakeDatabase[`companies/${companyId}/products/dish-peixe`] = {
+      id: 'dish-peixe', name: 'Peixe ao peso', isDish: true, soldByWeight: true,
+      price: 800, unit: 'kg', rawIngredientId: rawMeatId, rawIngredientName: 'Carne de Vaca (Lombo)',
+    };
+    const res = await post([{ productId: 'dish-peixe', quantity: 1, weightKg: 0.5 }]);
+    expect(res.status).toBe(200);
+    const item = fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions[0];
+    expect(item.totalPrice).toBe(400);
+    expect(item.weightKg).toBe(0.5);
+    expect(item.rawDeduction.quantityDeducted).toBe(0.5);
+    expect(fakeDatabase[`companies/${companyId}/products/${rawMeatId}`].stock).toBe(9.5);
+  });
+
+  it('prato ao peso sem peso é recusado e não mexe no stock', async () => {
+    fakeDatabase[`companies/${companyId}/products/dish-peixe`] = {
+      id: 'dish-peixe', name: 'Peixe ao peso', isDish: true, soldByWeight: true, price: 800, unit: 'kg',
+    };
+    const res = await post([{ productId: 'dish-peixe', quantity: 1 }]);
+    expect(res.status).not.toBe(200);
+    expect(fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions).toHaveLength(0);
+  });
+
+  it('ingrediente em unidades: 3 meios frangos abatem 1,5 un', async () => {
+    fakeDatabase[`companies/${companyId}/products/raw-frango`] = {
+      id: 'raw-frango', name: 'Frango inteiro', stock: 10, unit: 'un', cost: 300, price: 0,
+    };
+    fakeDatabase[`companies/${companyId}/products/dish-frango`] = {
+      id: 'dish-frango', name: 'Meio frango', isDish: true, price: 450, unit: 'dose',
+      rawIngredientId: 'raw-frango', rawIngredientName: 'Frango inteiro', rawQuantityPerPortion: 0.5,
+    };
+    const res = await post([{ productId: 'dish-frango', quantity: 3 }]);
+    expect(res.status).toBe(200);
+    expect(fakeDatabase[`companies/${companyId}/products/raw-frango`].stock).toBe(8.5);
+    const item = fakeDatabase[`companies/${companyId}/stays/${stayId}`].consumptions[0];
+    expect(item.rawDeduction).toMatchObject({ quantityDeducted: 1.5, unit: 'un' });
+  });
 });

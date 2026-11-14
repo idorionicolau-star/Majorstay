@@ -9,7 +9,7 @@ import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 
-type OrderLine = { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; notes?: string };
+type OrderLine = { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; notes?: string; weightKg?: number };
 type PendingOrder = {
   id: string;
   stayId: string;
@@ -116,7 +116,7 @@ export function PendingRoomOrders() {
               {o.items.map((l) => (
                 <li key={l.productId}>
                   <div className="flex justify-between gap-2">
-                    <span className="truncate">{l.quantity}× {l.productName}</span>
+                    <span className="truncate">{l.weightKg ? `${String(l.weightKg).replace('.', ',')} kg de` : `${l.quantity}×`} {l.productName}</span>
                     <span className="shrink-0 font-semibold">{formatCurrency(l.totalPrice)}</span>
                   </div>
                   {l.notes && <p className="text-[11px] italic text-amber-700 dark:text-amber-300">Obs: {l.notes}</p>}

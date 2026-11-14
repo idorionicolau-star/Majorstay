@@ -84,6 +84,7 @@ export function RoomConsumptionDialog({
         category: p.category || 'Geral',
         price: p.price || 0,
         stock: p.stock ?? null,
+        soldByWeight: Boolean(p.soldByWeight),
       }));
     }
     return DEFAULT_HOSPITALITY_ITEMS.map((item, idx) => ({
@@ -92,6 +93,7 @@ export function RoomConsumptionDialog({
       category: item.category,
       price: item.price,
       stock: null,
+      soldByWeight: false,
     }));
   }, [products]);
 
@@ -114,24 +116,28 @@ export function RoomConsumptionDialog({
   const consumptions = stay?.consumptions || [];
   const consumptionsTotal = consumptions.reduce((sum, c) => sum + (Number(c.totalPrice) || 0), 0);
 
-  const getQuantity = (id: string) => quantities[id] || 1;
-  const setQuantity = (id: string, qty: number) => {
-    setQuantities((prev) => ({ ...prev, [id]: Math.max(1, qty) }));
+  // Pratos vendidos ao peso: a "quantidade" são quilos (passos de 0,5). Nos restantes, unidades.
+  const getQuantity = (id: string, weighed = false) => quantities[id] || (weighed ? 0.5 : 1);
+  const setQuantity = (id: string, qty: number, weighed = false) => {
+    const min = weighed ? 0.5 : 1;
+    setQuantities((prev) => ({ ...prev, [id]: Math.max(min, Math.round(qty * 1000) / 1000) }));
   };
 
-  const handleAddConsumption = async (item: { id?: string; name: string; price: number }) => {
+  const handleAddConsumption = async (item: { id?: string; name: string; price: number; soldByWeight?: boolean }) => {
     if (!stay) return;
-    const qty = getQuantity(item.id || item.name);
+    const weighed = Boolean(item.soldByWeight);
+    const qty = getQuantity(item.id || item.name, weighed);
     try {
       setLoading(true);
       await addStayConsumption(stay.id, {
         productId: item.id?.startsWith('default-') ? undefined : item.id,
         productName: item.name,
-        quantity: qty,
+        quantity: weighed ? 1 : qty,
         unitPrice: item.price,
+        ...(weighed ? { weightKg: qty } : {}),
       });
       // Reset da quantidade selecionada
-      setQuantities((prev) => ({ ...prev, [item.id || item.name]: 1 }));
+      setQuantities((prev) => ({ ...prev, [item.id || item.name]: weighed ? 0.5 : 1 }));
     } catch (err: any) {
       console.error('Erro ao adicionar consumo:', err);
       toast({
@@ -288,8 +294,10 @@ export function RoomConsumptionDialog({
               {/* Lista de Produtos do Bar */}
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {filteredItems.map((item) => {
-                  const qty = getQuantity(item.id || item.name);
-                  const itemTotal = qty * item.price;
+                  const weighed = item.soldByWeight;
+                  const step = weighed ? 0.5 : 1;
+                  const qty = getQuantity(item.id || item.name, weighed);
+                  const itemTotal = Math.round(qty * item.price * 100) / 100;
                   return (
                     <div
                       key={item.id || item.name}
@@ -305,10 +313,15 @@ export function RoomConsumptionDialog({
                           </span>
                         </div>
                         <p className="text-xs font-extrabold text-[#C58A2C] dark:text-[#E88C4A] mt-0.5">
-                          {formatCurrency(item.price)}
+                          {formatCurrency(item.price)}{weighed ? ' / kg' : ''}
                           {(item as any).isDish ? (
                             <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 ml-1.5 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                              🍽️ Prato {(item as any).rawQuantityPerPortion ? `(${((item as any).rawQuantityPerPortion * 1000)}g ${(item as any).rawIngredientName || 'alimento'})` : ''}
+                              🍽️ Prato {(item as any).rawQuantityPerPortion ? (() => {
+                                const ing = products?.find((x) => x.id === (item as any).rawIngredientId);
+                                const q = (item as any).rawQuantityPerPortion as number;
+                                const asKg = !ing || (ing.unit || 'kg').toLowerCase().startsWith('k');
+                                return `(${asKg ? `${Math.round(q * 1000)}g` : `${q} un`} ${(item as any).rawIngredientName || 'alimento'})`;
+                              })() : ''}
                             </span>
                           ) : item.stock !== null && (
                             <span className="text-[10px] font-normal text-[#827568] dark:text-[#B0A294] ml-1.5">
@@ -324,18 +337,18 @@ export function RoomConsumptionDialog({
                           <button
                             type="button"
                             className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
-                            onClick={() => setQuantity(item.id || item.name, qty - 1)}
-                            disabled={qty <= 1}
+                            onClick={() => setQuantity(item.id || item.name, qty - step, weighed)}
+                            disabled={qty <= step}
                           >
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="text-xs font-bold px-2.5 text-[#251D18] dark:text-[#F5EFEB]">
-                            {qty}
+                            {weighed ? `${String(qty).replace('.', ',')} kg` : qty}
                           </span>
                           <button
                             type="button"
                             className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
-                            onClick={() => setQuantity(item.id || item.name, qty + 1)}
+                            onClick={() => setQuantity(item.id || item.name, qty + step, weighed)}
                           >
                             <Plus className="h-3 w-3" />
                           </button>

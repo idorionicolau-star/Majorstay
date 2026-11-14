@@ -133,7 +133,7 @@ function QuartoPortalContent() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [orderSent, setOrderSent] = useState<{ id: string; total: number; lines: { name: string; qty: number; price: number }[] } | null>(null);
+  const [orderSent, setOrderSent] = useState<{ id: string; total: number; lines: { name: string; qty: number; price: number; kg?: boolean }[] } | null>(null);
   const [now, setNow] = useState<number>(Date.now());
 
   // Estado de PIN & Desbloqueio seguro no servidor
@@ -330,15 +330,20 @@ function QuartoPortalContent() {
   }, [stay, now]);
 
   // Gestão do Carrinho do Bar
+  // Pratos vendidos ao peso: o valor no carrinho são quilos, de 0,5 em 0,5. Nos restantes, unidades.
+  const cartStep = (productId: string) => (data?.barProducts.find((p) => p.id === productId)?.soldByWeight ? 0.5 : 1);
+
   const addToCart = (productId: string) => {
-    setCart((prev) => ({ ...prev, [productId]: (prev[productId] || 0) + 1 }));
+    const step = cartStep(productId);
+    setCart((prev) => ({ ...prev, [productId]: Math.round(((prev[productId] || 0) + step) * 1000) / 1000 }));
   };
 
   const removeFromCart = (productId: string) => {
+    const step = cartStep(productId);
     setCart((prev) => {
       const next = { ...prev };
-      if (next[productId] > 1) {
-        next[productId] -= 1;
+      if (next[productId] > step) {
+        next[productId] = Math.round((next[productId] - step) * 1000) / 1000;
       } else {
         delete next[productId];
       }
@@ -350,7 +355,7 @@ function QuartoPortalContent() {
     if (!data?.barProducts) return 0;
     return Object.entries(cart).reduce((sum, [id, qty]) => {
       const prod = data.barProducts.find((p) => p.id === id);
-      return sum + (prod ? prod.price * qty : 0);
+      return sum + (prod ? Math.round(prod.price * qty * 100) / 100 : 0);
     }, 0);
   }, [cart, data?.barProducts]);
 
@@ -359,9 +364,9 @@ function QuartoPortalContent() {
     return Object.entries(cart)
       .map(([id, qty]) => {
         const prod = data.barProducts.find((p) => p.id === id);
-        return prod ? { id, name: prod.name, qty, price: prod.price } : null;
+        return prod ? { id, name: prod.name, qty, price: prod.price, kg: Boolean(prod.soldByWeight) } : null;
       })
-      .filter((l): l is { id: string; name: string; qty: number; price: number } => l !== null);
+      .filter((l): l is { id: string; name: string; qty: number; price: number; kg: boolean } => l !== null);
   }, [cart, data?.barProducts]);
 
   const [orderNotes, setOrderNotes] = useState('');
@@ -381,9 +386,9 @@ function QuartoPortalContent() {
     return data.barProducts;
   }, [data?.barProducts, menuFilter]);
 
-  const openBarWhatsApp = (lines: { name: string; qty: number; price: number }[], total: number, orderId?: string) => {
+  const openBarWhatsApp = (lines: { name: string; qty: number; price: number; kg?: boolean }[], total: number, orderId?: string) => {
     if (!data) return;
-    const items = lines.map((l) => `• ${l.qty}x ${l.name} (${l.price * l.qty} MT)`).join('\n');
+    const items = lines.map((l) => `• ${l.qty}${l.kg ? ' kg de' : 'x'} ${l.name} (${Math.round(l.price * l.qty * 100) / 100} MT)`).join('\n');
     const ref = orderId ? `\nPedido nº ${orderId.slice(-5).toUpperCase()}` : '';
     const msg = `Olá receção, estou no *${data.room.name}* e gostaria de fazer o seguinte pedido de bar:\n\n${items}\n\n*Total a pagar: ${total} MT*${ref}\nPor favor confirmar e trazer ao quarto. Obrigado!`;
     const cleanWhatsapp = data.hotel.whatsapp.replace(/\D/g, '');
@@ -407,7 +412,10 @@ function QuartoPortalContent() {
           c: companyId,
           r: roomId,
           pin,
-          items: cartLines.map((l) => ({ productId: l.id, quantity: l.qty })),
+          items: cartLines.map((l) => {
+            const weighed = data.barProducts.find((p) => p.id === l.id)?.soldByWeight;
+            return weighed ? { productId: l.id, quantity: 1, weightKg: l.qty } : { productId: l.id, quantity: l.qty };
+          }),
           notes: orderNotes.trim(),
         }),
       });
@@ -425,7 +433,7 @@ function QuartoPortalContent() {
       setOrderSent({
         id: String(json.orderId || ''),
         total: Number(json.total ?? cartTotal),
-        lines: cartLines.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+        lines: cartLines.map((l) => ({ name: l.name, qty: l.qty, price: l.price, kg: l.kg })),
       });
       setCart({});
       setOrderNotes('');
@@ -1021,7 +1029,7 @@ function QuartoPortalContent() {
                         )}
                       </div>
                       <span className="text-xs font-extrabold text-[#C58A2C] dark:text-[#E88C4A]">
-                        {formatCurrency(p.price)}
+                        {formatCurrency(p.price)}{p.soldByWeight ? ' / kg' : ''}
                       </span>
                     </div>
 
@@ -1036,7 +1044,7 @@ function QuartoPortalContent() {
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </Button>
-                          <span className="text-xs font-extrabold w-5 text-center">{qty}</span>
+                          <span className="text-xs font-extrabold min-w-5 text-center">{p.soldByWeight ? `${String(qty).replace('.', ',')} kg` : qty}</span>
                         </>
                       )}
                       <Button
@@ -1100,8 +1108,8 @@ function QuartoPortalContent() {
             <div className="flex-1 min-h-0 overflow-y-auto px-5 py-2 space-y-2">
               {cartLines.map((l) => (
                 <div key={l.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0 truncate font-semibold text-[#251D18] dark:text-[#F5EFEB]">{l.qty}× {l.name}</span>
-                  <span className="shrink-0 font-bold text-[#C58A2C] dark:text-[#E88C4A]">{formatCurrency(l.price * l.qty)}</span>
+                  <span className="min-w-0 truncate font-semibold text-[#251D18] dark:text-[#F5EFEB]">{l.kg ? `${String(l.qty).replace('.', ',')} kg` : `${l.qty}×`} {l.name}</span>
+                  <span className="shrink-0 font-bold text-[#C58A2C] dark:text-[#E88C4A]">{formatCurrency(Math.round(l.price * l.qty * 100) / 100)}</span>
                 </div>
               ))}
               <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#E5DFD6] dark:border-[#2C3440]">

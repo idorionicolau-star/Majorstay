@@ -59,6 +59,10 @@ interface RoomOrderDoc {
   preparingByName?: string;
 }
 
+/** Unidade de um ingrediente: 'kg' (ao peso) ou 'un' (unidades, ex.: frango inteiro). */
+const unitOf = (p?: Pick<Product, 'unit'> | null): 'kg' | 'un' => ((p?.unit || 'kg').toLowerCase().startsWith('k') ? 'kg' : 'un');
+const num = (n: number) => String(Math.round(n * 1000) / 1000).replace('.', ',');
+
 export default function RestaurantePage() {
   const { products, companyId, user, addProduct, updateProduct, auditStock } = useContext(InventoryContext) || {
     products: [],
@@ -91,13 +95,15 @@ export default function RestaurantePage() {
   const [newIngStockKg, setNewIngStockKg] = useState(10);
   const [newIngCostPerKg, setNewIngCostPerKg] = useState(350);
   const [newIngLocation, setNewIngLocation] = useState('Câmara Frigorífica');
+  const [newIngUnit, setNewIngUnit] = useState<'kg' | 'un'>('kg');
 
   // Modal Novo Prato Confecionado
   const [newDishOpen, setNewDishOpen] = useState(false);
   const [newDishName, setNewDishName] = useState('');
   const [newDishPrice, setNewDishPrice] = useState(550);
   const [newDishRawId, setNewDishRawId] = useState('');
-  const [newDishGrams, setNewDishGrams] = useState(300); // 300g por dose
+  const [newDishGrams, setNewDishGrams] = useState(300); // por dose: gramas (ingrediente em kg) ou unidades (ingrediente em un)
+  const [newDishByWeight, setNewDishByWeight] = useState(false); // prato vendido ao peso (preço por kg)
 
   // 1. Carregar Pedidos Ativos da Cozinha (Pendentes e A Preparar)
   const fetchOrders = async () => {
@@ -269,13 +275,13 @@ export default function RestaurantePage() {
       const current = selectedIngredient.stock || 0;
       const nextStock = Math.round((current + entryQtyKg) * 1000) / 1000;
       if (auditStock) {
-        await auditStock(selectedIngredient, nextStock, `Entrada de compra de alimentos (+${entryQtyKg} kg)`);
+        await auditStock(selectedIngredient, nextStock, `Entrada de compra de alimentos (+${entryQtyKg} ${unitOf(selectedIngredient)})`);
       } else {
         await updateProduct(selectedIngredient.instanceId, { stock: nextStock });
       }
       toast({
         title: 'Entrada de compra registada',
-        description: `Adicionados +${entryQtyKg} kg a "${selectedIngredient.name}".`,
+        description: `Adicionados +${entryQtyKg} ${unitOf(selectedIngredient)} a "${selectedIngredient.name}".`,
       });
       setEntryModalOpen(false);
     } catch {
@@ -290,13 +296,13 @@ export default function RestaurantePage() {
       const current = selectedIngredient.stock || 0;
       const nextStock = Math.max(0, Math.round((current - lossQtyKg) * 1000) / 1000);
       if (auditStock) {
-        await auditStock(selectedIngredient, nextStock, `Quebra / Desperdício alimentar (-${lossQtyKg} kg): ${lossReason}`);
+        await auditStock(selectedIngredient, nextStock, `Quebra / Desperdício alimentar (-${lossQtyKg} ${unitOf(selectedIngredient)}): ${lossReason}`);
       } else {
         await updateProduct(selectedIngredient.instanceId, { stock: nextStock });
       }
       toast({
         title: 'Quebra registada com sucesso',
-        description: `Abatidos -${lossQtyKg} kg de "${selectedIngredient.name}" por ${lossReason}.`,
+        description: `Abatidos -${lossQtyKg} ${unitOf(selectedIngredient)} de "${selectedIngredient.name}" por ${lossReason}.`,
       });
       setLossModalOpen(false);
     } catch {
@@ -315,13 +321,13 @@ export default function RestaurantePage() {
         stock: newIngStockKg,
         price: 0,
         cost: newIngCostPerKg,
-        unit: 'kg',
+        unit: newIngUnit,
         lowStockThreshold: 3,
         criticalStockThreshold: 1,
         location: 'Principal',
         isKitchenIngredient: true,
       } as any);
-      toast({ title: 'Ingrediente cadastrado', description: `${newIngName} criado com ${newIngStockKg} kg.` });
+      toast({ title: 'Ingrediente cadastrado', description: `${newIngName} criado com ${newIngStockKg} ${newIngUnit}.` });
       setNewIngName('');
       setNewIngredientOpen(false);
     } catch {
@@ -334,32 +340,39 @@ export default function RestaurantePage() {
     e.preventDefault();
     if (!newDishName.trim()) return;
     const selectedIng = rawIngredients.find((r) => r.id === newDishRawId);
+    const ingUnit = unitOf(selectedIng);
+    // Por dose: gramas -> kg (ingrediente em kg) ou unidades (ingrediente em un). Ao peso: abate o peso servido.
+    const perPortion = ingUnit === 'kg' ? newDishGrams / 1000 : newDishGrams;
     try {
       // O Firestore rejeita campos `undefined`: só se incluem os campos do ingrediente quando existe um.
       await addProduct({
         name: newDishName.trim(),
         category: 'Pratos Principais',
         price: newDishPrice,
-        cost: selectedIng ? Math.round(((selectedIng.cost || 0) * (newDishGrams / 1000)) * 100) / 100 : 0,
-        unit: 'dose',
+        cost: selectedIng ? Math.round(((selectedIng.cost || 0) * (newDishByWeight ? 1 : perPortion)) * 100) / 100 : 0,
+        unit: newDishByWeight ? 'kg' : 'dose',
         location: 'Principal',
         stock: 999, // Pratos confecionados não têm stock fixo na prateleira; consomem a carne
         lowStockThreshold: 0,
         criticalStockThreshold: 0,
         isDish: true,
+        ...(newDishByWeight ? { soldByWeight: true, pricePerKg: newDishPrice } : {}),
         ...(selectedIng
           ? {
               rawIngredientId: selectedIng.id,
               rawIngredientName: selectedIng.name,
-              rawQuantityPerPortion: newDishGrams / 1000,
+              ...(newDishByWeight ? {} : { rawQuantityPerPortion: perPortion }),
             }
           : {}),
       } as any);
       toast({
         title: 'Prato criado com sucesso',
-        description: `"${newDishName}" consome ${newDishGrams}g de ${selectedIng?.name || 'ingrediente'}.`,
+        description: newDishByWeight
+          ? `"${newDishName}" vende-se ao peso (${formatCurrency(newDishPrice)}/kg).`
+          : `"${newDishName}" consome ${ingUnit === 'kg' ? `${newDishGrams}g` : `${num(newDishGrams)} un`} de ${selectedIng?.name || 'ingrediente'}.`,
       });
       setNewDishName('');
+      setNewDishByWeight(false);
       setNewDishOpen(false);
     } catch {
       toast({ variant: 'destructive', title: 'Erro ao criar prato' });
@@ -618,16 +631,16 @@ export default function RestaurantePage() {
                             : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                         )}
                       >
-                        {stockKg.toFixed(2)} kg
+                        {stockKg.toFixed(2)} {unitOf(ing)}
                       </Badge>
                     </CardHeader>
 
                     <CardContent className="p-4 pt-2 space-y-3">
                       <div className="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60">
                         <div>
-                          <span className="text-slate-400 block text-[10px]">Custo Médio / Kg:</span>
+                          <span className="text-slate-400 block text-[10px]">Custo Médio / {unitOf(ing)}:</span>
                           <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {formatCurrency(ing.cost || 0)}/kg
+                            {formatCurrency(ing.cost || 0)}/{unitOf(ing)}
                           </span>
                         </div>
                         <div>
@@ -649,7 +662,7 @@ export default function RestaurantePage() {
                           className="rounded-xl h-9 text-xs font-bold border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 gap-1"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          Entrada (Kg)
+                          Entrada ({unitOf(ing)})
                         </Button>
 
                         <Button
@@ -662,7 +675,7 @@ export default function RestaurantePage() {
                           className="rounded-xl h-9 text-xs font-bold border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 gap-1"
                         >
                           <Minus className="w-3.5 h-3.5" />
-                          Quebra (Kg)
+                          Quebra ({unitOf(ing)})
                         </Button>
                       </div>
                     </CardContent>
@@ -706,7 +719,7 @@ export default function RestaurantePage() {
                     <span className="text-[10px] text-slate-500 dark:text-slate-400">{d.category || 'Pratos Principais'}</span>
                   </div>
                   <span className="text-sm font-black text-[#C58A2C]">
-                    {formatCurrency(d.price)}
+                    {formatCurrency(d.price)}{d.soldByWeight ? ' / kg' : ''}
                   </span>
                 </div>
 
@@ -716,9 +729,13 @@ export default function RestaurantePage() {
                     <span>Dedução por Dose:</span>
                   </div>
                   <p className="text-[11px] text-amber-800 dark:text-amber-300">
-                    {d.rawQuantityPerPortion
-                      ? `${Math.round(d.rawQuantityPerPortion * 1000)}g de ${d.rawIngredientName || 'Alimento Base'}`
-                      : 'Sem dedução de carne vinculada'}
+                    {d.soldByWeight
+                      ? `Ao peso: abate o peso servido${d.rawIngredientName ? ` de ${d.rawIngredientName}` : ''}`
+                      : d.rawQuantityPerPortion
+                        ? unitOf(products.find((p) => p.id === d.rawIngredientId)) === 'kg'
+                          ? `${Math.round(d.rawQuantityPerPortion * 1000)}g de ${d.rawIngredientName || 'Alimento Base'}`
+                          : `${num(d.rawQuantityPerPortion)} un de ${d.rawIngredientName || 'Alimento Base'}`
+                        : 'Sem dedução de carne vinculada'}
                   </p>
                 </div>
               </Card>
@@ -741,7 +758,7 @@ export default function RestaurantePage() {
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
             <div>
-              <label className="font-bold block mb-1">Quantidade Comprada (Kg):</label>
+              <label className="font-bold block mb-1">Quantidade Comprada ({unitOf(selectedIngredient)}):</label>
               <Input
                 type="number"
                 step="0.1"
@@ -767,7 +784,7 @@ export default function RestaurantePage() {
               Cancelar
             </Button>
             <Button onClick={handleConfirmEntry} className="rounded-xl text-xs font-bold bg-emerald-600 text-white">
-              Confirmar Entrada (+{entryQtyKg} kg)
+              Confirmar Entrada (+{entryQtyKg} {unitOf(selectedIngredient)})
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -787,7 +804,7 @@ export default function RestaurantePage() {
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
             <div>
-              <label className="font-bold block mb-1">Quilos Descartados / Perdidos (Kg):</label>
+              <label className="font-bold block mb-1">Quantidade Descartada / Perdida ({unitOf(selectedIngredient)}):</label>
               <Input
                 type="number"
                 step="0.05"
@@ -812,7 +829,7 @@ export default function RestaurantePage() {
               Cancelar
             </Button>
             <Button onClick={handleConfirmLoss} className="rounded-xl text-xs font-bold bg-rose-600 text-white">
-              Abater Quebra (-{lossQtyKg} kg)
+              Abater Quebra (-{lossQtyKg} {unitOf(selectedIngredient)})
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -842,9 +859,20 @@ export default function RestaurantePage() {
                   required
                 />
               </div>
+              <div>
+                <label className="font-bold block mb-1">Medido em:</label>
+                <select
+                  value={newIngUnit}
+                  onChange={(e) => setNewIngUnit(e.target.value === 'un' ? 'un' : 'kg')}
+                  className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs font-medium"
+                >
+                  <option value="kg">Quilos (kg), ex.: carne, peixe, camarão</option>
+                  <option value="un">Unidades, ex.: frango inteiro, ovos</option>
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="font-bold block mb-1">Stock Inicial (Kg):</label>
+                  <label className="font-bold block mb-1">Stock Inicial ({newIngUnit}):</label>
                   <Input
                     type="number"
                     step="0.1"
@@ -856,7 +884,7 @@ export default function RestaurantePage() {
                   />
                 </div>
                 <div>
-                  <label className="font-bold block mb-1">Custo Estimado / Kg (MT):</label>
+                  <label className="font-bold block mb-1">Custo Estimado / {newIngUnit} (MT):</label>
                   <Input
                     type="number"
                     min="0"
@@ -912,8 +940,20 @@ export default function RestaurantePage() {
                   required
                 />
               </div>
+              <label className="flex items-center gap-2 font-bold cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newDishByWeight}
+                  onChange={(e) => {
+                    setNewDishByWeight(e.target.checked);
+                    setNewDishRawId('');
+                  }}
+                  className="h-4 w-4"
+                />
+                Vendido ao peso (o preço é por kg e o peso é indicado em cada pedido)
+              </label>
               <div>
-                <label className="font-bold block mb-1">Preço de Venda ao Hóspede (MT):</label>
+                <label className="font-bold block mb-1">{newDishByWeight ? 'Preço por Kg (MT):' : 'Preço de Venda ao Hóspede (MT):'}</label>
                 <Input
                   type="number"
                   min="0"
@@ -924,34 +964,45 @@ export default function RestaurantePage() {
                 />
               </div>
               <div>
-                <label className="font-bold block mb-1">Ingrediente Principal da Arca (Dedução em Kg):</label>
+                <label className="font-bold block mb-1">Ingrediente Principal da Arca (o stock é abatido por dose):</label>
                 <select
                   value={newDishRawId}
-                  onChange={(e) => setNewDishRawId(e.target.value)}
+                  onChange={(e) => {
+                    setNewDishRawId(e.target.value);
+                    const ing = rawIngredients.find((r) => r.id === e.target.value);
+                    setNewDishGrams(unitOf(ing) === 'kg' ? 300 : 1);
+                  }}
                   className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-xs font-medium"
                 >
                   <option value="">Nenhum (prato sem dedução de stock em kg)</option>
-                  {rawIngredients.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} (disp: {Number(r.stock).toFixed(1)} kg)
-                    </option>
-                  ))}
+                  {rawIngredients
+                    .filter((r) => !newDishByWeight || unitOf(r) === 'kg')
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name} (disp: {Number(r.stock).toFixed(1)} {unitOf(r)})
+                      </option>
+                    ))}
                 </select>
               </div>
-              {newDishRawId && (
+              {newDishRawId && !newDishByWeight && (
                 <div>
-                  <label className="font-bold block mb-1">Gramagem / Quantidade Abatida por Dose (gramas):</label>
+                  <label className="font-bold block mb-1">
+                    {unitOf(rawIngredients.find((r) => r.id === newDishRawId)) === 'kg'
+                      ? 'Quantidade Abatida por Dose (gramas):'
+                      : 'Quantidade Abatida por Dose (unidades, ex.: 0,5 = meio frango):'}
+                  </label>
                   <Input
                     type="number"
-                    step="10"
-                    min="10"
+                    step={unitOf(rawIngredients.find((r) => r.id === newDishRawId)) === 'kg' ? '10' : '0.5'}
+                    min={unitOf(rawIngredients.find((r) => r.id === newDishRawId)) === 'kg' ? '10' : '0.5'}
                     value={newDishGrams}
                     onChange={(e) => setNewDishGrams(Number(e.target.value))}
                     placeholder="300"
                     className="rounded-xl h-10"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Cada prato vendido abaterá automaticamente {(newDishGrams / 1000).toFixed(3)} kg da câmara fria.
+                    Cada prato vendido abaterá automaticamente{' '}
+                    {unitOf(rawIngredients.find((r) => r.id === newDishRawId)) === 'kg' ? `${(newDishGrams / 1000).toFixed(3)} kg` : `${num(newDishGrams)} un`} do stock.
                   </p>
                 </div>
               )}
