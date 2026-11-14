@@ -3,9 +3,9 @@ export type PlanId = "mensal" | "trimestral" | "anual";
 export type Plan = { id: PlanId; label: string; months: number; amount: number; note?: string };
 
 export const PLANS: Plan[] = [
-    { id: "mensal", label: "Mensal", months: 1, amount: 1500 },
-    { id: "trimestral", label: "Trimestral", months: 3, amount: 4050, note: "Poupa 10%" },
-    { id: "anual", label: "Anual", months: 12, amount: 15300, note: "Poupa 15%" },
+    { id: "mensal", label: "Mensal", months: 1, amount: 1000 },
+    { id: "trimestral", label: "Trimestral", months: 3, amount: 2700, note: "Poupa 10%" },
+    { id: "anual", label: "Anual", months: 12, amount: 10200, note: "Poupa 15%" },
 ];
 
 export const planById = (id: string) => PLANS.find((p) => p.id === id);

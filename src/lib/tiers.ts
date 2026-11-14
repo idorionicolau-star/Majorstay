@@ -39,7 +39,7 @@ export const TIERS: Tier[] = [
     {
         id: 'pro',
         label: 'Pro',
-        monthly: 1500,
+        monthly: 1000,
         forWho: 'Guest Houses, Pensões e Alojamentos',
         maxRooms: 15,
         maxUsers: 3,
@@ -57,7 +57,7 @@ export const TIERS: Tier[] = [
     {
         id: 'business',
         label: 'Business',
-        monthly: 3500,
+        monthly: 1500,
         forWho: 'Lodges, Motéis e Hotéis Médios',
         maxRooms: 30,
         maxUsers: 10,
@@ -74,7 +74,7 @@ export const TIERS: Tier[] = [
     {
         id: 'enterprise',
         label: 'Enterprise',
-        monthly: 7500,
+        monthly: 5500,
         forWho: 'Hotéis de Grande Porte, Resorts e Redes',
         maxRooms: null,
         maxUsers: null,
@@ -107,7 +107,7 @@ export const tierById = (id: unknown): Tier | undefined => {
         return {
             id: 'basico',
             label: 'Básico',
-            monthly: 1500,
+            monthly: 1000,
             forWho: 'Alojamento Inicial',
             maxRooms: 15,
             maxUsers: 1,

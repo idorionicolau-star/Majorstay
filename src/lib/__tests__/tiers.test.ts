@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { companyHas, companyMaxRooms, companyMaxUsers, companyTierLabel, featureForPath, onLegacyPlan, resolvePayTier, tierAmount, tierFor } from '../tiers';
 
 describe('planos MajorStay: preços', () => {
-    it('Pro preços de hotelaria (1500 MT/mês)', () => {
-        expect([tierAmount('pro', 'mensal'), tierAmount('pro', 'trimestral'), tierAmount('pro', 'anual')]).toEqual([1500, 4050, 15300]);
+    it('Pro preços de hotelaria (1000 MT/mês)', () => {
+        expect([tierAmount('pro', 'mensal'), tierAmount('pro', 'trimestral'), tierAmount('pro', 'anual')]).toEqual([1000, 2700, 10200]);
     });
     it('Business e Enterprise com desconto por período (10% trimestral, 15% anual)', () => {
-        expect([tierAmount('business', 'mensal'), tierAmount('business', 'trimestral'), tierAmount('business', 'anual')]).toEqual([3500, 9450, 35700]);
-        expect([tierAmount('enterprise', 'mensal'), tierAmount('enterprise', 'trimestral'), tierAmount('enterprise', 'anual')]).toEqual([7500, 20250, 76500]);
+        expect([tierAmount('business', 'mensal'), tierAmount('business', 'trimestral'), tierAmount('business', 'anual')]).toEqual([1500, 4050, 15300]);
+        expect([tierAmount('enterprise', 'mensal'), tierAmount('enterprise', 'trimestral'), tierAmount('enterprise', 'anual')]).toEqual([5500, 14850, 56100]);
     });
     it('plano antigo paga o preço do Pro', () => {
-        expect(tierAmount('atual', 'anual')).toBe(15300);
+        expect(tierAmount('atual', 'anual')).toBe(10200);
     });
 });
 
