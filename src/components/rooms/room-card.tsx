@@ -365,10 +365,18 @@ export function RoomCard({
                     {stay.clientPhone}
                   </span>
                 )}
-                {stay.vehiclePlate && (
-                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono text-[11px] shrink-0 font-medium" title="Matrícula do veículo">
-                    <Car className="h-3 w-3 text-slate-400" />
-                    {stay.vehiclePlate}
+                {(stay.vehiclePlate || stay.vehicleBrand || stay.vehicleModel) && (
+                  <span
+                    className="text-slate-600 dark:text-slate-300 flex items-center gap-1 text-[11px] font-medium shrink-0 max-w-[220px] truncate"
+                    title={`Viatura: ${[stay.vehiclePlate, stay.vehicleBrand, stay.vehicleModel, stay.vehicleColor].filter(Boolean).join(' · ')}`}
+                  >
+                    <Car className="h-3 w-3 text-[#007bb9] shrink-0" />
+                    {stay.vehiclePlate && <span className="font-mono font-bold">{stay.vehiclePlate}</span>}
+                    {(stay.vehicleBrand || stay.vehicleModel) && (
+                      <span className="truncate text-slate-500 dark:text-slate-400 text-[10px]">
+                        ({[stay.vehicleBrand, stay.vehicleModel, stay.vehicleColor].filter(Boolean).join(' ')})
+                      </span>
+                    )}
                   </span>
                 )}
               </div>

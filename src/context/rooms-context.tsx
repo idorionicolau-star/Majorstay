@@ -71,6 +71,9 @@ interface RoomsContextType {
     clientPhone?: string;
     clientDoc?: string;
     vehiclePlate?: string;
+    vehicleBrand?: string;
+    vehicleModel?: string;
+    vehicleColor?: string;
     contractedHours: number;
     ratePerHour: number;
     paymentMethod?: string;
@@ -527,6 +530,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     clientPhone?: string;
     clientDoc?: string;
     vehiclePlate?: string;
+    vehicleBrand?: string;
+    vehicleModel?: string;
+    vehicleColor?: string;
     contractedHours: number;
     ratePerHour: number;
     paymentMethod?: string;
@@ -542,6 +548,11 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const totalDue = stayChargeForHours({ ratePerHourApplied: data.ratePerHour, ...pkg }, contracted);
     const targetRoom = rooms.find((r) => r.id === data.roomId);
     const roomName = data.roomName || targetRoom?.name || 'Quarto';
+
+    const plate = (data.vehiclePlate || '').trim().toUpperCase().slice(0, 15);
+    const brand = (data.vehicleBrand || '').trim().slice(0, 30);
+    const model = (data.vehicleModel || '').trim().slice(0, 30);
+    const color = (data.vehicleColor || '').trim().slice(0, 30);
 
     // Gerar PIN de 4 dígitos criptograficamente seguro com crypto.getRandomValues
     const pinBuf = new Uint32Array(1);
@@ -559,7 +570,10 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         clientName: data.clientName || 'Hóspede Particular',
         clientPhone: data.clientPhone || '',
         clientDoc: data.clientDoc || '',
-        vehiclePlate: (data.vehiclePlate || '').trim().toUpperCase().slice(0, 12),
+        vehiclePlate: plate,
+        vehicleBrand: brand,
+        vehicleModel: model,
+        vehicleColor: color,
         accessPin,
         pinFailedAttempts: 0,
         pinLockedUntil: null,
@@ -600,7 +614,10 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       clientName: data.clientName || 'Hóspede Particular',
       clientPhone: data.clientPhone || '',
       clientDoc: data.clientDoc || '',
-        vehiclePlate: (data.vehiclePlate || '').trim().toUpperCase().slice(0, 12),
+      vehiclePlate: plate,
+      vehicleBrand: brand,
+      vehicleModel: model,
+      vehicleColor: color,
       accessPin,
       pinFailedAttempts: 0,
       pinLockedUntil: null,

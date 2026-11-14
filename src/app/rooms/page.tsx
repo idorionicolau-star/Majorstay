@@ -183,7 +183,12 @@ function RoomsPageContent() {
         const matchClient = (activeStay?.clientName || '').toLowerCase().includes(query);
         const matchPhone = (activeStay?.clientPhone || '').includes(query);
         const matchPlate = (activeStay?.vehiclePlate || '').toLowerCase().replace(/\s/g, '').includes(query.replace(/\s/g, ''));
-        return matchRoomName || matchType || matchClient || matchPhone || matchPlate;
+        const matchVehicle = [activeStay?.vehicleBrand, activeStay?.vehicleModel, activeStay?.vehicleColor]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+        return matchRoomName || matchType || matchClient || matchPhone || matchPlate || matchVehicle;
       }
 
       return true;

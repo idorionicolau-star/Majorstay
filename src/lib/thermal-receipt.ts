@@ -125,6 +125,9 @@ export type StayReceiptInput = {
   roomName: string;
   clientName?: string;
   vehiclePlate?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehicleColor?: string;
   checkIn: Date;
   checkOut?: Date | null;
   /** Saída prevista (recibo passado no check-in) */
@@ -142,10 +145,17 @@ export type StayReceiptInput = {
 };
 
 export function buildStayReceipt(i: StayReceiptInput): ReceiptDoc {
+  const vehicleDetails = [
+    i.vehiclePlate ? `Matrícula: ${i.vehiclePlate}` : '',
+    [i.vehicleBrand, i.vehicleModel, i.vehicleColor].filter(Boolean).join(' '),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   const meta = [
     `Quarto: ${i.roomName}`,
     `Cliente: ${i.clientName?.trim() || 'Particular'}`,
-    ...(i.vehiclePlate ? [`Matrícula: ${i.vehiclePlate}`] : []),
+    ...(vehicleDetails ? [`Viatura: ${vehicleDetails}`] : []),
     `Entrada: ${fmtDate(i.checkIn)} ${fmtTime(i.checkIn)}`,
     ...(i.checkOut ? [`Saída: ${fmtDate(i.checkOut)} ${fmtTime(i.checkOut)}`] : []),
     ...(!i.checkOut && i.expectedCheckOut ? [`Saída prevista: ${fmtTime(i.expectedCheckOut)}`] : []),

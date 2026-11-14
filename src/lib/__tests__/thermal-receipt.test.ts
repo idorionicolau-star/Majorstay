@@ -33,6 +33,17 @@ describe('impressão térmica', () => {
     expect(doc.totals.some((t) => t.left === 'Pagamento')).toBe(true);
   });
 
+  it('recibo com marca, modelo e cor da viatura exibe detalhes completos', () => {
+    const doc = buildStayReceipt({
+      ...base,
+      vehicleBrand: 'Toyota',
+      vehicleModel: 'Hilux',
+      vehicleColor: 'Branco',
+    });
+    const html = receiptToHtml(doc);
+    expect(html).toContain('Matrícula: ABC-123-MC · Toyota Hilux Branco');
+  });
+
   it('conta provisória mostra o que falta pagar', () => {
     const doc = buildStayReceipt({ ...base, final: false, paid: 600, checkOut: null });
     expect(doc.title).toContain('provisória');

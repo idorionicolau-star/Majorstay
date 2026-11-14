@@ -93,6 +93,9 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
         roomName: stay.roomName || room?.name || 'Quarto',
         clientName: stay.clientName,
         vehiclePlate: stay.vehiclePlate,
+        vehicleBrand: stay.vehicleBrand,
+        vehicleModel: stay.vehicleModel,
+        vehicleColor: stay.vehicleColor,
         checkIn: checkInDate,
         checkOut: now,
         stayLabel: stay.packagePrice ? `Pacote ${stay.packageHours || pricing.billedHours}h` : `${pricing.billedHours}h de estadia`,
@@ -179,6 +182,11 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                 Hóspede: <strong className="text-slate-800 dark:text-slate-200">{stay.clientName || 'Particular'}</strong>
                 {stay.clientPhone ? ` (${stay.clientPhone})` : ''}
+                {(stay.vehiclePlate || stay.vehicleBrand || stay.vehicleModel) && (
+                  <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    🚗 Viatura: {[stay.vehiclePlate, stay.vehicleBrand, stay.vehicleModel, stay.vehicleColor].filter(Boolean).join(' · ')}
+                  </span>
+                )}
               </p>
             </div>
             <div className="text-right">

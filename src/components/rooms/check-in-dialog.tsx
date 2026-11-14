@@ -64,6 +64,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const [clientPhone, setClientPhone] = useState<string>('');
   const [clientDoc, setClientDoc] = useState<string>('');
   const [vehiclePlate, setVehiclePlate] = useState<string>('');
+  const [vehicleBrand, setVehicleBrand] = useState<string>('');
+  const [vehicleModel, setVehicleModel] = useState<string>('');
+  const [vehicleColor, setVehicleColor] = useState<string>('');
   const [contractedHours, setContractedHours] = useState<number>(1);
   // pacote de preço fixo escolhido (só aparece se o quarto tiver o preço configurado); sem pacote cobra-se por hora
   const [pkg, setPkg] = useState<'pernoite' | 'diaria' | null>(null);
@@ -164,6 +167,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         clientPhone: clientPhone.trim(),
         clientDoc: clientDoc.trim(),
         vehiclePlate: vehiclePlate.trim(),
+        vehicleBrand: vehicleBrand.trim(),
+        vehicleModel: vehicleModel.trim(),
+        vehicleColor: vehicleColor.trim(),
         contractedHours,
         ratePerHour,
         paymentMethod,
@@ -179,6 +185,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
             roomName: selectedRoom?.name || 'Quarto',
             clientName: clientName.trim() || 'Hóspede Particular',
             vehiclePlate: vehiclePlate.trim() || undefined,
+            vehicleBrand: vehicleBrand.trim() || undefined,
+            vehicleModel: vehicleModel.trim() || undefined,
+            vehicleColor: vehicleColor.trim() || undefined,
             checkIn: now,
             expectedCheckOut: out,
             stayLabel: activePkg ? activePkg.label : `${contractedHours}h de estadia`,
@@ -197,6 +206,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
       setClientPhone('');
       setClientDoc('');
       setVehiclePlate('');
+      setVehicleBrand('');
+      setVehicleModel('');
+      setVehicleColor('');
       setPkg(null);
       setContractedHours(selectedRoom?.minimumHours || 1);
       setNotes('');
@@ -498,21 +510,70 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
               />
             </div>
 
-            <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor="vehiclePlate" className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                <Car className="w-3.5 h-3.5 text-slate-400" />
-                Matrícula do Veículo <span className="text-slate-400 font-normal text-[10px]">(opcional)</span>
-              </Label>
-              <Input
-                id="vehiclePlate"
-                value={vehiclePlate}
-                onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())}
-                maxLength={12}
-                autoCapitalize="characters"
-                autoComplete="off"
-                placeholder="Ex: AAA 123 MC"
-                className="text-base sm:text-xs font-mono font-semibold uppercase rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 h-10"
-              />
+            <div className="sm:col-span-2 p-3 sm:p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Car className="w-3.5 h-3.5 text-[#007bb9]" />
+                  Dados da Viatura / Carro <span className="text-slate-400 font-normal text-[10px]">(opcional)</span>
+                </Label>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="vehiclePlate" className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                    Matrícula
+                  </Label>
+                  <Input
+                    id="vehiclePlate"
+                    value={vehiclePlate}
+                    onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())}
+                    maxLength={15}
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    placeholder="AAA 123 MC"
+                    className="text-xs font-mono font-bold uppercase rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 h-9"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vehicleBrand" className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                    Marca
+                  </Label>
+                  <Input
+                    id="vehicleBrand"
+                    value={vehicleBrand}
+                    onChange={(e) => setVehicleBrand(e.target.value)}
+                    placeholder="Ex: Toyota, Ford"
+                    className="text-xs font-medium rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 h-9"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vehicleModel" className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                    Modelo
+                  </Label>
+                  <Input
+                    id="vehicleModel"
+                    value={vehicleModel}
+                    onChange={(e) => setVehicleModel(e.target.value)}
+                    placeholder="Ex: Hilux, Fortuner"
+                    className="text-xs font-medium rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 h-9"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vehicleColor" className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                    Cor
+                  </Label>
+                  <Input
+                    id="vehicleColor"
+                    value={vehicleColor}
+                    onChange={(e) => setVehicleColor(e.target.value)}
+                    placeholder="Ex: Branco, Prata"
+                    className="text-xs font-medium rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 h-9"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

@@ -679,6 +679,9 @@ export type Stay = {
   clientPhone?: string;
   clientDoc?: string; // BI / Passaporte
   vehiclePlate?: string; // Matrícula do veículo do hóspede (opcional)
+  vehicleBrand?: string; // Marca do veículo (ex: Toyota, Ford, Mercedes, etc.)
+  vehicleModel?: string; // Modelo do veículo (ex: Hilux, Ranger, Corolla, etc.)
+  vehicleColor?: string; // Cor do veículo (ex: Branco, Preto, Prata, etc.)
   accessPin?: string; // PIN de 4 dígitos para acesso exclusivo do hóspede via QR Code
   pinFailedAttempts?: number; // Contador de tentativas incorretas
   pinLockedUntil?: string | any; // Timestamp de bloqueio temporário (15 min após 5 erros)
