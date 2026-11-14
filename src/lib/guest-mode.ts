@@ -1154,13 +1154,17 @@ export function updateGuestBooking(id: string, data: Partial<Booking>): void {
 }
 
 export const INITIAL_GUEST_SERVICES: HospitalityService[] = [
-  { id: 'srv-1', name: 'Lavandaria (Lavagem e Secagem)', category: 'Lavandaria', price: 250, active: true },
-  { id: 'srv-2', name: 'Passar a Ferro (por peça)', category: 'Lavandaria', price: 50, active: true },
-  { id: 'srv-3', name: 'Aluguer de Toalha Extra', category: 'Conforto', price: 50, active: true },
-  { id: 'srv-4', name: 'Limpeza Extra / Troca de Lençóis', category: 'Governança', price: 200, active: true },
-  { id: 'srv-5', name: 'Transfer / Transporte Aeroporto', category: 'Transporte', price: 1200, active: true },
-  { id: 'srv-6', name: 'Massagem Relaxante (45 min)', category: 'Bem-Estar', price: 1500, active: true },
-  { id: 'srv-7', name: 'Decoração Romântica do Quarto', category: 'Especial', price: 800, active: true },
+  { id: 'srv-1', name: 'Ficha de Bilhar / Snooker (1 Jogo)', category: 'Bilhares, Jogos & Diversões', price: 50, description: '1 ficha para mesa de bilhar/snooker no salão de jogos ou lounge.', active: true },
+  { id: 'srv-2', name: 'Mesa de Bilhar (1 Hora de Jogo)', category: 'Bilhares, Jogos & Diversões', price: 200, description: 'Uso livre da mesa com tacos e giz durante 60 minutos.', active: true },
+  { id: 'srv-3', name: 'Partida de Matraquilhos / Pebolim', category: 'Bilhares, Jogos & Diversões', price: 20, description: 'Ficha ou moeda para mesa de matraquilhos.', active: true },
+  { id: 'srv-4', name: 'Acesso à Piscina (Day-pass Visitante)', category: 'Lazer, Piscina & Bem-Estar', price: 250, description: 'Acesso diário à piscina para clientes e visitantes sem quarto.', active: true },
+  { id: 'srv-5', name: 'Lavandaria (Lavagem e Secagem)', category: 'Lavandaria & Roupa', price: 250, description: 'Cesto de roupa lavada e centrifugada.', active: true },
+  { id: 'srv-6', name: 'Passar a Ferro (por peça)', category: 'Lavandaria & Roupa', price: 50, description: 'Engomadoria profissional por peça de roupa.', active: true },
+  { id: 'srv-7', name: 'Aluguer de Toalha Extra', category: 'Comodidades & Extras', price: 50, description: 'Toalha de banho ou piscina adicional.', active: true },
+  { id: 'srv-8', name: 'Limpeza Extra / Troca de Lençóis', category: 'Governança & Limpeza', price: 200, description: 'Higienização e substituição de lençóis e fronhas.', active: true },
+  { id: 'srv-9', name: 'Transfer / Transporte Aeroporto', category: 'Transporte & Transfers', price: 1200, description: 'Translado privativo de ida ou regresso ao aeroporto.', active: true },
+  { id: 'srv-10', name: 'Massagem Relaxante (45 min)', category: 'Bem-Estar & Spa', price: 1500, description: 'Sessão de massagem corporal relaxante no spa.', active: true },
+  { id: 'srv-11', name: 'Decoração Romântica do Quarto', category: 'Comodidades & Extras', price: 800, description: 'Pétalas, velas decorativas e arranjo especial no quarto.', active: true },
 ];
 
 export function getGuestServices(): HospitalityService[] {

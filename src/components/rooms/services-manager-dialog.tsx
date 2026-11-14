@@ -35,6 +35,8 @@ interface ServicesManagerDialogProps {
 }
 
 export const SERVICE_CATEGORIES = [
+  'Bilhares, Jogos & Diversões',
+  'Lazer, Piscina & Bem-Estar',
   'Lavandaria & Roupa',
   'Bem-Estar & Spa',
   'Governança & Limpeza',

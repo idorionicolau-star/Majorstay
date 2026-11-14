@@ -198,3 +198,52 @@ export function buildKitchenTicket(i: KitchenTicketInput): ReceiptDoc {
     footer: 'Senha de cozinha / bar',
   };
 }
+
+export type ServiceSaleReceiptInput = {
+  hotel: string;
+  serviceName: string;
+  category?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  paymentMethod: string;
+  clientName?: string;
+  documentNumber?: string;
+  date: Date;
+  operator?: string;
+  notes?: string;
+};
+
+/** Talão / comprovativo de cobrança de serviço ou diversão avulsa (ex: Bilhar, Piscina, Day-pass, Spa, etc.) */
+export function buildServiceSaleReceipt(i: ServiceSaleReceiptInput): ReceiptDoc {
+  const meta = [
+    `Documento: ${i.documentNumber || 'Venda Avulsa / Balcão'}`,
+    `Data: ${fmtDate(i.date)} ${fmtTime(i.date)}`,
+    `Cliente: ${i.clientName?.trim() || 'Cliente Balcão / Lounge'}`,
+    ...(i.operator ? [`Operador: ${i.operator}`] : []),
+  ];
+
+  const lines: ReceiptLine[] = [
+    {
+      left: `${i.quantity}x ${i.serviceName}`,
+      right: money(i.totalPrice),
+      bold: true,
+      ...(i.notes ? { sub: `Obs: ${i.notes}` } : {}),
+    },
+  ];
+
+  const totals: ReceiptLine[] = [
+    { left: 'TOTAL PAGO', right: money(i.totalPrice), bold: true },
+    { left: 'Forma de Pagamento', right: i.paymentMethod },
+    { left: 'Estado', right: 'PAGO' },
+  ];
+
+  return {
+    hotel: i.hotel,
+    title: 'COMPROVATIVO DE SERVIÇO / DIVERSÃO',
+    meta,
+    lines,
+    totals,
+    footer: 'Bom entretenimento! Obrigado pela preferência.',
+  };
+}
