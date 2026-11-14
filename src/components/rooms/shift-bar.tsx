@@ -58,6 +58,20 @@ export function ShiftBar() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Tempo real: o turno do colega (aberto ou fechado) aparece em segundos, sem recarregar a página
+  useEffect(() => {
+    if (isGuest || !companyId) return;
+    const tick = () => { if (document.visibilityState === 'visible' && !dialog) load(); };
+    const id = setInterval(tick, 10_000);
+    document.addEventListener('visibilitychange', tick);
+    window.addEventListener('focus', tick);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+      window.removeEventListener('focus', tick);
+    };
+  }, [load, isGuest, companyId, dialog]);
+
   if (isGuest || !companyId || !loaded) return null;
 
   const counted = Number(amount);
