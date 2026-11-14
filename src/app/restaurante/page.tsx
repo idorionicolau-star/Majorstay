@@ -30,12 +30,14 @@ import {
   PackagePlus,
   Trash2,
   Flame,
+  Printer,
   Info,
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { getAuth } from 'firebase/auth';
 import type { Product } from '@/lib/types';
+import { buildKitchenTicket, printReceipt } from '@/lib/thermal-receipt';
 
 interface RoomOrderDoc {
   id: string;
@@ -49,6 +51,7 @@ interface RoomOrderDoc {
     unitPrice: number;
     totalPrice: number;
     notes?: string;
+    weightKg?: number;
   }[];
   notes?: string;
   total: number;
@@ -64,8 +67,9 @@ const unitOf = (p?: Pick<Product, 'unit'> | null): 'kg' | 'un' => ((p?.unit || '
 const num = (n: number) => String(Math.round(n * 1000) / 1000).replace('.', ',');
 
 export default function RestaurantePage() {
-  const { products, companyId, user, addProduct, updateProduct, auditStock } = useContext(InventoryContext) || {
+  const { products, companyId, user, addProduct, updateProduct, auditStock, companyData } = useContext(InventoryContext) || {
     products: [],
+    companyData: null,
     companyId: null,
     user: null,
     addProduct: async () => {},
@@ -143,6 +147,20 @@ export default function RestaurantePage() {
     const interval = setInterval(fetchOrders, 15000); // Atualiza a cada 15 segundos
     return () => clearInterval(interval);
   }, [companyId]);
+
+  const handlePrintTicket = (ord: RoomOrderDoc) => {
+    const ok = printReceipt(
+      buildKitchenTicket({
+        hotel: companyData?.name || 'Cozinha',
+        roomName: ord.roomName,
+        createdAt: new Date(ord.createdAt),
+        items: ord.items,
+        notes: ord.notes,
+        source: ord.source === 'guest' ? 'Hóspede (QR)' : 'Receção',
+      })
+    );
+    if (!ok) toast({ variant: 'destructive', title: 'Não foi possível imprimir' });
+  };
 
   // Ações de Pedidos (KDS)
   const handleStartPreparing = async (orderId: string) => {
@@ -555,6 +573,16 @@ export default function RestaurantePage() {
                       >
                         <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                         Pronto / Lançar
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handlePrintTicket(ord)}
+                        className="h-9 w-9 p-0 rounded-xl shrink-0"
+                        title="Imprimir senha da cozinha"
+                      >
+                        <Printer className="w-4 h-4" />
                       </Button>
 
                       <Button

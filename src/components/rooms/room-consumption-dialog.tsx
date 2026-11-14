@@ -19,9 +19,12 @@ import {
   Minus,
   Trash2,
   Receipt,
+  Printer,
   ShoppingBag,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { buildStayReceipt, printReceipt } from '@/lib/thermal-receipt';
+import { normalizeDate, calculateStayPricing, totalContractedHours } from '@/lib/hospitality-calc';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
@@ -60,7 +63,7 @@ export function RoomConsumptionDialog({
   stay,
 }: RoomConsumptionDialogProps) {
   const { addStayConsumption, removeStayConsumption } = useRooms();
-  const { products } = useInventory();
+  const { products, companyData, user } = useInventory();
 
   const [activeTab, setActiveTab] = useState<'add' | 'tab'>('add');
   const [searchTerm, setSearchTerm] = useState('');
@@ -148,6 +151,40 @@ export function RoomConsumptionDialog({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Conta provisória (sem valor de recibo) para o hóspede conferir antes de pagar
+  const handlePrintTab = () => {
+    if (!stay) return;
+    const rate = stay.ratePerHourApplied || room?.ratePerHour || 0;
+    const now = new Date();
+    const pricing = calculateStayPricing({
+      checkInAt: normalizeDate(stay.checkInAt),
+      checkOutAt: now,
+      contractedHours: totalContractedHours(stay),
+      ratePerHour: rate,
+      graceMinutes: 10,
+      consumptions: stay.consumptions || [],
+      packagePrice: stay.packagePrice,
+      packageHours: stay.packageHours,
+    });
+    const ok = printReceipt(
+      buildStayReceipt({
+        hotel: companyData?.name || 'Alojamento',
+        roomName: stay.roomName || room?.name || 'Quarto',
+        clientName: stay.clientName,
+        vehiclePlate: stay.vehiclePlate,
+        checkIn: normalizeDate(stay.checkInAt),
+        stayLabel: stay.packagePrice ? `Pacote ${stay.packageHours || pricing.billedHours}h` : `${pricing.billedHours}h de estadia`,
+        stayAmount: pricing.stayAmountDue,
+        consumptions: stay.consumptions || [],
+        total: pricing.totalAmountDue,
+        paid: Number(stay.totalAmountPaid) || 0,
+        final: false,
+        operator: user?.username,
+      })
+    );
+    if (!ok) toast({ variant: 'destructive', title: 'Não foi possível imprimir' });
   };
 
   const handleAddCustom = async (e: React.FormEvent) => {
@@ -413,6 +450,10 @@ export function RoomConsumptionDialog({
 
             {/* ABA 2: COMANDA DO QUARTO */}
             <TabsContent value="tab" className="space-y-3 m-0">
+              <Button type="button" variant="outline" size="sm" onClick={handlePrintTab} className="w-full h-10 rounded-xl text-xs font-bold gap-1.5">
+                <Printer className="h-3.5 w-3.5" />
+                Imprimir conta (térmica)
+              </Button>
               {consumptions.length === 0 ? (
                 <div className="text-center py-10 text-[#827568] dark:text-[#B0A294] text-xs">
                   <Receipt className="h-10 w-10 mx-auto mb-2 opacity-30 text-[#C58A2C]" />
@@ -428,7 +469,7 @@ export function RoomConsumptionDialog({
                     >
                       <div>
                         <p className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
-                          {c.quantity}× {c.productName}
+                          {c.weightKg ? `${String(c.weightKg).replace('.', ',')} kg de` : `${c.quantity}×`} {c.productName}
                         </p>
                         {c.notes && (
                           <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium italic mt-0.5">

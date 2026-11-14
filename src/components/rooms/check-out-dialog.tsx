@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { LogOut, Clock, AlertTriangle, Brush, CheckCircle2, DollarSign, CreditCard, MessageCircle } from 'lucide-react';
+import { LogOut, Clock, AlertTriangle, Brush, CheckCircle2, DollarSign, CreditCard, MessageCircle, Printer } from 'lucide-react';
+import { buildStayReceipt, printReceipt } from '@/lib/thermal-receipt';
 import { buildStayReceiptWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp';
 import { useInventory } from '@/context/inventory-context';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -46,7 +47,7 @@ const PAYMENT_METHODS = [
 
 export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialogProps) {
   const { checkOutStay } = useRooms();
-  const { companyData } = useInventory();
+  const { companyData, user } = useInventory();
 
   const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
   const [roomNextStatus, setRoomNextStatus] = useState<'cleaning' | 'free'>('cleaning');
@@ -83,6 +84,29 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   const previousPaid = Number(stay.totalAmountPaid) || 0;
   const balanceToPay = Math.max(0, pricing.totalAmountDue - previousPaid);
 
+
+  const handlePrintReceipt = () => {
+    if (!stay) return;
+    const ok = printReceipt(
+      buildStayReceipt({
+        hotel: companyData?.name || 'Alojamento',
+        roomName: stay.roomName || room?.name || 'Quarto',
+        clientName: stay.clientName,
+        vehiclePlate: stay.vehiclePlate,
+        checkIn: checkInDate,
+        checkOut: now,
+        stayLabel: stay.packagePrice ? `Pacote ${stay.packageHours || pricing.billedHours}h` : `${pricing.billedHours}h de estadia`,
+        stayAmount: pricing.stayAmountDue,
+        consumptions: stay.consumptions || [],
+        total: pricing.totalAmountDue,
+        paid: pricing.totalAmountDue,
+        paymentMethod,
+        final: true,
+        operator: user?.username,
+      })
+    );
+    if (!ok) toast({ variant: 'destructive', title: 'Não foi possível imprimir', description: 'Tente novamente.' });
+  };
 
   const handleSendWhatsAppReceipt = () => {
     if (!stay) return;
@@ -348,6 +372,17 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
                 Recibo WhatsApp
               </Button>
             )}
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrintReceipt}
+              disabled={loading}
+              className="col-span-2 w-full h-11 rounded-full font-bold flex items-center justify-center gap-1.5"
+            >
+              <Printer className="w-4 h-4" />
+              Imprimir recibo (térmica)
+            </Button>
 
             <Button
               type="submit"
