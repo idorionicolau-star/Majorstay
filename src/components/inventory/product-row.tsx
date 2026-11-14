@@ -6,6 +6,8 @@ import { ChevronDown, ChevronRight, Layers } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { getStockStatus } from "./columns";
+import { useInventory } from "@/context/inventory-context";
+import { availableUnits, formatAvailable } from "@/lib/dish-stock";
 
 const STOCK_TONE = {
     bom: "text-[hsl(var(--chart-2))]",
@@ -21,7 +23,10 @@ export function ProductRow({ product, canEdit, locationName }: { product: Produc
         const status = getStockStatus(product);
     const isIngredient = Boolean(product.isKitchenIngredient || product.category === 'Cozinha / Alimentos');
     const isDish = Boolean(product.isDish || (product.category || '').toLowerCase().includes('prato'));
-    const available = product.stock - product.reservedStock;
+    const { products: allProducts } = useInventory();
+    const units = availableUnits(product, allProducts);
+    const available = isDish ? (units === null ? "—" : formatAvailable(units)) : product.stock - product.reservedStock;
+    const unitLabel = isDish ? (product.soldByWeight ? "kg" : "doses") : (product.unit || "un");
     const noCost = !isIngredient && (product.cost === undefined || product.cost <= 0);
     const href = canEdit
         ? (isDish || isIngredient ? '/restaurante' : `/inventory/${product.instanceId || product.id}/edit`)
@@ -60,7 +65,7 @@ export function ProductRow({ product, canEdit, locationName }: { product: Produc
             </div>
             <div className="shrink-0 text-right">
                 <p className={cn("text-base font-black leading-none", STOCK_TONE[status])}>
-                    {available}<span className="ml-0.5 text-[10px] font-bold text-muted-foreground">{product.unit || "un"}</span>
+                    {available}<span className="ml-0.5 text-[10px] font-bold text-muted-foreground">{unitLabel}</span>
                 </p>
                 {status !== "bom" && (
                     <p className={cn("mt-0.5 text-[9px] font-black uppercase tracking-wider", STOCK_TONE[status])}>{STATUS_LABEL[status]}</p>

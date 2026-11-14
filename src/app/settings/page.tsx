@@ -460,12 +460,12 @@ export default function SettingsPage() {
           type: 'END_OF_DAY_REPORT',
           companyId,
           subject: `📊 Relatório de Fecho do Dia — ${companyDetails.name || 'MajorStay'} (${formattedToday})`,
-          body: {
-            totalSales: todaySales.length,
-            salesValue: todayTotal,
-            criticalItemsCount: criticalCount,
-            date: formattedToday,
-          },
+          // a rota /api/email lê estes campos ao nível de cima (como os outros emails)
+          companyName: companyDetails.name,
+          totalSales: todaySales.length,
+          salesValue: todayTotal,
+          criticalItemsCount: criticalCount,
+          date: formattedToday,
         }),
       });
 
