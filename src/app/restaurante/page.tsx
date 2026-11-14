@@ -67,8 +67,9 @@ const unitOf = (p?: Pick<Product, 'unit'> | null): 'kg' | 'un' => ((p?.unit || '
 const num = (n: number) => String(Math.round(n * 1000) / 1000).replace('.', ',');
 
 export default function RestaurantePage() {
-  const { products, companyId, user, addProduct, updateProduct, auditStock, companyData } = useContext(InventoryContext) || {
+  const { products, companyId, user, addProduct, updateProduct, auditStock, companyData, canEdit } = useContext(InventoryContext) || {
     products: [],
+    canEdit: () => false,
     companyData: null,
     companyId: null,
     user: null,
@@ -77,6 +78,8 @@ export default function RestaurantePage() {
     auditStock: async () => {},
   };
   const { stays } = useRooms();
+  // Criar pratos/ingredientes e mexer no stock exige escrita no Inventário (a receção só vê)
+  const canManageStock = Boolean(canEdit && canEdit('inventory'));
 
   const [activeTab, setActiveTab] = useState<'kds' | 'fridge' | 'menu'>('kds');
   const [orders, setOrders] = useState<RoomOrderDoc[]>([]);
@@ -433,6 +436,7 @@ export default function RestaurantePage() {
           <Button
             size="sm"
             onClick={() => setNewDishOpen(true)}
+            style={canManageStock ? undefined : { display: 'none' }}
             className="rounded-xl h-9 text-xs font-bold bg-[#007bb9] hover:bg-[#006295] text-white shadow-xs gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -620,6 +624,7 @@ export default function RestaurantePage() {
             <Button
               size="sm"
               onClick={() => setNewIngredientOpen(true)}
+            style={canManageStock ? undefined : { display: 'none' }}
               className="rounded-xl h-9 text-xs font-bold bg-[#DF9E42] hover:bg-[#C58A2C] text-white shadow-xs gap-1.5"
             >
               <PackagePlus className="w-4 h-4" />
@@ -679,7 +684,7 @@ export default function RestaurantePage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="grid grid-cols-2 gap-2 pt-1" style={canManageStock ? undefined : { display: 'none' }}>
                         <Button
                           size="sm"
                           variant="outline"
@@ -731,6 +736,7 @@ export default function RestaurantePage() {
             <Button
               size="sm"
               onClick={() => setNewDishOpen(true)}
+            style={canManageStock ? undefined : { display: 'none' }}
               className="rounded-xl h-9 text-xs font-bold bg-[#007bb9] hover:bg-[#006295] text-white shadow-xs gap-1.5"
             >
               <Plus className="w-4 h-4" />
