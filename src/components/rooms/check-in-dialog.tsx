@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useInventory } from '@/context/inventory-context';
+import { buildStayReceipt, printReceipt } from '@/lib/thermal-receipt';
 import { BedDouble, Clock, User, Phone, CreditCard, Check, Moon, Search, Car, Tag } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Room } from '@/lib/types';
@@ -52,6 +54,7 @@ const QUICK_PAYMENTS = [
 
 export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGuestName, initialGuestPhone, initialHours }: CheckInDialogProps) {
   const { rooms, checkInStay } = useRooms();
+  const { companyData, user } = useInventory();
 
   const freeRooms = rooms.filter((r) => r.active && (r.status === 'free' || r.id === preselectedRoomId));
 
@@ -65,6 +68,19 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   // pacote de preço fixo escolhido (só aparece se o quarto tiver o preço configurado); sem pacote cobra-se por hora
   const [pkg, setPkg] = useState<'pernoite' | 'diaria' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
+  // Imprimir o recibo ao confirmar (a escolha fica guardada neste aparelho; por defeito ligada)
+  const [printOnCheckIn, setPrintOnCheckIn] = useState(true);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('majorstay.printCheckInReceipt') === '0') setPrintOnCheckIn(false);
+    } catch {}
+  }, []);
+  const togglePrint = (v: boolean) => {
+    setPrintOnCheckIn(v);
+    try {
+      localStorage.setItem('majorstay.printCheckInReceipt', v ? '1' : '0');
+    } catch {}
+  };
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
@@ -154,6 +170,28 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         notes: notes.trim(),
         ...(activePkg ? { packageType: activePkg.type, packagePrice: activePkg.price } : {}),
       });
+      if (printOnCheckIn) {
+        const now = new Date();
+        const out = new Date(now.getTime() + (activePkg ? activePkg.hours : contractedHours) * 3600_000);
+        printReceipt(
+          buildStayReceipt({
+            hotel: companyData?.name || 'Alojamento',
+            roomName: selectedRoom?.name || 'Quarto',
+            clientName: clientName.trim() || 'Hóspede Particular',
+            vehiclePlate: vehiclePlate.trim() || undefined,
+            checkIn: now,
+            expectedCheckOut: out,
+            stayLabel: activePkg ? activePkg.label : `${contractedHours}h de estadia`,
+            stayAmount: totalAmount,
+            consumptions: [],
+            total: totalAmount,
+            paid: totalAmount,
+            paymentMethod,
+            final: true,
+            operator: user?.username,
+          })
+        );
+      }
       onOpenChange(false);
       setClientName('Hóspede Particular');
       setClientPhone('');
@@ -524,6 +562,10 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
 
           {/* Action Footer Fixo */}
           <DialogFooter className="px-6 sm:px-7 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 justify-end">
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 sm:mr-auto cursor-pointer">
+              <input type="checkbox" checked={printOnCheckIn} onChange={(e) => togglePrint(e.target.checked)} className="h-4 w-4" />
+              Imprimir recibo
+            </label>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
