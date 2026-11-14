@@ -184,6 +184,7 @@ export async function POST(req: Request) {
           }
 
           let resolvedUnitPrice = 0;
+          let weighedKg: number | undefined;
           let resolvedProductName = (rawItem.productName || '').trim();
           let rawDeductionRecord: StayConsumptionItem['rawDeduction'] = undefined;
 
@@ -204,6 +205,13 @@ export async function POST(req: Request) {
             resolvedProductName = prodData.name || resolvedProductName || 'Produto do Bar';
 
             const isDish = Boolean(prodData.isDish);
+            if (prodData.soldByWeight) {
+              const w = Number(rawItem.weightKg);
+              if (!Number.isFinite(w) || w < 0.1 || w > 50) {
+                throw new Error(`Indique o peso (kg) de "${resolvedProductName}".`);
+              }
+              weighedKg = Math.round(w * 1000) / 1000;
+            }
             const rawIngId = prodData.rawIngredientId ? String(prodData.rawIngredientId).trim() : '';
             const rawSnap = rawIngId ? productSnaps.get(rawIngId) : null;
 
@@ -213,7 +221,7 @@ export async function POST(req: Request) {
               const rawRef = db.doc(`companies/${companyId}/products/${rawIngId}`);
               const rawUnit = String(rawData.unit || 'kg').toLowerCase();
               const portionQty = Number(prodData.rawQuantityPerPortion) || 0.3; // ex: 300g por dose
-              const customWeight = typeof rawItem.weightKg === 'number' && rawItem.weightKg > 0 ? rawItem.weightKg : undefined;
+              const customWeight = weighedKg && rawUnit === 'kg' ? weighedKg : undefined; // venda ao peso abate o peso servido
               const totalDeducted = customWeight ? customWeight : Math.round(portionQty * qty * 1000) / 1000;
 
               const currentRawStock = runningStock.has(rawIngId) ? (runningStock.get(rawIngId) as number) : Number(rawData.stock) || 0;
@@ -300,7 +308,7 @@ export async function POST(req: Request) {
             }
           }
 
-          const totalPrice = qty * resolvedUnitPrice;
+          const totalPrice = weighedKg ? Math.round(weighedKg * resolvedUnitPrice * 100) / 100 : qty * resolvedUnitPrice;
           const consumptionItem: StayConsumptionItem = {
             id: `cons-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
             productId: rawItem.productId || undefined,
@@ -313,7 +321,7 @@ export async function POST(req: Request) {
             addedByName: employeeName,
             ...(orderRef ? { orderId: orderRef.id } : {}),
             ...(rawItem.notes ? { notes: String(rawItem.notes).trim() } : {}),
-            ...(rawItem.weightKg ? { weightKg: Number(rawItem.weightKg) } : {}),
+            ...(weighedKg ? { weightKg: weighedKg } : {}),
             ...(rawDeductionRecord ? { rawDeduction: rawDeductionRecord } : {}),
           };
 
