@@ -1,4 +1,4 @@
-import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification, Room, Stay, Booking } from "@/lib/types";
+import type { Employee, Company, Product, Sale, Expense, Customer, StockMovement, Order, Production, AppNotification, Room, Stay, Booking, HospitalityService } from "@/lib/types";
 import { calculateStayPricing, totalContractedHours } from "@/lib/hospitality-calc";
 import { GUEST_PRODUCTS, GUEST_LOCATIONS, guestLocation } from "@/lib/demo-data";
 import { GUEST_TRIAL_LIMIT_MS, GUEST_TRIAL_GAP_MS } from "@/lib/guest-trial";
@@ -1151,4 +1151,30 @@ export function addGuestBooking(booking: Booking): void {
 
 export function updateGuestBooking(id: string, data: Partial<Booking>): void {
   writeStore("bookings", getGuestBookings().map((b) => (b.id === id ? { ...b, ...data } : b)));
+}
+
+export const INITIAL_GUEST_SERVICES: HospitalityService[] = [
+  { id: 'srv-1', name: 'Lavandaria (Lavagem e Secagem)', category: 'Lavandaria', price: 250, active: true },
+  { id: 'srv-2', name: 'Passar a Ferro (por peça)', category: 'Lavandaria', price: 50, active: true },
+  { id: 'srv-3', name: 'Aluguer de Toalha Extra', category: 'Conforto', price: 50, active: true },
+  { id: 'srv-4', name: 'Limpeza Extra / Troca de Lençóis', category: 'Governança', price: 200, active: true },
+  { id: 'srv-5', name: 'Transfer / Transporte Aeroporto', category: 'Transporte', price: 1200, active: true },
+  { id: 'srv-6', name: 'Massagem Relaxante (45 min)', category: 'Bem-Estar', price: 1500, active: true },
+  { id: 'srv-7', name: 'Decoração Romântica do Quarto', category: 'Especial', price: 800, active: true },
+];
+
+export function getGuestServices(): HospitalityService[] {
+  return readStore<HospitalityService[]>("services", () => INITIAL_GUEST_SERVICES);
+}
+
+export function addGuestService(service: HospitalityService): void {
+  writeStore("services", [...getGuestServices(), service]);
+}
+
+export function updateGuestService(id: string, data: Partial<HospitalityService>): void {
+  writeStore("services", getGuestServices().map((s) => (s.id === id ? { ...s, ...data } : s)));
+}
+
+export function deleteGuestService(id: string): void {
+  writeStore("services", getGuestServices().filter((s) => s.id !== id));
 }

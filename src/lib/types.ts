@@ -605,6 +605,8 @@ export type StayExtension = {
 export type StayConsumptionItem = {
   id: string;
   productId?: string;
+  serviceId?: string; // ID do serviço de hotelaria (Lavandaria, Massagem, etc.)
+  isService?: boolean; // Verdadeiro se for serviço (sem abate de stock físico)
   productName: string;
   quantity: number;
   unitPrice: number;
@@ -625,6 +627,17 @@ export type StayConsumptionItem = {
     unit: string;
   };
 };
+
+export interface HospitalityService {
+  id: string;
+  name: string; // ex: "Lavandaria (Peça)", "Ferro de Engomar", "Massagem", "Transfer Aeroporto"
+  category: string; // ex: "Lavandaria", "Bem-Estar", "Transporte", "Governança", "Outros"
+  price: number; // Preço em MT
+  description?: string;
+  active: boolean; // se está visível para lançamentos
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export type RoomOrderItem = {
   productId: string;

@@ -405,6 +405,13 @@ service cloud.firestore {
         allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
       }
 
+      // Serviços de Hotelaria (Lavandaria, Passadoria, Massagem, Transfers, Comodidades)
+      // Gerente cria sem limites; Funcionários lêem e lançam na comanda do quarto.
+      match /services/{serviceId} {
+        allow get, list: if isEmployeeOf(companyId);
+        allow create, update, delete: if isManagerOf(companyId) && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+      }
+
       // Registo de auditoria de hotelaria (correções, anulações, extensões, desvios). Imutável.
       match /hospitalityAudit/{logId} {
         allow get, list: if isManagerOf(companyId);

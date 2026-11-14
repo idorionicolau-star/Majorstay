@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BedDouble, Brush, Clock, Coins } from 'lucide-react';
+import { BedDouble, Brush, Clock, Coins, AlertTriangle } from 'lucide-react';
 import type { Room, RoomType } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
@@ -40,7 +40,10 @@ const ROOM_TYPES: { id: RoomType; label: string }[] = [
 ];
 
 export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialogProps) {
-  const { addRoom, updateRoom } = useRooms();
+  const { addRoom, updateRoom, rooms = [], maxRoomsAllowed } = useRooms();
+
+  const activeRoomsCount = rooms.filter((r) => r.active !== false).length;
+  const isLimitReached = !roomToEdit && maxRoomsAllowed !== null && activeRoomsCount >= maxRoomsAllowed;
 
   const [name, setName] = useState('');
   const [type, setType] = useState<RoomType>('standard');
@@ -151,6 +154,18 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-7 py-3 space-y-4">
+          {isLimitReached && (
+            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-200 text-xs space-y-1">
+              <p className="font-bold flex items-center gap-1.5">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                Limite do pacote atingido ({activeRoomsCount} de {maxRoomsAllowed} quartos)
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                O seu pacote atual permite até {maxRoomsAllowed} quartos. Para cadastrar mais quartos, faça upgrade do pacote em Definições &gt; Subscrição.
+              </p>
+            </div>
+          )}
+
           {/* Nome / Número */}
           <div className="space-y-1.5">
             <Label htmlFor="roomName" className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -296,9 +311,9 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
             <Button
               type="submit"
               className="w-full sm:w-auto h-11 rounded-full font-extrabold bg-[#007bb9] hover:bg-[#006194] text-white shadow-md shadow-blue-500/20 px-6 active:scale-95 transition-all"
-              disabled={loading}
+              disabled={loading || isLimitReached}
             >
-              {loading ? 'A Guardar...' : roomToEdit ? 'Salvar Alterações' : 'Criar Quarto'}
+              {loading ? 'A Guardar...' : roomToEdit ? 'Salvar Alterações' : isLimitReached ? 'Limite Atingido' : 'Criar Quarto'}
             </Button>
           </DialogFooter>
         </form>

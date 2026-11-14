@@ -21,14 +21,17 @@ import {
   Receipt,
   Printer,
   ShoppingBag,
+  ConciergeBell,
+  Settings,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { buildStayReceipt, printReceipt } from '@/lib/thermal-receipt';
 import { normalizeDate, calculateStayPricing, totalContractedHours } from '@/lib/hospitality-calc';
-import type { Stay, Room } from '@/lib/types';
+import type { Stay, Room, HospitalityService } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { toast } from '@/hooks/use-toast';
+import { ServicesManagerDialog } from './services-manager-dialog';
 
 interface RoomConsumptionDialogProps {
   open: boolean;
@@ -62,13 +65,21 @@ export function RoomConsumptionDialog({
   room,
   stay,
 }: RoomConsumptionDialogProps) {
-  const { addStayConsumption, removeStayConsumption } = useRooms();
+  const { addStayConsumption, removeStayConsumption, services = [], servicesLoading } = useRooms();
   const { products, companyData, user } = useInventory();
+  const isManager = user?.role === 'Admin' || user?.role === 'Dono';
 
-  const [activeTab, setActiveTab] = useState<'add' | 'tab'>('add');
+  const [activeTab, setActiveTab] = useState<'add' | 'services' | 'tab'>('add');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(false);
+
+  // Gestão de Serviços
+  const [servicesManagerOpen, setServicesManagerOpen] = useState(false);
+  const [serviceSearchTerm, setServiceSearchTerm] = useState('');
+  const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+  const [serviceQuantities, setServiceQuantities] = useState<Record<string, number>>({});
+  const [serviceNotes, setServiceNotes] = useState<Record<string, string>>({});
 
   // Formulário personalizado
   const [customName, setCustomName] = useState('');
@@ -146,6 +157,64 @@ export function RoomConsumptionDialog({
       toast({
         variant: 'destructive',
         title: 'Erro ao registar consumo',
+        description: err.message || 'Falha ao lançar na conta do quarto.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Quantidades e notas para Serviços
+  const getServiceQuantity = (id: string) => serviceQuantities[id] || 1;
+  const setServiceQuantity = (id: string, qty: number) => {
+    setServiceQuantities((prev) => ({ ...prev, [id]: Math.max(1, Math.round(qty)) }));
+  };
+
+  const serviceCategories = useMemo(() => {
+    const set = new Set(services.map((s) => s.category).filter(Boolean));
+    return ['all', ...Array.from(set)];
+  }, [services]);
+
+  const filteredServices = useMemo(() => {
+    return services.filter((s) => {
+      if (selectedServiceCategory !== 'all' && s.category !== selectedServiceCategory) return false;
+      if (serviceSearchTerm.trim()) {
+        const q = serviceSearchTerm.toLowerCase();
+        return (
+          s.name.toLowerCase().includes(q) ||
+          (s.category && s.category.toLowerCase().includes(q)) ||
+          (s.description && s.description.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [services, selectedServiceCategory, serviceSearchTerm]);
+
+  const handleAddServiceConsumption = async (service: HospitalityService) => {
+    if (!stay) return;
+    const qty = getServiceQuantity(service.id);
+    const notes = serviceNotes[service.id];
+    try {
+      setLoading(true);
+      await addStayConsumption(stay.id, {
+        serviceId: service.id,
+        isService: true,
+        productName: service.name,
+        quantity: qty,
+        unitPrice: service.price,
+        notes: notes?.trim() || undefined,
+      });
+      setServiceQuantities((prev) => ({ ...prev, [service.id]: 1 }));
+      setServiceNotes((prev) => {
+        const next = { ...prev };
+        delete next[service.id];
+        return next;
+      });
+    } catch (err: any) {
+      console.error('Erro ao adicionar serviço:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao registar serviço',
         description: err.message || 'Falha ao lançar na conta do quarto.',
       });
     } finally {
@@ -244,6 +313,7 @@ export function RoomConsumptionDialog({
   if (!stay) return null;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex flex-col max-h-[92dvh] w-full max-w-[calc(100vw-1.5rem)] sm:max-w-xl overflow-hidden p-0 rounded-3xl border border-blue-100/90 dark:border-slate-800 bg-white dark:bg-[#191E25] text-slate-800 dark:text-slate-100 shadow-2xl">
         {/* Top Fresh Pastel Accent Gradient */}
@@ -272,22 +342,36 @@ export function RoomConsumptionDialog({
 
         <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-5">
           <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
-            <TabsList className="grid grid-cols-2 mb-4 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl h-11">
+            <TabsList className="grid grid-cols-3 mb-4 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl h-11">
               <TabsTrigger
                 value="add"
                 className="text-xs font-bold gap-1.5 rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-[#191E25] data-[state=active]:text-[#007bb9] dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-sm"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Lançar do Bar / Stock
+                <Wine className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Bar &amp; Stock</span>
+                <span className="sm:hidden">Bar</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="services"
+                className="text-xs font-bold gap-1.5 rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-[#191E25] data-[state=active]:text-[#007bb9] dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-sm"
+              >
+                <ConciergeBell className="h-3.5 w-3.5 text-amber-500" />
+                <span>Serviços</span>
+                {services.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold ml-0.5">
+                    {services.length}
+                  </span>
+                )}
               </TabsTrigger>
               <TabsTrigger
                 value="tab"
                 className="text-xs font-bold gap-1.5 rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-[#191E25] data-[state=active]:text-[#007bb9] dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-sm"
               >
                 <Receipt className="h-3.5 w-3.5" />
-                Comanda ({consumptions.length})
+                <span className="hidden sm:inline">Comanda</span>
+                <span>({consumptions.length})</span>
                 {consumptionsTotal > 0 && (
-                  <span className="ml-1 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                  <span className="ml-0.5 text-emerald-600 dark:text-emerald-400 font-extrabold hidden md:inline">
                     ({formatCurrency(consumptionsTotal)})
                   </span>
                 )}
@@ -448,7 +532,167 @@ export function RoomConsumptionDialog({
               </div>
             </TabsContent>
 
-            {/* ABA 2: COMANDA DO QUARTO */}
+            {/* ABA 2: SERVIÇOS DO ALOJAMENTO */}
+            <TabsContent value="services" className="space-y-3.5 m-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#827568] pointer-events-none" />
+                  <Input
+                    placeholder="Pesquisar serviços (lavandaria, massagem, transfer, etc.)..."
+                    value={serviceSearchTerm}
+                    onChange={(e) => setServiceSearchTerm(e.target.value)}
+                    className="pl-10 h-10 text-base sm:text-xs rounded-xl border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] focus-visible:ring-[#007bb9]"
+                  />
+                </div>
+                {isManager && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setServicesManagerOpen(true)}
+                    className="h-10 text-xs font-bold rounded-xl border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/40 text-[#007bb9] dark:text-sky-300 hover:bg-blue-100 gap-1.5 shrink-0"
+                    title="Adicionar ou editar catálogo de serviços"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Gerir</span> Serviços
+                  </Button>
+                )}
+              </div>
+
+              {/* Categorias de Serviços */}
+              {serviceCategories.length > 1 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                  {serviceCategories.map((cat) => {
+                    const active = selectedServiceCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedServiceCategory(cat)}
+                        className={`h-7 text-xs px-3 rounded-full shrink-0 font-medium transition-all ${
+                          active
+                            ? 'bg-[#007bb9] text-white shadow-sm'
+                            : 'border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] text-[#5C5346] dark:text-[#D4C8B8] hover:bg-[#F2ECE1] dark:hover:bg-[#2A211B]'
+                        }`}
+                      >
+                        {cat === 'all' ? 'Todos' : cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Lista de Serviços */}
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {servicesLoading ? (
+                  <div className="py-8 text-center text-xs text-slate-400">
+                    A carregar catálogo de serviços...
+                  </div>
+                ) : filteredServices.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+                    <ConciergeBell className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600" />
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      Nenhum serviço disponível com estes filtros.
+                    </p>
+                    {isManager && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setServicesManagerOpen(true)}
+                        className="h-8 text-xs font-bold rounded-xl bg-[#007bb9] text-white"
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Cadastrar Serviços
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  filteredServices.map((service) => {
+                    const qty = getServiceQuantity(service.id);
+                    const itemTotal = qty * service.price;
+                    const notes = serviceNotes[service.id] || '';
+                    return (
+                      <div
+                        key={service.id}
+                        className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] flex flex-col gap-2 hover:border-[#007bb9]/40 transition-colors shadow-sm"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-bold text-xs text-[#251D18] dark:text-[#F5EFEB] truncate">
+                                {service.name}
+                              </p>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 font-bold shrink-0 border border-blue-100 dark:border-blue-900">
+                                {service.category || 'Geral'}
+                              </span>
+                            </div>
+                            <p className="text-xs font-extrabold text-[#007bb9] dark:text-sky-300 mt-0.5">
+                              {formatCurrency(service.price)}
+                              {service.description && (
+                                <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 ml-2">
+                                  • {service.description}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+
+                          {/* Seletor de Quantidade e Botão Lançar */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center border border-[#E5DFD6] dark:border-[#2C3440] rounded-xl overflow-hidden bg-[#FAF7F2] dark:bg-[#261E1A]">
+                              <button
+                                type="button"
+                                className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
+                                onClick={() => setServiceQuantity(service.id, qty - 1)}
+                                disabled={qty <= 1}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </button>
+                              <span className="text-xs font-bold px-2.5 text-[#251D18] dark:text-[#F5EFEB]">
+                                {qty}
+                              </span>
+                              <button
+                                type="button"
+                                className="p-1.5 px-2 hover:bg-[#F2ECE1] dark:hover:bg-[#34241B] text-[#5C5346] dark:text-[#D4C8B8] transition-colors"
+                                onClick={() => setServiceQuantity(service.id, qty + 1)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+
+                            <Button
+                              size="sm"
+                              className="h-9 px-3 text-xs font-bold rounded-xl bg-gradient-to-r from-[#007bb9] to-[#0091da] hover:from-[#006194] hover:to-[#007bb9] text-white shadow-sm gap-1"
+                              onClick={() => handleAddServiceConsumption(service)}
+                              disabled={loading}
+                            >
+                              <Plus className="h-3 w-3" />
+                              Lançar ({formatCurrency(itemTotal)})
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Campo de Notas Opcional */}
+                        <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                          <Input
+                            placeholder="Nota opcional para este serviço (ex: 2 camisas azuis, massagem às 16h)..."
+                            value={notes}
+                            onChange={(e) =>
+                              setServiceNotes((prev) => ({
+                                ...prev,
+                                [service.id]: e.target.value,
+                              }))
+                            }
+                            className="h-7 text-[11px] rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </TabsContent>
+
+            {/* ABA 3: COMANDA DO QUARTO */}
             <TabsContent value="tab" className="space-y-3 m-0">
               <Button type="button" variant="outline" size="sm" onClick={handlePrintTab} className="w-full h-10 rounded-xl text-xs font-bold gap-1.5">
                 <Printer className="h-3.5 w-3.5" />
@@ -468,9 +712,16 @@ export function RoomConsumptionDialog({
                       className="p-3 rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-white dark:bg-[#111418] flex items-center justify-between text-xs shadow-sm"
                     >
                       <div>
-                        <p className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
-                          {c.weightKg ? `${String(c.weightKg).replace('.', ',')} kg de` : `${c.quantity}×`} {c.productName}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-bold text-[#251D18] dark:text-[#F5EFEB]">
+                            {c.weightKg ? `${String(c.weightKg).replace('.', ',')} kg de` : `${c.quantity}×`} {c.productName}
+                          </p>
+                          {(c.isService || c.serviceId) && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#007bb9] dark:text-sky-300 border border-blue-200 dark:border-blue-800">
+                              🛎️ Serviço
+                            </span>
+                          )}
+                        </div>
                         {c.notes && (
                           <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium italic mt-0.5">
                             Nota: {c.notes}
@@ -532,5 +783,11 @@ export function RoomConsumptionDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ServicesManagerDialog
+      open={servicesManagerOpen}
+      onOpenChange={setServicesManagerOpen}
+    />
+    </>
   );
 }

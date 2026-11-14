@@ -58,6 +58,8 @@ async function authorizeUser(req: Request, companyId: string, kitchenOrderOnly =
 
 interface AddItemPayload {
   productId?: string;
+  serviceId?: string;
+  isService?: boolean;
   productName?: string;
   quantity: number;
   unitPrice?: number;
@@ -140,7 +142,7 @@ export async function POST(req: Request) {
           throw new Error('Lista de itens a lançar está vazia.');
         }
 
-        // O Firestore exige todas as leituras antes de qualquer escrita: ler já todos os produtos.
+        // O Firestore exige todas as leituras antes de qualquer escrita: ler já todos os produtos e serviços.
         const productSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
         const productIds = Array.from(
           new Set(
@@ -151,6 +153,20 @@ export async function POST(req: Request) {
         );
         const snaps = await Promise.all(productIds.map((id) => transaction.get(db.doc(`companies/${companyId}/products/${id}`))));
         productIds.forEach((id, idx) => productSnaps.set(id, snaps[idx]));
+
+        // Leitura prévia dos serviços cadastrados (se existirem)
+        const serviceSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+        const serviceIds = Array.from(
+          new Set(
+            addItems
+              .map((it) => (typeof it.serviceId === 'string' ? it.serviceId.trim() : ''))
+              .filter((id) => id !== '')
+          )
+        );
+        if (serviceIds.length > 0) {
+          const sSnaps = await Promise.all(serviceIds.map((id) => transaction.get(db.doc(`companies/${companyId}/services/${id}`))));
+          serviceIds.forEach((id, idx) => serviceSnaps.set(id, sSnaps[idx]));
+        }
 
         // Leitura prévia dos ingredientes de pratos (se existirem) ainda antes de qualquer escrita
         const rawIngredientIds: string[] = [];
@@ -188,6 +204,8 @@ export async function POST(req: Request) {
           let weighedKg: number | undefined;
           let resolvedProductName = (rawItem.productName || '').trim();
           let rawDeductionRecord: StayConsumptionItem['rawDeduction'] = undefined;
+          let isService = Boolean(rawItem.isService);
+          let resolvedServiceId: string | undefined = undefined;
 
           if (rawItem.productId && typeof rawItem.productId === 'string' && rawItem.productId.trim() !== '') {
             // Produto do catálogo: lê da base de dados e ignora o unitPrice do cliente
@@ -294,8 +312,24 @@ export async function POST(req: Request) {
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
               });
             }
+          } else if (rawItem.serviceId && typeof rawItem.serviceId === 'string' && rawItem.serviceId.trim() !== '') {
+            // Serviço oficial cadastrado no alojamento (Lavandaria, Massagem, Transfers, etc.)
+            const srvId = rawItem.serviceId.trim();
+            const srvSnap = serviceSnaps.get(srvId);
+            if (!srvSnap || !srvSnap.exists) {
+              throw new Error(`Serviço não encontrado (ID: ${srvId}).`);
+            }
+            const srvData = srvSnap.data() || {};
+            const servicePrice = Number(srvData.price);
+            if (!Number.isFinite(servicePrice) || servicePrice < 0) {
+              throw new Error(`Preço inválido para o serviço "${srvData.name || srvId}".`);
+            }
+            resolvedUnitPrice = servicePrice;
+            resolvedProductName = srvData.name || resolvedProductName || 'Serviço de Hotelaria';
+            isService = true;
+            resolvedServiceId = srvId;
           } else {
-            // Item livre (sem productId): apenas Admin ou Dono
+            // Item livre (sem productId e sem serviceId): apenas Admin ou Dono
             if (!isAdminOrOwner) {
               throw new Error('Apenas Administradores ou Donos podem lançar itens livres sem produto associado.');
             }
@@ -313,6 +347,8 @@ export async function POST(req: Request) {
           const consumptionItem: StayConsumptionItem = {
             id: `cons-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
             productId: rawItem.productId || undefined,
+            serviceId: resolvedServiceId,
+            isService: isService || Boolean(resolvedServiceId),
             productName: resolvedProductName,
             quantity: qty,
             unitPrice: resolvedUnitPrice,

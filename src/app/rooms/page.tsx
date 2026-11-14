@@ -17,6 +17,7 @@ import {
   MessageCircle,
   QrCode,
   ShieldAlert,
+  ConciergeBell,
 } from 'lucide-react';
 import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ import { RoomConsumptionDialog } from '@/components/rooms/room-consumption-dialo
 import { BookingDialog } from '@/components/rooms/booking-dialog';
 import { BookingsListDialog } from '@/components/rooms/bookings-list-dialog';
 import { RoomQrDialog } from '@/components/rooms/room-qr-dialog';
+import { ServicesManagerDialog } from '@/components/rooms/services-manager-dialog';
 import type { Room, Stay, Booking } from '@/lib/types';
 
 type FilterTab = 'all' | 'free' | 'occupied' | 'overtime' | 'cleaning' | 'open';
@@ -63,9 +65,12 @@ function RoomsPageContent() {
     loading,
     stats,
     refreshRealtimeStatuses,
+    services = [],
+    maxRoomsAllowed,
   } = useRooms();
   const { user } = useInventory();
   const isManager = user?.role === 'Admin' || user?.role === 'Dono';
+  const activeRoomsCount = useMemo(() => rooms.filter((r) => r.active !== false).length, [rooms]);
 
   // O filtro e o quarto vêm do endereço (?filtro=free|occupied|overtime|cleaning|open e ?quarto=ID),
   // para que um alerta ou cartão do painel abra já a lista certa.
@@ -120,6 +125,9 @@ function RoomsPageContent() {
   const [consumptionOpen, setConsumptionOpen] = useState(false);
   const [stayForConsumption, setStayForConsumption] = useState<Stay | null>(null);
   const [roomForConsumption, setRoomForConsumption] = useState<Room | null>(null);
+
+  // Modal de Catálogo de Serviços de Alojamento
+  const [servicesManagerOpen, setServicesManagerOpen] = useState(false);
 
   // Modais de Reservas Antecipadas
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
@@ -242,9 +250,16 @@ function RoomsPageContent() {
               <BedDouble className="h-6 w-6" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
-                Quadro de Quartos & Suítes
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
+                  Quadro de Quartos &amp; Suítes
+                </h1>
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/40 text-[#007bb9] dark:text-sky-300">
+                  {maxRoomsAllowed !== null
+                    ? `${activeRoomsCount}/${maxRoomsAllowed} Quartos (${Math.max(0, maxRoomsAllowed - activeRoomsCount)} disp.)`
+                    : `${activeRoomsCount} Quartos (Ilimitado)`}
+                </span>
+              </div>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
                 Monitorização ao segundo, check-in tátil, reservas antecipadas e controlo de estadias.
               </p>
@@ -277,6 +292,18 @@ function RoomsPageContent() {
               Controlo
             </Button>
           )}
+
+          {/* Catálogo de Serviços de Alojamento */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setServicesManagerOpen(true)}
+            title="Serviços de Alojamento (Lavandaria, Passadoria, Massagem, Transfers, etc.)"
+            className="h-10 text-xs gap-1.5 rounded-full border border-sky-200 dark:border-sky-900/60 bg-sky-50/60 dark:bg-sky-950/30 text-[#007bb9] dark:text-sky-300 hover:bg-sky-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
+          >
+            <ConciergeBell className="h-3.5 w-3.5 text-[#007bb9]" />
+            Serviços ({services.length})
+          </Button>
 
           {/* Reservas Antecipadas */}
           <Button
@@ -686,6 +713,11 @@ function RoomsPageContent() {
         open={qrDialogOpen}
         onOpenChange={setQrDialogOpen}
         room={roomForQr}
+      />
+
+      <ServicesManagerDialog
+        open={servicesManagerOpen}
+        onOpenChange={setServicesManagerOpen}
       />
     </div>
   );

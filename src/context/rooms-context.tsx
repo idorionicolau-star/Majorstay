@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback, useRef } from 'react';
-import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem, Booking, BookingStatus } from '@/lib/types';
+import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem, Booking, BookingStatus, HospitalityService } from '@/lib/types';
 import {
   isGuestCompany,
   getGuestRooms,
@@ -16,7 +16,12 @@ import {
   getGuestBookings,
   addGuestBooking,
   updateGuestBooking,
+  getGuestServices,
+  addGuestService,
+  updateGuestService,
+  deleteGuestService,
 } from '@/lib/guest-mode';
+import { companyMaxRooms } from '@/lib/tiers';
 import { useInventory } from '@/context/inventory-context';
 import { db } from '@/firebase/index';
 import {
@@ -87,19 +92,25 @@ interface RoomsContextType {
     stayId: string,
     item: {
       productId?: string;
+      serviceId?: string;
+      isService?: boolean;
       productName: string;
       quantity: number;
       unitPrice: number;
       weightKg?: number;
+      notes?: string;
     }
   ) => Promise<void>;
   addStayConsumptionsBulk: (
     stayId: string,
     items: {
       productId?: string;
+      serviceId?: string;
+      isService?: boolean;
       productName: string;
       quantity: number;
       unitPrice: number;
+      notes?: string;
     }[]
   ) => Promise<void>;
   removeStayConsumption: (stayId: string, consumptionId: string, reason?: string) => Promise<void>;
@@ -107,6 +118,12 @@ interface RoomsContextType {
   addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<Booking>;
   updateBookingStatus: (bookingId: string, status: BookingStatus) => Promise<void>;
   cancelBooking: (bookingId: string) => Promise<void>;
+  services: HospitalityService[];
+  servicesLoading: boolean;
+  addService: (service: Omit<HospitalityService, 'id' | 'createdAt'>) => Promise<string>;
+  updateService: (id: string, data: Partial<HospitalityService>) => Promise<void>;
+  deleteService: (id: string) => Promise<void>;
+  maxRoomsAllowed: number | null;
 }
 
 export const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
@@ -118,18 +135,21 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
   const [rawRooms, setRawRooms] = useState<Room[]>([]);
   const [stays, setStays] = useState<Stay[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [services, setServices] = useState<HospitalityService[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
 
   const isGuest = isGuestCompany(companyId);
 
-  // Escuta das coleções de Quartos e Estadias
+  // Escuta das coleções de Quartos, Estadias e Serviços
   useEffect(() => {
     if (isGuest) {
       const loadGuestData = () => {
         setRawRooms(getGuestRooms());
         setStays(getGuestStays());
         setBookings(getGuestBookings());
+        setServices(getGuestServices());
       };
       loadGuestData();
       setLoading(false);
@@ -141,11 +161,13 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       setRawRooms([]);
       setStays([]);
       setBookings([]);
+      setServices([]);
       setLoading(false);
       return;
     }
 
     setLoading(true);
+    setServicesLoading(true);
 
     const roomsRef = collection(db, `companies/${companyId}/rooms`);
     const roomsQuery = query(roomsRef, orderBy('name', 'asc'));
@@ -200,10 +222,30 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    const servicesRef = collection(db, `companies/${companyId}/services`);
+    const servicesQuery = query(servicesRef, orderBy('name', 'asc'));
+
+    const unsubServices = onSnapshot(
+      servicesQuery,
+      (snapshot) => {
+        const list = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        })) as HospitalityService[];
+        setServices(list);
+        setServicesLoading(false);
+      },
+      (error) => {
+        console.error('Erro ao carregar serviços:', error);
+        setServicesLoading(false);
+      }
+    );
+
     return () => {
       unsubRooms();
       unsubStays();
       unsubBookings();
+      unsubServices();
     };
   }, [companyId, canRooms, isGuest]);
 
@@ -322,8 +364,21 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     };
   }, [rooms, stays]);
 
+  const maxRoomsAllowed = useMemo(() => companyMaxRooms(companyData), [companyData]);
+
   // 1. Criar Quarto
   const addRoom = async (roomData: Omit<Room, 'id' | 'createdAt' | 'status'>): Promise<string> => {
+    const activeRoomsCount = rawRooms.filter((r) => r.active !== false).length;
+    if (maxRoomsAllowed !== null && activeRoomsCount >= maxRoomsAllowed) {
+      const msg = `Limite de quartos atingido (${maxRoomsAllowed} quartos permitidos no plano atual). Faça upgrade para adicionar mais quartos.`;
+      toast({
+        variant: 'destructive',
+        title: 'Limite do plano atingido',
+        description: msg,
+      });
+      throw new Error(msg);
+    }
+
     if (isGuest) {
       const newRoom: Room = {
         id: `room-${Date.now()}`,
@@ -384,6 +439,62 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const roomDoc = doc(db, `companies/${companyId}/rooms/${id}`);
     await deleteDoc(roomDoc);
     toast({ title: 'Quarto eliminado' });
+  };
+
+  // --- Gestão de Serviços do Alojamento (Lavandaria, Massagem, Transfers, Comodidades) ---
+  const addService = async (serviceData: Omit<HospitalityService, 'id' | 'createdAt'>): Promise<string> => {
+    if (isGuest) {
+      const newService: HospitalityService = {
+        id: `srv-${Date.now()}`,
+        ...serviceData,
+        createdAt: new Date().toISOString(),
+      };
+      addGuestService(newService);
+      setServices((prev) => [...prev, newService]);
+      toast({ title: 'Serviço cadastrado com sucesso!', description: serviceData.name });
+      return newService.id;
+    }
+
+    if (!companyId) throw new Error('Empresa não selecionada.');
+    const srvRef = collection(db, `companies/${companyId}/services`);
+    const docRef = await addDoc(srvRef, {
+      ...serviceData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: 'Serviço adicionado', description: serviceData.name });
+    return docRef.id;
+  };
+
+  const updateService = async (id: string, data: Partial<HospitalityService>): Promise<void> => {
+    if (isGuest) {
+      updateGuestService(id, data);
+      setServices((prev) => prev.map((s) => (s.id === id ? { ...s, ...data, updatedAt: new Date().toISOString() } : s)));
+      toast({ title: 'Serviço atualizado com sucesso!' });
+      return;
+    }
+
+    if (!companyId) return;
+    const docRef = doc(db, `companies/${companyId}/services/${id}`);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+    toast({ title: 'Serviço atualizado com sucesso!' });
+  };
+
+  const deleteService = async (id: string): Promise<void> => {
+    if (isGuest) {
+      deleteGuestService(id);
+      setServices((prev) => prev.filter((s) => s.id !== id));
+      toast({ title: 'Serviço removido' });
+      return;
+    }
+
+    if (!companyId) return;
+    const docRef = doc(db, `companies/${companyId}/services/${id}`);
+    await deleteDoc(docRef);
+    toast({ title: 'Serviço removido' });
   };
 
   // 4. Check-in de Estadia
@@ -641,10 +752,13 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     stayId: string,
     item: {
       productId?: string;
+      serviceId?: string;
+      isService?: boolean;
       productName: string;
       quantity: number;
       unitPrice: number;
       weightKg?: number;
+      notes?: string;
     }
   ): Promise<void> => {
     const currentStay = stays.find((s) => s.id === stayId);
@@ -659,11 +773,14 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       const newConsumption: StayConsumptionItem = {
         id: `cons-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         productId: item.productId,
+        serviceId: item.serviceId,
+        isService: item.isService,
         productName: item.productName,
         quantity: qty,
         unitPrice: price,
         totalPrice,
         ...(weightKg ? { weightKg } : {}),
+        ...(item.notes ? { notes: item.notes } : {}),
         addedAt: new Date().toISOString(),
         addedBy: user?.id || 'unknown',
         addedByName: user?.username || 'Barman / Receção',
@@ -678,7 +795,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         totalAmountDue: newTotalDue,
       });
       toast({
-        title: 'Consumo registado no quarto!',
+        title: item.isService ? 'Serviço registado no quarto!' : 'Consumo registado no quarto!',
         description: `${qty}× ${item.productName} (${formatCurrency(totalPrice)})`,
       });
       return;
@@ -693,16 +810,19 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       items: [
         {
           productId: item.productId,
+          serviceId: item.serviceId,
+          isService: item.isService,
           productName: item.productName,
           quantity: qty,
           unitPrice: price,
+          notes: item.notes,
           ...(weightKg ? { weightKg } : {}),
         },
       ],
     });
 
     toast({
-      title: 'Consumo registado no quarto!',
+      title: item.isService ? 'Serviço registado no quarto!' : 'Consumo registado no quarto!',
       description: `${weightKg ? `${weightKg} kg de` : `${qty}×`} ${item.productName} (${formatCurrency(totalPrice)})`,
     });
   };
@@ -712,9 +832,12 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     stayId: string,
     items: {
       productId?: string;
+      serviceId?: string;
+      isService?: boolean;
       productName: string;
       quantity: number;
       unitPrice: number;
+      notes?: string;
     }[]
   ): Promise<void> => {
     if (!items || items.length === 0) return;
@@ -728,10 +851,13 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         return {
           id: `cons-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
           productId: item.productId,
+          serviceId: item.serviceId,
+          isService: item.isService,
           productName: item.productName,
           quantity: qty,
           unitPrice: price,
           totalPrice: qty * price,
+          ...(item.notes ? { notes: item.notes } : {}),
           addedAt: new Date().toISOString(),
           addedBy: user?.id || 'unknown',
           addedByName: user?.username || 'Barman / Receção',
@@ -756,6 +882,21 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     }
 
     if (!companyId) throw new Error('Empresa indisponível.');
+
+    await authedFetch('/api/stays/consumption', 'POST', {
+      companyId,
+      stayId,
+      action: 'add',
+      items: items.map((item) => ({
+        productId: item.productId,
+        serviceId: item.serviceId,
+        isService: item.isService,
+        productName: item.productName,
+        quantity: Math.max(1, item.quantity || 1),
+        unitPrice: Math.max(0, item.unitPrice || 0),
+        notes: item.notes,
+      })),
+    });
 
     await authedFetch('/api/stays/consumption', 'POST', {
       companyId,
@@ -890,6 +1031,12 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         addBooking,
         updateBookingStatus,
         cancelBooking,
+        services,
+        servicesLoading,
+        addService,
+        updateService,
+        deleteService,
+        maxRoomsAllowed,
       }}
     >
       {children}

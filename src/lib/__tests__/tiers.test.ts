@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { companyHas, companyMaxUsers, companyTierLabel, featureForPath, onLegacyPlan, resolvePayTier, tierAmount, tierFor } from '../tiers';
+import { companyHas, companyMaxRooms, companyMaxUsers, companyTierLabel, featureForPath, onLegacyPlan, resolvePayTier, tierAmount, tierFor } from '../tiers';
 
 describe('planos MajorStay: preços', () => {
     it('Pro preços de hotelaria (1500 MT/mês)', () => {
@@ -21,33 +21,38 @@ describe('planos MajorStay: o que cada alojamento tem', () => {
     const antiga = { status: 'active' };
     const teste = { status: 'trial', tier: 'pro' };
 
-    it('Pro: quartos, bar, reservas e documentos, 3 utilizadores', () => {
+    it('Pro: até 15 quartos, bar, reservas e documentos, 3 utilizadores', () => {
         expect(companyHas(pro, 'rooms')).toBe(true);
         expect(companyHas(pro, 'tapSell')).toBe(true);
         expect(companyHas(pro, 'bookings')).toBe(true);
         expect(companyHas(pro, 'documents')).toBe(true);
         expect(companyHas(pro, 'locations')).toBe(false);
+        expect(companyMaxRooms(pro)).toBe(15);
         expect(companyMaxUsers(pro)).toBe(3);
     });
-    it('Business: encomendas e variações sim, 10 utilizadores', () => {
+    it('Business: até 30 quartos, encomendas e variações sim, 10 utilizadores', () => {
         expect(companyHas(business, 'orders')).toBe(true);
         expect(companyHas(business, 'variants')).toBe(true);
         expect(companyHas(business, 'production')).toBe(true);
+        expect(companyMaxRooms(business)).toBe(30);
         expect(companyMaxUsers(business)).toBe(10);
     });
-    it('Enterprise: tudo, sem limite de utilizadores', () => {
+    it('Enterprise: tudo, quartos e utilizadores ilimitados', () => {
         expect(companyHas(enterprise, 'production')).toBe(true);
         expect(companyHas(enterprise, 'locations')).toBe(true);
+        expect(companyMaxRooms(enterprise)).toBeNull();
         expect(companyMaxUsers(enterprise)).toBeNull();
     });
-    it('quem já pagava antes dos planos não perde nada', () => {
+    it('quem já pagava antes dos planos não perde nada (quartos e utilizadores ilimitados)', () => {
         expect(onLegacyPlan(antiga)).toBe(true);
         expect(companyHas(antiga, 'production')).toBe(true);
+        expect(companyMaxRooms(antiga)).toBeNull();
         expect(companyMaxUsers(antiga)).toBeNull();
         expect(companyTierLabel(antiga)).toMatch(/Completo/);
     });
     it('em teste tudo aberto, mas não conta como plano antigo', () => {
         expect(companyHas(teste, 'production')).toBe(true);
+        expect(companyMaxRooms(teste)).toBeNull();
         expect(onLegacyPlan({ status: 'trial' })).toBe(false);
     });
     it('a funcionalidade diz qual o plano mais barato que a tem', () => {

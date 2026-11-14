@@ -22,6 +22,8 @@ export type Tier = {
     monthly: number;
     /** para quem é */
     forWho: string;
+    /** quartos incluídos (null = sem limite) */
+    maxRooms: number | null;
     /** utilizadores incluídos (null = sem limite) */
     maxUsers: number | null;
     features: Feature[];
@@ -39,12 +41,14 @@ export const TIERS: Tier[] = [
         label: 'Pro',
         monthly: 1500,
         forWho: 'Guest Houses, Pensões e Alojamentos',
+        maxRooms: 15,
         maxUsers: 3,
         features: PRO_FEATURES,
         highlights: [
-            'Até 10 quartos e estadias em tempo real',
+            'Até 15 quartos e estadias em tempo real',
             'Cobrança por hora e pernoita',
             'Lounge & Bar com comanda digital',
+            'Serviços de alojamento sem limites',
             'Recibos e reservas por WhatsApp',
             '3 utilizadores incluídos',
         ],
@@ -54,12 +58,14 @@ export const TIERS: Tier[] = [
         label: 'Business',
         monthly: 3500,
         forWho: 'Lodges, Motéis e Hotéis Médios',
+        maxRooms: 30,
         maxUsers: 10,
         features: BUSINESS_FEATURES,
         highlights: [
-            'Até 30 quartos e reservas antecipadas',
+            'De 16 até 30 quartos e reservas antecipadas',
             'Controlo de turnos de receção e auditoria',
             'Gestão de stock de Bar e Frigobar',
+            'Serviços de alojamento sem limites',
             'Documentos e comanda com a sua marca',
             '10 utilizadores incluídos',
         ],
@@ -69,11 +75,13 @@ export const TIERS: Tier[] = [
         label: 'Enterprise',
         monthly: 7500,
         forWho: 'Hotéis de Grande Porte, Resorts e Redes',
+        maxRooms: null,
         maxUsers: null,
         features: ENTERPRISE_FEATURES,
         highlights: [
             'Quartos ilimitados e multi-propriedades',
             'Tudo do Business + Várias localizações',
+            'Serviços de alojamento sem limites',
             'Auditoria avançada e permissões de gerência',
             'Suporte prioritário dedicado 24/7',
             'Utilizadores ilimitados',
@@ -100,9 +108,10 @@ export const tierById = (id: unknown): Tier | undefined => {
             label: 'Básico',
             monthly: 1500,
             forWho: 'Alojamento Inicial',
+            maxRooms: 15,
             maxUsers: 1,
             features: PRO_FEATURES,
-            highlights: ['1 utilizador', 'Quadro de Quartos e Bar', 'Cobrança por hora'],
+            highlights: ['1 utilizador', 'Até 15 quartos', 'Quadro de Quartos e Bar', 'Cobrança por hora'],
         };
     }
     return TIERS.find((t) => t.id === id);
@@ -139,6 +148,12 @@ const allOpen = (c: CompanyLike) => !c || c.status === 'trial' || !isTierId(c.ti
 export function companyHas(c: CompanyLike, f: Feature): boolean {
     if (allOpen(c)) return true;
     return tierById(c!.tier)!.features.includes(f);
+}
+
+/** Quartos permitidos (null = sem limite). */
+export function companyMaxRooms(c: CompanyLike): number | null {
+    if (allOpen(c)) return null;
+    return tierById(c?.tier)?.maxRooms ?? null;
 }
 
 /** Utilizadores permitidos (null = sem limite). */
