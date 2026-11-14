@@ -32,12 +32,12 @@ export default function ControloPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     if (isGuest || !companyId || !isManager) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const { getAuth } = await import('firebase/auth');
@@ -67,6 +67,20 @@ export default function ControloPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Tempo real: volta a ler a cada 10 s (só com o ecrã visível) e logo que a janela volta a ficar à frente
+  useEffect(() => {
+    if (isGuest || !companyId || !isManager) return;
+    const tick = () => { if (document.visibilityState === 'visible') load(true); };
+    const id = setInterval(tick, 10_000);
+    document.addEventListener('visibilitychange', tick);
+    window.addEventListener('focus', tick);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+      window.removeEventListener('focus', tick);
+    };
+  }, [load, isGuest, companyId, isManager]);
 
   // O gerente fecha o turno de quem se esqueceu: conta a caixa e o sistema regista a diferença
   const closeShiftAsManager = async (shiftId: string) => {
@@ -113,7 +127,7 @@ export default function ControloPage() {
             Pedidos recusados e consumos removidos da conta, com quem fez e porquê. Veja se há padrões estranhos.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading} className="h-10 rounded-full gap-1.5 text-xs shrink-0">
+        <Button variant="outline" size="sm" onClick={() => load()} disabled={loading} className="h-10 rounded-full gap-1.5 text-xs shrink-0">
           <RefreshCw className="h-3.5 w-3.5" /> Atualizar
         </Button>
       </div>
