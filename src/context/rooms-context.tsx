@@ -446,7 +446,11 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     if (isGuest) {
       const newService: HospitalityService = {
         id: `srv-${Date.now()}`,
-        ...serviceData,
+        name: serviceData.name.trim(),
+        category: serviceData.category?.trim() || 'Geral',
+        price: Number(serviceData.price) || 0,
+        active: serviceData.active !== false,
+        ...(serviceData.description?.trim() ? { description: serviceData.description.trim() } : {}),
         createdAt: new Date().toISOString(),
       };
       addGuestService(newService);
@@ -457,11 +461,21 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     if (!companyId) throw new Error('Empresa não selecionada.');
     const srvRef = collection(db, `companies/${companyId}/services`);
-    const docRef = await addDoc(srvRef, {
-      ...serviceData,
+    
+    // Sanitização rigorosa: o Firestore rejeita valores 'undefined'
+    const payload: Record<string, any> = {
+      name: serviceData.name.trim(),
+      category: serviceData.category?.trim() || 'Geral',
+      price: Number(serviceData.price) || 0,
+      active: serviceData.active !== false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (serviceData.description && serviceData.description.trim()) {
+      payload.description = serviceData.description.trim();
+    }
+
+    const docRef = await addDoc(srvRef, payload);
     toast({ title: 'Serviço adicionado', description: serviceData.name });
     return docRef.id;
   };
@@ -476,10 +490,18 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     if (!companyId) return;
     const docRef = doc(db, `companies/${companyId}/services/${id}`);
-    await updateDoc(docRef, {
-      ...data,
+    const payload: Record<string, any> = {
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (data.category !== undefined) payload.category = data.category.trim();
+    if (data.price !== undefined) payload.price = Number(data.price) || 0;
+    if (data.active !== undefined) payload.active = data.active;
+    if (data.description !== undefined) {
+      payload.description = data.description ? data.description.trim() : '';
+    }
+
+    await updateDoc(docRef, payload);
     toast({ title: 'Serviço atualizado com sucesso!' });
   };
 

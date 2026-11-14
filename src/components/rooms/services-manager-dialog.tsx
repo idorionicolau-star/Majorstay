@@ -97,18 +97,16 @@ export function ServicesManagerDialog({ open, onOpenChange }: ServicesManagerDia
           name: name.trim(),
           category: category.trim(),
           price: Number(price),
-          description: description.trim() || undefined,
+          description: description.trim(),
         });
-        toast({ title: 'Serviço atualizado com sucesso!' });
       } else {
         await addService({
           name: name.trim(),
           category: category.trim(),
           price: Number(price),
-          description: description.trim() || undefined,
+          description: description.trim(),
           active: true,
         });
-        toast({ title: 'Serviço adicionado com sucesso!' });
       }
       resetForm();
     } catch (err: any) {
