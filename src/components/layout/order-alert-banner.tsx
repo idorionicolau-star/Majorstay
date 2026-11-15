@@ -7,7 +7,7 @@ import { BellRing, Volume2, VolumeX } from "lucide-react";
 import { InventoryContext } from "@/context/inventory-context";
 import { authedFetch } from "@/lib/api-client";
 import { attentionCount, type AlertOrder } from "@/lib/order-alert";
-import { audioReady, playOrderAlert, unlockAudio } from "@/lib/beep";
+import { audioReady, playOrderAlert, stopOrderAlert, unlockAudio } from "@/lib/beep";
 
 type Order = AlertOrder & { roomName?: string };
 
@@ -16,8 +16,8 @@ const REPEAT_MS = 30_000;
 const MUTE_KEY = "majorstay.orderSound";
 
 /**
- * Aviso de pedidos dos quartos em QUALQUER página: faixa no topo + 3 bips.
- * O som repete de 30 em 30 s enquanto houver pedido por aceitar ou entrega atrasada.
+ * Aviso de pedidos dos quartos em QUALQUER página: faixa no topo + aviso sonoro por voz.
+ * O som para assim que alguém clica em "Ver pedidos" ou entra na página de quartos.
  */
 export function OrderAlertBanner() {
   const ctx = useContext(InventoryContext);
@@ -29,6 +29,7 @@ export function OrderAlertBanner() {
   const [muted, setMuted] = useState(false);
   const [ready, setReady] = useState(false);
   const seen = useRef<Set<string>>(new Set());
+  const acknowledged = useRef<Set<string>>(new Set());
   const firstLoad = useRef(true);
   const lastBeep = useRef(0);
 
@@ -71,27 +72,47 @@ export function OrderAlertBanner() {
   const counts = attentionCount(orders);
   const needs = counts.pending + counts.late > 0;
 
-  // Aviso sonoro por voz: logo que chega um pedido novo, e a repetir de 30 em 30 s enquanto houver algo por atender
+  // Ao entrar em /rooms (ou clicar em Ver pedidos), interrompe o som de imediato e reconhece os pedidos atuais
+  useEffect(() => {
+    if (pathname.startsWith("/rooms")) {
+      stopOrderAlert();
+      orders.forEach((o) => acknowledged.current.add(o.id));
+    }
+  }, [pathname, orders]);
+
+  const handleAcknowledge = () => {
+    stopOrderAlert();
+    orders.forEach((o) => acknowledged.current.add(o.id));
+  };
+
+  // Pedidos que ainda não foram vistos/reconhecidos
+  const unackOrders = orders.filter((o) => !acknowledged.current.has(o.id));
+  const unackCounts = attentionCount(unackOrders);
+  const needsSound = unackCounts.pending + unackCounts.late > 0;
+
+  // Aviso sonoro por voz: logo que chega um pedido novo toca o aviso uma vez
   useEffect(() => {
     const newPending = orders.some((o) => o.status === "pending" && !seen.current.has(o.id));
     orders.forEach((o) => seen.current.add(o.id));
     const wasFirst = firstLoad.current;
     firstLoad.current = false;
-    if (muted || !needs) return;
+    if (muted) return;
     const now = Date.now();
-    if ((newPending && !wasFirst) || now - lastBeep.current >= REPEAT_MS) {
+    if (newPending && !wasFirst) {
       if (playOrderAlert()) lastBeep.current = now;
     }
-  }, [orders, muted, needs]);
+  }, [orders, muted]);
 
-  // enquanto há algo por atender, a repetição também corre entre consultas
+  // Repetição de 30 em 30 s apenas enquanto ninguém clicou em "Ver pedidos" nem está na página dos quartos
   useEffect(() => {
-    if (!needs || muted) return;
+    if (!needsSound || muted || pathname.startsWith("/rooms")) return;
     const t = setInterval(() => {
-      if (Date.now() - lastBeep.current >= REPEAT_MS && playOrderAlert()) lastBeep.current = Date.now();
+      if (Date.now() - lastBeep.current >= REPEAT_MS && playOrderAlert()) {
+        lastBeep.current = Date.now();
+      }
     }, 5_000);
     return () => clearInterval(t);
-  }, [needs, muted]);
+  }, [needsSound, muted, pathname]);
 
   if (!enabled) return null;
 
@@ -114,7 +135,7 @@ export function OrderAlertBanner() {
     <div role="alert" className="sticky top-0 z-[60] flex flex-wrap items-center justify-center gap-3 bg-gradient-to-r from-amber-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-md">
       <span className="flex items-center gap-2"><BellRing className="h-4 w-4 animate-pulse" />{text}</span>
       {!onRooms && (
-        <Link href="/rooms" className="rounded-md bg-white px-3 py-1 text-xs font-bold text-rose-700 shadow-sm">Ver pedidos</Link>
+        <Link href="/rooms" onClick={handleAcknowledge} className="rounded-md bg-white px-3 py-1 text-xs font-bold text-rose-700 shadow-sm">Ver pedidos</Link>
       )}
       {!muted && !ready && !audioReady() && (
         <button type="button" onClick={() => unlockAudio().then(setReady)} className="flex items-center gap-1 rounded-md bg-white/20 px-3 py-1 text-xs font-bold">

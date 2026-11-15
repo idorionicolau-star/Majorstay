@@ -2,7 +2,7 @@
 export type AlertOrder = { id: string; status: string; createdAt?: string; etaAt?: string };
 
 export const ACCEPT_LIMIT_MIN = 3; // pedido por aceitar há mais de 3 min fica destacado
-export const ETA_CHOICES = [5, 10, 15, 20] as const;
+export const ETA_CHOICES = [5, 10, 15, 20, 30, 45, 60] as const;
 
 const ms = (iso?: string) => {
   const t = iso ? new Date(iso).getTime() : NaN;

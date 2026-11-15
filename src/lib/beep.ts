@@ -94,5 +94,16 @@ export function playFallbackBeeps(): boolean {
   return true;
 }
 
+/** Interrompe imediatamente a reprodução do áudio (ex: quando clica em ver pedido) */
+export function stopOrderAlert(): void {
+  if (typeof window === 'undefined') return;
+  if (orderAudio) {
+    try {
+      orderAudio.pause();
+      orderAudio.currentTime = 0;
+    } catch { /* ignora */ }
+  }
+}
+
 /** Compatibilidade */
 export const playThreeBeeps = playOrderAlert;

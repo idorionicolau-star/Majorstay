@@ -40,7 +40,7 @@ export function PendingRoomOrders() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
-  const [eta, setEta] = useState<number>(10);
+  const [etas, setEtas] = useState<Record<string, number>>({});
   const [tick, setTick] = useState(0);
   useEffect(() => { const t = setInterval(() => setTick((n) => n + 1), 15_000); return () => clearInterval(t); }, []);
 
@@ -72,9 +72,10 @@ export function PendingRoomOrders() {
 
   const confirmOrder = async (order: PendingOrder) => {
     setBusyId(order.id);
+    const orderEta = etas[order.id] ?? 15;
     try {
-      await authedFetch('/api/stays/consumption', 'POST', { companyId, stayId: order.stayId, action: 'add', orderId: order.id, etaMinutes: eta });
-      toast({ title: 'Pedido confirmado', description: `${order.roomName}: ${formatCurrency(order.total)} lançado na conta. Pronto em ${eta} min.` });
+      await authedFetch('/api/stays/consumption', 'POST', { companyId, stayId: order.stayId, action: 'add', orderId: order.id, etaMinutes: orderEta });
+      toast({ title: 'Pedido confirmado', description: `${order.roomName}: ${formatCurrency(order.total)} lançado na conta. Pronto em ${orderEta >= 60 ? '1 hora' : `${orderEta} min`}.` });
     } catch (e) {
       toast({ title: 'Não foi possível confirmar', description: e instanceof Error ? e.message : 'Tente de novo.', variant: 'destructive' });
     } finally {
@@ -178,11 +179,26 @@ export function PendingRoomOrders() {
               </div>
             ) : (
               <>
-              <div className="flex items-center gap-1.5 text-[11px]">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
                 <span className="font-semibold text-slate-500">Pronto em:</span>
-                {ETA_CHOICES.map((m) => (
-                  <button key={m} type="button" onClick={() => setEta(m)} className={cn('h-7 rounded-full px-2.5 font-bold border', eta === m ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700')}>{m} min</button>
-                ))}
+                {ETA_CHOICES.map((m) => {
+                  const currentEta = etas[o.id] ?? 15;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setEtas((prev) => ({ ...prev, [o.id]: m }))}
+                      className={cn(
+                        'h-7 rounded-full px-2.5 font-bold border transition-colors',
+                        currentEta === m
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                      )}
+                    >
+                      {m >= 60 ? '1 h' : `${m} min`}
+                    </button>
+                  );
+                })}
               </div>
               <div className="grid grid-cols-[1fr_auto] gap-2">
                 <Button type="button" className="h-10 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" disabled={busyId === o.id} onClick={() => confirmOrder(o)}>
