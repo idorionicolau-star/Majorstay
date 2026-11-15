@@ -12,6 +12,7 @@ import { isKitchenProduct, KITCHEN_ENABLED } from '@/lib/features';
  *   list                                  → contas abertas
  *   open   { clientName }                 → abre conta
  *   add    { tabId, productId, quantity } → lança (preço do servidor; o stock desce já)
+ *   dec    { tabId, itemId }              → menos 1 (o stock volta)
  *   remove { tabId, itemId, reason }      → tira um item (o stock volta)
  *   close  { tabId, paymentMethod }       → cobra: cria as vendas no caixa
  *   toRoom { tabId, stayId }              → passa os itens para a conta de um quarto
@@ -62,7 +63,8 @@ export async function POST(req: Request) {
       const open = await col.where('status', '==', 'open').limit(100).get();
       if (open.docs.length >= 100) return NextResponse.json({ error: 'Há contas abertas a mais. Feche algumas.' }, { status: 400 });
       const ref = col.doc();
-      await ref.set({ clientName, status: 'open', items: [], openedAt: now(), openedByUid: decoded.uid, openedByName: name, companyId });
+      const phone = String(body.phone ?? '').replace(/[^0-9+ ]/g, '').trim().slice(0, 20);
+      await ref.set({ clientName, ...(phone ? { phone } : {}), status: 'open', items: [], openedAt: now(), openedByUid: decoded.uid, openedByName: name, companyId });
       return NextResponse.json({ success: true, id: ref.id });
     }
 
@@ -110,12 +112,38 @@ export async function POST(req: Request) {
           addedAt: now(),
           addedByName: name,
         };
+        const same = items.find((i) => i.productId === productId && i.unitPrice === price);
         tx.update(prodRef, { stock: stock - quantity, lastUpdated: now() });
         tx.set(db.collection(`companies/${companyId}/stockMovements`).doc(), {
           productId, productName: item.productName, type: 'OUT', quantity, fromLocationId: p.location || 'Principal',
           reason: `Conta aberta de ${tabSnap.data()?.clientName}`, userId: decoded.uid, userName: name, timestamp: admin.firestore.FieldValue.serverTimestamp(),
         });
-        tx.update(tabRef, { items: [...items, item], updatedAt: now() });
+        const nextItems = same
+          ? items.map((i) => (i.id === same.id ? { ...i, quantity: i.quantity + quantity, totalPrice: round2((i.quantity + quantity) * i.unitPrice) } : i))
+          : [...items, item];
+        tx.update(tabRef, { items: nextItems, updatedAt: now() });
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'dec') {
+      await db.runTransaction(async (tx) => {
+        const tabSnap = await tx.get(tabRef);
+        if (!tabSnap.exists || tabSnap.data()?.status !== 'open') throw new Error('Esta conta já não está aberta.');
+        const items: TabItem[] = tabSnap.data()?.items || [];
+        const item = items.find((i) => i.id === body.itemId);
+        if (!item) throw new Error('Item não encontrado.');
+        if (item.quantity <= 1) throw new Error('Para retirar o último, use o lixo e indique o motivo.');
+        const prodRef = db.doc(`companies/${companyId}/products/${item.productId}`);
+        const prodSnap = await tx.get(prodRef);
+        if (prodSnap.exists) {
+          tx.update(prodRef, { stock: (Number(prodSnap.data()?.stock) || 0) + 1, lastUpdated: now() });
+          tx.set(db.collection(`companies/${companyId}/stockMovements`).doc(), {
+            productId: item.productId, productName: item.productName, type: 'IN', quantity: 1, toLocationId: prodSnap.data()?.location || 'Principal',
+            reason: `Menos 1 na conta de ${tabSnap.data()?.clientName}`, userId: decoded.uid, userName: name, timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+        tx.update(tabRef, { items: items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity - 1, totalPrice: round2((i.quantity - 1) * i.unitPrice) } : i)), updatedAt: now() });
       });
       return NextResponse.json({ success: true });
     }

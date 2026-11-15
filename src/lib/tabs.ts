@@ -16,6 +16,7 @@ export type TabItem = {
 export type Tab = {
   id: string;
   clientName: string;
+  phone?: string;
   status: 'open' | 'closed' | 'transferred';
   items: TabItem[];
   openedAt: string;

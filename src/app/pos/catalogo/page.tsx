@@ -58,6 +58,7 @@ import {
 
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { PosCart } from '@/components/pos/pos-cart';
+import { OpenTabs } from '@/components/pos/open-tabs';
 import Link from 'next/link';
 import { setSellMode } from '@/lib/sell-mode';
 import { holdCart, resumeCart, parseHeld, type HeldCart } from '@/lib/held-carts';
@@ -511,6 +512,8 @@ export default function POSPage() {
                     </Button>
                 </div>
             </div>
+
+            <OpenTabs />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* LEFT: Product Grid */}
