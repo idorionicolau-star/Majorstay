@@ -582,7 +582,8 @@ export type Room = {
   ratePerHour: number; // Preço por hora em MT
   minimumHours: number; // Mínimo de horas (padrão: 1)
   overnightPrice?: number; // Preço fixo da pernoite (opcional)
-  overnightHours?: number; // Horas da pernoite (padrão: 12)
+  overnightHours?: number; // (antigo) Horas da pernoite — já não é usado: a pernoite termina à hora de saída
+  overnightEndHour?: number; // Hora a que a pernoite termina, 0-23 (padrão: 10 = 10:00 do dia seguinte)
   dailyPrice?: number; // Preço fixo da diária de 24h (opcional)
   cleaningDurationMinutes?: number; // Duração estimada da limpeza (minutos)
   cleaningStartedAt?: string | any; // Timestamp do início da higienização atual

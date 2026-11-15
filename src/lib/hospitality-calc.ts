@@ -348,3 +348,19 @@ export function computeRoomCleaningStatus(params: {
     startedAt,
   };
 }
+
+export const DEFAULT_OVERNIGHT_END_HOUR = 10;
+
+/**
+ * Horas de uma pernoite que termina a uma hora fixa (ex.: às 10:00 da manhã seguinte), contadas a partir de agora.
+ * Chegou às 17:00 → 17h; chegou à 1h da manhã → 9h (até às 10:00 desse dia). Arredonda para cima à hora inteira.
+ */
+export function overnightHoursUntil(now: Date, endHour: number = DEFAULT_OVERNIGHT_END_HOUR, timeZone: string = 'Africa/Maputo'): number {
+  const end = Number.isInteger(endHour) && endHour >= 0 && endHour <= 23 ? endHour : DEFAULT_OVERNIGHT_END_HOUR;
+  const parts = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone }).formatToParts(now);
+  const h = Number(parts.find((p) => p.type === 'hour')?.value);
+  const m = Number(parts.find((p) => p.type === 'minute')?.value);
+  let minutes = end * 60 - (h * 60 + m);
+  if (minutes <= 0) minutes += 24 * 60;
+  return Math.max(1, Math.ceil(minutes / 60));
+}

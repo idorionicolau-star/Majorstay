@@ -1,7 +1,7 @@
 'use client';
 
-import { formatHotelTime } from '@/lib/server-time';
-import { nowMs, nowDate } from '@/lib/server-time';
+import { formatHotelTime, nowDate, getHotelTimeZone } from '@/lib/server-time';
+import { overnightHoursUntil, DEFAULT_OVERNIGHT_END_HOUR } from '@/lib/hospitality-calc';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
@@ -131,9 +131,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const roomLocked = Boolean(preselectedRoomId) && selectedRoom?.id === preselectedRoomId;
   const ratePerHour = selectedRoom?.ratePerHour || 0;
   const pkgOptions = [
-    Number(selectedRoom?.overnightPrice) > 0 && { type: 'pernoite' as const, label: 'Pernoite', hours: Math.max(1, Number(selectedRoom?.overnightHours) || 12), price: Number(selectedRoom?.overnightPrice) },
-    Number(selectedRoom?.dailyPrice) > 0 && { type: 'diaria' as const, label: 'Diária', hours: 24, price: Number(selectedRoom?.dailyPrice) },
-  ].filter(Boolean) as { type: 'pernoite' | 'diaria'; label: string; hours: number; price: number }[];
+    Number(selectedRoom?.overnightPrice) > 0 && { type: 'pernoite' as const, label: 'Pernoite', hours: overnightHoursUntil(nowDate(), selectedRoom?.overnightEndHour, getHotelTimeZone()), price: Number(selectedRoom?.overnightPrice), until: `${String(Number.isInteger(selectedRoom?.overnightEndHour) ? selectedRoom?.overnightEndHour : DEFAULT_OVERNIGHT_END_HOUR).padStart(2, '0')}:00` },
+    Number(selectedRoom?.dailyPrice) > 0 && { type: 'diaria' as const, label: 'Diária', hours: 24, price: Number(selectedRoom?.dailyPrice), until: '' },
+  ].filter(Boolean) as { type: 'pernoite' | 'diaria'; label: string; hours: number; price: number; until: string }[];
   const activePkg = pkgOptions.find((o) => o.type === pkg) || null;
   // Quartos com mínimo de horas: a taxa é por bloco (ex.: 1100 a cada 2h). Horas arredondadas para cima ao bloco.
   const blockHours = Math.max(1, Math.floor(selectedRoom?.minimumHours || 1));
@@ -479,7 +479,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                             : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-blue-200 hover:bg-blue-50/40"
                         )}
                       >
-                        <span className="flex items-center gap-1.5">{o.type === 'pernoite' && <Moon className="w-3.5 h-3.5" />}{o.label} ({o.hours}h)</span>
+                        <span className="flex items-center gap-1.5">{o.type === 'pernoite' && <Moon className="w-3.5 h-3.5" />}{o.label} {o.type === 'pernoite' ? `(até ${o.until})` : `(${o.hours}h)`}</span>
                         <span className={cn("text-[11px] font-extrabold", active ? "text-white" : "text-[#006194] dark:text-sky-300")}>{formatCurrency(o.price)}</span>
                       </button>
                     );
