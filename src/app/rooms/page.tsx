@@ -18,9 +18,11 @@ import {
   QrCode,
   ShieldAlert,
   ConciergeBell,
+  MoreHorizontal,
 } from 'lucide-react';
 import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -272,101 +274,58 @@ function RoomsPageContent() {
           </div>
         </div>
 
-        {/* Botões de Ação com Pílulas e Dourado/Azul Stitch */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshRealtimeStatuses}
-            title="Atualizar status dos quartos"
-            className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 font-medium px-3.5 shadow-xs active:scale-95 transition-all"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Atualizar
-          </Button>
-
-          {isManager && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/rooms/controlo')}
-              title="Pedidos recusados e consumos removidos"
-              className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
-            >
-              <ShieldAlert className="h-3.5 w-3.5" />
-              Controlo
-            </Button>
-          )}
-
-          {/* Catálogo de Serviços de Alojamento */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setServicesManagerOpen(true)}
-            title="Serviços de Alojamento (Lavandaria, Passadoria, Massagem, Transfers, etc.)"
-            className="h-10 text-xs gap-1.5 rounded-full border border-sky-200 dark:border-sky-900/60 bg-sky-50/60 dark:bg-sky-950/30 text-[#007bb9] dark:text-sky-300 hover:bg-sky-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
-          >
-            <ConciergeBell className="h-3.5 w-3.5 text-[#007bb9]" />
-            Serviços ({services.length})
-          </Button>
-
-          {/* Reservas Antecipadas */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setBookingsListOpen(true)}
-            className="h-10 text-xs gap-1.5 rounded-full border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
-          >
-            <Calendar className="h-3.5 w-3.5 text-amber-600" />
-            Reservas ({activeBookingsCount})
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setBookingDialogOpen(true)}
-            className="h-10 text-xs gap-1.5 rounded-full border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/30 text-[#007bb9] dark:text-sky-300 hover:bg-blue-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
-          >
-            <Plus className="h-3.5 w-3.5 text-[#007bb9]" />
-            Nova Reserva
-          </Button>
-
-          {/* QR Code / Visor de Quartos */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (rooms.length > 0) {
-                handleOpenQrDialog(rooms[0]);
-              }
-            }}
-            className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
-            title="Ver e imprimir QR Code para as mesas de cabeceira dos quartos"
-          >
-            <QrCode className="h-3.5 w-3.5 text-slate-500" />
-            QR Mesas
-          </Button>
-
-          {isManager && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleOpenNewRoom}
-              className="h-10 text-xs gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 font-bold px-4 shadow-xs active:scale-95 transition-all"
-            >
-              <Plus className="h-3.5 w-3.5 text-[#007bb9]" />
-              Novo Quarto
-            </Button>
-          )}
-
+        {/* Ações: principal (Check-in), Reservas e menu "Mais" com o resto */}
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             size="sm"
             onClick={() => handleOpenCheckIn()}
-            className="h-10 text-xs gap-2 bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold rounded-full px-5 shadow-sm active:scale-95 transition-all"
+            className="h-11 flex-1 sm:flex-none text-sm gap-2 bg-[#007bb9] hover:bg-[#006194] text-white font-extrabold rounded-full px-5 shadow-sm active:scale-95 transition-all"
           >
             <Plus className="h-4 w-4" />
             Novo Check-in
           </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBookingsListOpen(true)}
+            className="h-11 text-sm gap-1.5 rounded-full border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 font-bold px-4 active:scale-95 transition-all"
+          >
+            <Calendar className="h-4 w-4 text-amber-600" />
+            Reservas ({activeBookingsCount})
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" aria-label="Mais ações" className="h-11 w-11 p-0 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <MoreHorizontal className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5">
+              <DropdownMenuItem className="h-11 gap-2 rounded-xl" onSelect={() => setBookingDialogOpen(true)}>
+                <Plus className="h-4 w-4" /> Nova Reserva
+              </DropdownMenuItem>
+              <DropdownMenuItem className="h-11 gap-2 rounded-xl" onSelect={() => setServicesManagerOpen(true)}>
+                <ConciergeBell className="h-4 w-4" /> Serviços ({services.length})
+              </DropdownMenuItem>
+              <DropdownMenuItem className="h-11 gap-2 rounded-xl" onSelect={() => { if (rooms.length > 0) handleOpenQrDialog(rooms[0]); }}>
+                <QrCode className="h-4 w-4" /> QR Mesas
+              </DropdownMenuItem>
+              {isManager && (
+                <DropdownMenuItem className="h-11 gap-2 rounded-xl" onSelect={handleOpenNewRoom}>
+                  <Plus className="h-4 w-4" /> Novo Quarto
+                </DropdownMenuItem>
+              )}
+              {isManager && (
+                <DropdownMenuItem className="h-11 gap-2 rounded-xl" onSelect={() => router.push('/rooms/controlo')}>
+                  <ShieldAlert className="h-4 w-4" /> Controlo
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className="h-11 gap-2 rounded-xl" onSelect={refreshRealtimeStatuses}>
+                <RefreshCw className="h-4 w-4" /> Atualizar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
