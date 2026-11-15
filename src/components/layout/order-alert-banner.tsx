@@ -7,7 +7,7 @@ import { BellRing, Volume2, VolumeX } from "lucide-react";
 import { InventoryContext } from "@/context/inventory-context";
 import { authedFetch } from "@/lib/api-client";
 import { attentionCount, type AlertOrder } from "@/lib/order-alert";
-import { audioReady, playThreeBeeps, unlockAudio } from "@/lib/beep";
+import { audioReady, playOrderAlert, unlockAudio } from "@/lib/beep";
 
 type Order = AlertOrder & { roomName?: string };
 
@@ -71,7 +71,7 @@ export function OrderAlertBanner() {
   const counts = attentionCount(orders);
   const needs = counts.pending + counts.late > 0;
 
-  // 3 bips: logo que chega um pedido novo, e a repetir de 30 em 30 s enquanto houver algo por atender
+  // Aviso sonoro por voz: logo que chega um pedido novo, e a repetir de 30 em 30 s enquanto houver algo por atender
   useEffect(() => {
     const newPending = orders.some((o) => o.status === "pending" && !seen.current.has(o.id));
     orders.forEach((o) => seen.current.add(o.id));
@@ -80,7 +80,7 @@ export function OrderAlertBanner() {
     if (muted || !needs) return;
     const now = Date.now();
     if ((newPending && !wasFirst) || now - lastBeep.current >= REPEAT_MS) {
-      if (playThreeBeeps()) lastBeep.current = now;
+      if (playOrderAlert()) lastBeep.current = now;
     }
   }, [orders, muted, needs]);
 
@@ -88,7 +88,7 @@ export function OrderAlertBanner() {
   useEffect(() => {
     if (!needs || muted) return;
     const t = setInterval(() => {
-      if (Date.now() - lastBeep.current >= REPEAT_MS && playThreeBeeps()) lastBeep.current = Date.now();
+      if (Date.now() - lastBeep.current >= REPEAT_MS && playOrderAlert()) lastBeep.current = Date.now();
     }, 5_000);
     return () => clearInterval(t);
   }, [needs, muted]);

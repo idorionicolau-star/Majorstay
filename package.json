@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "desktop:dev": "electron electron/main.js",
+    "desktop:build": "electron-builder --win --config electron-builder.json"
   },
   "dependencies": {
     "@google/generative-ai": "^0.16.1",

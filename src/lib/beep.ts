@@ -1,5 +1,9 @@
-/** Três bips curtos (Web Audio). Só toca depois de a pessoa ter tocado/clicado na página uma vez (regra dos navegadores). */
+/**
+ * Alerta sonoro de pedidos dos quartos ("Você recebeu um novo pedido").
+ * Toca o ficheiro de áudio /sounds/novo-pedido.mp3 com fallback para Web Audio.
+ */
 let ctx: AudioContext | null = null;
+let orderAudio: HTMLAudioElement | null = null;
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -9,21 +13,68 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
+function getOrderAudio(): HTMLAudioElement | null {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') return null;
+  if (!orderAudio) {
+    try {
+      orderAudio = new Audio('/sounds/novo-pedido.mp3');
+      orderAudio.preload = 'auto';
+    } catch {
+      return null;
+    }
+  }
+  return orderAudio;
+}
+
 /** Tenta ativar o som (chamar num clique). Devolve true se o som está pronto. */
 export async function unlockAudio(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const a = getOrderAudio();
+  if (a) {
+    try {
+      a.load();
+    } catch { /* ignora */ }
+  }
+
   const c = getCtx();
-  if (!c) return false;
-  try {
-    if (c.state === 'suspended') await c.resume();
-  } catch { /* ignora */ }
-  return c.state === 'running';
+  if (c && c.state === 'suspended') {
+    try {
+      await c.resume();
+    } catch { /* ignora */ }
+  }
+  return true;
 }
 
 export function audioReady(): boolean {
-  return !!ctx && ctx.state === 'running';
+  if (typeof window === 'undefined') return false;
+  return !!orderAudio || (!!ctx && ctx.state === 'running');
 }
 
-export function playThreeBeeps(): boolean {
+/** Reproduz o aviso de voz: "Você recebeu um novo pedido" */
+export function playOrderAlert(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const audio = getOrderAudio();
+  if (audio) {
+    try {
+      audio.currentTime = 0;
+      const p = audio.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          playFallbackBeeps();
+        });
+      }
+      return true;
+    } catch {
+      return playFallbackBeeps();
+    }
+  }
+
+  return playFallbackBeeps();
+}
+
+/** Fallback sintético caso o áudio falhe */
+export function playFallbackBeeps(): boolean {
   const c = getCtx();
   if (!c || c.state !== 'running') return false;
   const t0 = c.currentTime + 0.02;
@@ -42,3 +93,6 @@ export function playThreeBeeps(): boolean {
   }
   return true;
 }
+
+/** Compatibilidade */
+export const playThreeBeeps = playOrderAlert;

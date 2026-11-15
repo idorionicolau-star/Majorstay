@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "app.majorgroup.majorstay",
+  "productName": "MajorStay",
+  "copyright": "Copyright © 2026 Major Group",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "electron/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "electron/assets/icon.png",
+    "publisherName": "Major Group"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "MajorStay",
+    "artifactName": "MajorStay-Setup-${version}.${ext}"
+  },
+  "portable": {
+    "artifactName": "MajorStay-Portable-${version}.${ext}"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "idorionicolau-star",
+    "repo": "Majorstay"
+  }
+}
