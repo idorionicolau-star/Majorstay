@@ -11,7 +11,7 @@ try {
 }
 
 const isDev = process.env.NODE_ENV === 'development';
-const PRODUCTION_URL = process.env.MAJORSTAY_URL || 'https://stock.majorgroup.app';
+const PRODUCTION_URL = process.env.MAJORSTAY_URL || 'https://stay.majorgroup.app';
 const DEV_URL = process.env.ELECTRON_START_URL || 'http://localhost:9002';
 
 let mainWindow = null;
@@ -58,7 +58,7 @@ function createMainWindow() {
 
   // Links externos (WhatsApp, documentação, suporte) abrem no navegador padrão do Windows
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (!url.startsWith(PRODUCTION_URL) && !url.startsWith(DEV_URL)) {
+    if (!url.startsWith(PRODUCTION_URL) && !url.startsWith(DEV_URL) && !url.startsWith('https://majorstay.vercel.app')) {
       shell.openExternal(url);
       return { action: 'deny' };
     }
