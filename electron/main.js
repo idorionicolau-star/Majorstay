@@ -121,12 +121,17 @@ function setupMenu() {
             }
           },
         },
-        { type: 'separator' },
-        {
-          label: 'Ferramentas de Programador',
-          accelerator: 'Ctrl+Shift+I',
-          click: () => mainWindow && mainWindow.webContents.toggleDevTools(),
-        },
+        // Ferramentas de programador só em desenvolvimento (não aparecem aos funcionários)
+        ...(isDev
+          ? [
+              { type: 'separator' },
+              {
+                label: 'Ferramentas de Programador',
+                accelerator: 'Ctrl+Shift+I',
+                click: () => mainWindow && mainWindow.webContents.toggleDevTools(),
+              },
+            ]
+          : []),
       ],
     },
   ];
@@ -210,6 +215,33 @@ ipcMain.handle('desktop:print-silent', async (event, options = {}) => {
       }
     );
   });
+});
+
+// Imprime só o recibo (HTML), em silêncio, na impressora predefinida do Windows (a térmica).
+// Usa uma janela escondida para não imprimir a app inteira.
+ipcMain.handle('desktop:print-html', async (event, html, options = {}) => {
+  if (typeof html !== 'string' || html.length === 0 || html.length > 2_000_000) {
+    return { success: false, error: 'Conteúdo inválido' };
+  }
+  const win = new BrowserWindow({ show: false, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false } });
+  try {
+    await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    return await new Promise((resolve) => {
+      win.webContents.print(
+        {
+          silent: options.silent !== false,
+          printBackground: true,
+          deviceName: typeof options.deviceName === 'string' ? options.deviceName : '',
+          margins: { marginType: 'none' },
+        },
+        (success, failureReason) => resolve(success ? { success: true } : { success: false, error: failureReason })
+      );
+    });
+  } catch (e) {
+    return { success: false, error: e && e.message ? e.message : 'Falha ao imprimir' };
+  } finally {
+    setTimeout(() => { if (!win.isDestroyed()) win.close(); }, 1000);
+  }
 });
 
 // Ciclo de Vida da Aplicação
