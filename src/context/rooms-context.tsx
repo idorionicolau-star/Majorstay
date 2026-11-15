@@ -78,6 +78,7 @@ interface RoomsContextType {
     ratePerHour: number;
     paymentMethod?: string;
     notes?: string;
+    payAtExit?: boolean;
   }) => Promise<string>;
   extendStay: (stayId: string, hours: number, notes?: string) => Promise<void>;
   checkOutStay: (
@@ -87,6 +88,8 @@ interface RoomsContextType {
       paymentMethod?: string;
       roomNextStatus?: 'cleaning' | 'free';
       notes?: string;
+      discountAmount?: number;
+      discountReason?: string;
     }
   ) => Promise<any>;
   markRoomCleaned: (roomId: string) => Promise<void>;
@@ -541,6 +544,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     packagePrice?: number;
     packageHours?: number;
     blockHours?: number;
+    payAtExit?: boolean;
   }): Promise<string> => {
     const contracted = Math.max(1, data.contractedHours || 1);
     const pkg = data.packageType && Number(data.packagePrice) > 0
@@ -586,7 +590,8 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         ...(data.blockHours && data.blockHours > 1 ? { blockHours: data.blockHours } : {}),
         ...pkg,
         totalAmountDue: totalDue,
-        totalAmountPaid: totalDue,
+        totalAmountPaid: data.payAtExit ? 0 : totalDue,
+        ...(data.payAtExit ? { payAtExit: true } : {}),
         paymentMethod: data.paymentMethod || 'Dinheiro',
         openedBy: user?.id || 'guest-user',
         openedByName: user?.username || 'Recepção',
@@ -631,7 +636,8 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       ...(data.blockHours && data.blockHours > 1 ? { blockHours: data.blockHours } : {}),
       ...pkg,
       totalAmountDue: totalDue,
-      totalAmountPaid: totalDue,
+      totalAmountPaid: data.payAtExit ? 0 : totalDue,
+      ...(data.payAtExit ? { payAtExit: true } : {}),
       paymentMethod: data.paymentMethod || 'Dinheiro',
       openedBy: user.id,
       openedByName: user.username,
@@ -731,6 +737,8 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       paymentMethod?: string;
       roomNextStatus?: 'cleaning' | 'free';
       notes?: string;
+      discountAmount?: number;
+      discountReason?: string;
     }
   ): Promise<any> => {
     const currentStay = stays.find((s) => s.id === stayId);
@@ -755,6 +763,8 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       paymentMethod: options?.paymentMethod,
       roomNextStatus: options?.roomNextStatus || 'cleaning',
       notes: options?.notes,
+      discountAmount: options?.discountAmount,
+      discountReason: options?.discountReason,
     });
 
     const data = result.data;

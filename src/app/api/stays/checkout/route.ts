@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { validateDiscount } from '@/lib/discount';
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
 import { calculateStayPricing, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
@@ -58,7 +59,7 @@ async function authorizeUser(req: Request, companyId: string) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { companyId, stayId, roomId, amountPaid: customAmountPaid, paymentMethod = 'Dinheiro', notes = '', roomNextStatus = 'cleaning' } = body;
+    const { companyId, stayId, roomId, amountPaid: customAmountPaid, paymentMethod = 'Dinheiro', notes = '', roomNextStatus = 'cleaning', discountAmount, discountReason } = body;
 
     if (!companyId || !stayId || !roomId) {
       return NextResponse.json({ error: 'Parâmetros obrigatórios em falta: companyId, stayId, roomId.' }, { status: 400 });
@@ -141,7 +142,10 @@ export async function POST(req: Request) {
         blockHours: Number(stayData.blockHours) || undefined,
       });
 
-      const totalAmountDue = pricing.totalAmountDue;
+      // Desconto: motivo obrigatório, nunca acima do total; fica registado com o nome de quem o deu
+      const discount = validateDiscount(discountAmount, discountReason, pricing.totalAmountDue);
+      const grossTotal = pricing.totalAmountDue;
+      const totalAmountDue = Math.round((grossTotal - discount.amount) * 100) / 100;
       const finalAmountPaid = typeof customAmountPaid === 'number' && !isNaN(customAmountPaid)
         ? customAmountPaid
         : totalAmountDue;
@@ -158,7 +162,7 @@ export async function POST(req: Request) {
         ? ` | Consumos do Bar (${consumptionsCount} itens, ${pricing.consumptionsAmountDue} MT): ` +
           sanitizedConsumptions.map((c: any) => `${c.quantity}x ${c.productName} (${c.totalPrice} MT)`).join(', ')
         : '';
-      const staySummaryNote = `Quarto: ${stayData.roomName || roomData.name}. Entrada: ${checkInStr}. Saída: ${checkOutStr}. Horas: ${pricing.billedHours}h (${pricing.stayAmountDue} MT)${consumptionsText}. ${notes}`.trim();
+      const staySummaryNote = `Quarto: ${stayData.roomName || roomData.name}. Entrada: ${checkInStr}. Saída: ${checkOutStr}. Horas: ${pricing.billedHours}h (${pricing.stayAmountDue} MT)${consumptionsText}.${discount.amount > 0 ? ` Desconto: ${discount.amount} MT (${discount.reason}, por ${employeeName}).` : ''} ${notes}`.trim();
 
       const newSale: Omit<Sale, 'id'> = {
         date: serverNow.toISOString().slice(0, 10),
@@ -167,7 +171,8 @@ export async function POST(req: Request) {
         quantity: pricing.billedHours,
         unit: 'horas',
         unitPrice: pricing.ratePerHour,
-        subtotal: totalAmountDue,
+        subtotal: grossTotal,
+        ...(discount.amount > 0 ? { discount: discount.amount } : {}),
         totalValue: totalAmountDue,
         amountPaid: finalAmountPaid,
         soldBy: employeeName,
@@ -196,6 +201,7 @@ export async function POST(req: Request) {
         billedHours: pricing.billedHours,
         totalAmountDue,
         totalAmountPaid: finalAmountPaid,
+        ...(discount.amount > 0 ? { discountAmount: discount.amount, discountReason: discount.reason, discountByName: employeeName } : {}),
         paymentMethod,
         closedBy: decoded.uid,
         closedByName: employeeName,
@@ -231,8 +237,9 @@ export async function POST(req: Request) {
           totalAmountPaid: finalAmountPaid,
           paymentMethod,
           saleId: saleRef.id,
+          ...(discount.amount > 0 ? { discountAmount: discount.amount } : {}),
         },
-        reason: 'Check-out efetuado no servidor com sucesso',
+        reason: discount.amount > 0 ? `Check-out com desconto de ${discount.amount} MT. Motivo: ${discount.reason}` : 'Check-out efetuado no servidor com sucesso',
         userId: decoded.uid,
         userName: employeeName,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),

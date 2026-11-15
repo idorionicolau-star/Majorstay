@@ -71,6 +71,8 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   // pacote de preço fixo escolhido (só aparece se o quarto tiver o preço configurado); sem pacote cobra-se por hora
   const [pkg, setPkg] = useState<'pernoite' | 'diaria' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
+  // Cliente que não sabe quanto tempo fica: não se cobra nada agora, paga-se pelo tempo real no check-out
+  const [payAtExit, setPayAtExit] = useState(false);
   // Imprimir o recibo ao confirmar (a escolha fica guardada neste aparelho; por defeito ligada)
   const [printOnCheckIn, setPrintOnCheckIn] = useState(true);
   useEffect(() => {
@@ -178,6 +180,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         contractedHours: billedHours,
         ratePerHour: ratePerHour / blockHours,
         ...(!activePkg && blockHours > 1 ? { blockHours } : {}),
+        ...(payAtExit ? { payAtExit: true } : {}),
         paymentMethod,
         notes: notes.trim(),
         ...(activePkg ? { packageType: activePkg.type, packagePrice: activePkg.price } : {}),
@@ -200,9 +203,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
             stayAmount: totalAmount,
             consumptions: [],
             total: totalAmount,
-            paid: totalAmount,
+            paid: payAtExit ? 0 : totalAmount,
             paymentMethod,
-            final: true,
+            final: !payAtExit,
             operator: user?.username,
           })
         );
@@ -218,6 +221,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
       setPkg(null);
       setContractedHours(selectedRoom?.minimumHours || 1);
       setNotes('');
+      setPayAtExit(false);
     } catch (err: any) {
       console.error('Erro no check-in:', err);
       toast({
@@ -601,7 +605,17 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
             </div>
           </div>
 
+          {/* Pagar à saída */}
+          <label className="flex items-start gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 cursor-pointer">
+            <input type="checkbox" checked={payAtExit} onChange={(e) => setPayAtExit(e.target.checked)} className="h-4 w-4 mt-0.5" />
+            <span className="text-xs">
+              <strong className="font-bold text-slate-800 dark:text-slate-200">Pagar à saída</strong>
+              <span className="block text-slate-500 dark:text-slate-400">Não cobra agora. No check-out paga-se pelo tempo real de permanência.</span>
+            </span>
+          </label>
+
           {/* Método de Pagamento Inicial */}
+          {!payAtExit && (
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
               <CreditCard className="w-3.5 h-3.5 text-slate-400" />
@@ -628,6 +642,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
               })}
             </div>
           </div>
+          )}
 
           {/* Observações / Notas */}
           <div className="space-y-1">
@@ -665,7 +680,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
               className="w-full sm:w-auto px-7 py-2.5 rounded-full bg-[#007bb9] hover:bg-[#006194] disabled:opacity-50 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95 transition-all"
             >
               <Check className="w-4 h-4" />
-              <span>{loading ? 'A Registar...' : `Confirmar Check-in (${formatCurrency(totalAmount)})`}</span>
+              <span>{loading ? 'A Registar...' : payAtExit ? 'Confirmar Check-in (pagar à saída)' : `Confirmar Check-in (${formatCurrency(totalAmount)})`}</span>
             </button>
           </DialogFooter>
         </form>

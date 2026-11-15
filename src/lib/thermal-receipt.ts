@@ -136,6 +136,8 @@ export type StayReceiptInput = {
   stayLabel: string;
   stayAmount: number;
   consumptions: { quantity: number; productName: string; totalPrice: number; weightKg?: number; notes?: string }[];
+  /** Desconto dado (o `total` já vem com ele descontado) */
+  discount?: number;
   total: number;
   paid: number;
   paymentMethod?: string;
@@ -168,6 +170,7 @@ export function buildStayReceipt(i: StayReceiptInput): ReceiptDoc {
       ...(c.notes ? { sub: `Obs: ${c.notes}` } : {}),
     });
   }
+  if (i.discount && i.discount > 0) lines.push({ left: 'Desconto', right: `-${money(i.discount)}` });
   const balance = Math.max(0, Math.round((i.total - i.paid) * 100) / 100);
   const totals: ReceiptLine[] = [{ left: 'TOTAL', right: money(i.total), bold: true }];
   if (i.paid > 0) totals.push({ left: i.final ? 'Pago' : 'Já pago', right: money(i.paid) });

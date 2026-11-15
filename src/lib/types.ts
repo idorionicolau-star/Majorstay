@@ -699,6 +699,10 @@ export type Stay = {
   packageHours?: number; // Horas cobertas pelo pacote
   totalAmountDue: number; // Total calculado a cobrar
   totalAmountPaid: number; // Total pago pelo cliente
+  payAtExit?: boolean; // Cliente paga só à saída (nada cobrado no check-in)
+  discountAmount?: number; // Desconto dado no check-out (MT)
+  discountReason?: string; // Motivo obrigatório do desconto
+  discountByName?: string; // Quem deu o desconto
   paymentMethod?: string; // Dinheiro, M-Pesa, E-Mola, Cartão, Ponto24
   openedBy: string; // ID do funcionário que abriu o check-in
   openedByName?: string;
