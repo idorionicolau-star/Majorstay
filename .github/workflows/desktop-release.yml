@@ -37,7 +37,13 @@ jobs:
       - name: Build Windows .exe Installer & Portable
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win --config electron-builder.json --publish always
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -eq "tag") {
+            npx electron-builder --win --config electron-builder.json --publish always
+          } else {
+            npx electron-builder --win --config electron-builder.json
+          }
 
       - name: Upload Release Artifacts
         uses: actions/upload-artifact@v4

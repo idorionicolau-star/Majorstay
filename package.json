@@ -1,6 +1,7 @@
 {
-  "name": "nextn",
-  "version": "0.1.0",
+  "name": "majorstay",
+  "version": "1.0.0",
+  "main": "electron/main.js",
   "private": true,
   "scripts": {
     "dev": "next dev -p 9002 --webpack",
