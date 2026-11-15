@@ -23,11 +23,12 @@ export function orderUrgency(o: AlertOrder, now: number = Date.now()): Urgency {
   return 'ok';
 }
 
-/** Pedidos que pedem atenção (som a repetir): por aceitar, ou confirmados e atrasados. */
-export function attentionCount(orders: AlertOrder[], now: number = Date.now()): { pending: number; late: number } {
+/** Pedidos que pedem atenção (som a repetir): por aceitar, por confirmar (> 3 min), ou confirmados e atrasados. */
+export function attentionCount(orders: AlertOrder[], now: number = Date.now()): { pending: number; late: number; unconfirmed: number } {
   const pending = orders.filter((o) => o.status === 'pending').length;
-  const late = orders.filter((o) => orderUrgency(o, now) !== 'ok' && o.status !== 'pending').length;
-  return { pending, late };
+  const unconfirmed = orders.filter((o) => o.status === 'pending' && orderUrgency(o, now) === 'accept-late').length;
+  const late = orders.filter((o) => orderUrgency(o, now) === 'delivery-late' && o.status === 'confirmed').length;
+  return { pending, late, unconfirmed };
 }
 
 /** Minutos que faltam até à hora prevista (negativo = atrasado). */

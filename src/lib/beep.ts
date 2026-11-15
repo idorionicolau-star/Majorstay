@@ -1,6 +1,7 @@
 /**
  * Alerta sonoro de pedidos dos quartos e hotelaria:
  * - Novo pedido: /sounds/novo-pedido.mp3 ("Você recebeu um novo pedido")
+ * - Pedido por confirmar: /sounds/pedido-por-confirmar.mp3 ("Atenção, pedido por confirmar")
  * - Pedido atrasado: /sounds/pedido-atrasado.mp3 ("Atenção: verifique a entrega do pedido")
  * - Estadia concluída: /sounds/estadia-concluida.mp3 ("Atenção: tempo de estadia concluído")
  * - Limpeza concluída / atrasada: /sounds/limpeza-concluida.mp3 ("Atenção: tempo de limpeza concluído")
@@ -8,6 +9,7 @@
  */
 let ctx: AudioContext | null = null;
 let orderAudio: HTMLAudioElement | null = null;
+let unconfirmedAudio: HTMLAudioElement | null = null;
 let lateAudio: HTMLAudioElement | null = null;
 let stayAudio: HTMLAudioElement | null = null;
 let cleanAudio: HTMLAudioElement | null = null;
@@ -31,6 +33,19 @@ function getOrderAudio(): HTMLAudioElement | null {
     }
   }
   return orderAudio;
+}
+
+function getUnconfirmedAudio(): HTMLAudioElement | null {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') return null;
+  if (!unconfirmedAudio) {
+    try {
+      unconfirmedAudio = new Audio('/sounds/pedido-por-confirmar.mp3');
+      unconfirmedAudio.preload = 'auto';
+    } catch {
+      return null;
+    }
+  }
+  return unconfirmedAudio;
 }
 
 function getLateAudio(): HTMLAudioElement | null {
@@ -84,7 +99,7 @@ export function isAudioMuted(): boolean {
 /** Tenta ativar o som (chamar num clique). Devolve true se o som está pronto. */
 export async function unlockAudio(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  const audios = [getOrderAudio(), getLateAudio(), getStayAudio(), getCleanAudio()];
+  const audios = [getOrderAudio(), getUnconfirmedAudio(), getLateAudio(), getStayAudio(), getCleanAudio()];
   audios.forEach((a) => {
     if (a) {
       try { a.load(); } catch { /* ignora */ }
@@ -102,7 +117,7 @@ export async function unlockAudio(): Promise<boolean> {
 
 export function audioReady(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!orderAudio || !!lateAudio || !!stayAudio || !!cleanAudio || (!!ctx && ctx.state === 'running');
+  return !!orderAudio || !!unconfirmedAudio || !!lateAudio || !!stayAudio || !!cleanAudio || (!!ctx && ctx.state === 'running');
 }
 
 function playAudioWithFallback(getAudio: () => HTMLAudioElement | null): boolean {
@@ -133,6 +148,11 @@ export function playOrderAlert(): boolean {
   return playAudioWithFallback(getOrderAudio);
 }
 
+/** Reproduz o aviso de voz: "Atenção, pedido por confirmar" */
+export function playUnconfirmedAlert(): boolean {
+  return playAudioWithFallback(getUnconfirmedAudio);
+}
+
 /** Reproduz o aviso de voz: "Atenção: verifique a entrega do pedido" */
 export function playLateAlert(): boolean {
   return playAudioWithFallback(getLateAudio);
@@ -151,7 +171,7 @@ export function playCleanAlert(): boolean {
 /** Interrompe imediatamente qualquer áudio em reprodução */
 export function stopOrderAlert(): void {
   if (typeof window === 'undefined') return;
-  [orderAudio, lateAudio, stayAudio, cleanAudio].forEach((a) => {
+  [orderAudio, unconfirmedAudio, lateAudio, stayAudio, cleanAudio].forEach((a) => {
     if (a) {
       try {
         a.pause();

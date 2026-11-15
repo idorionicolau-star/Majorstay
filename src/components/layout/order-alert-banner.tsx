@@ -7,7 +7,7 @@ import { BellRing, Volume2, VolumeX } from "lucide-react";
 import { InventoryContext } from "@/context/inventory-context";
 import { authedFetch } from "@/lib/api-client";
 import { attentionCount, orderUrgency, type AlertOrder } from "@/lib/order-alert";
-import { audioReady, playLateAlert, playOrderAlert, stopOrderAlert, unlockAudio } from "@/lib/beep";
+import { audioReady, playLateAlert, playOrderAlert, playUnconfirmedAlert, stopOrderAlert, unlockAudio } from "@/lib/beep";
 
 type Order = AlertOrder & { roomName?: string };
 
@@ -18,8 +18,9 @@ const MUTE_KEY = "majorstay.orderSound";
 /**
  * Aviso de pedidos dos quartos em QUALQUER página: faixa no topo + aviso sonoro por voz.
  * - Novo pedido: "Você recebeu um novo pedido"
- * - Pedido atrasado: "Atenção: verifique a entrega do pedido"
- * O som para assim que alguém clica em "Ver pedidos" ou entra na página de quartos.
+ * - Pedido por confirmar (> 3 min): "Atenção, pedido por confirmar" (obriga a receção a confirmar)
+ * - Pedido atrasado na entrega: "Atenção: verifique a entrega do pedido"
+ * O som inicial para ao ver pedidos, mas volta a alertar e repetir se passar 3 min sem confirmação.
  */
 export function OrderAlertBanner() {
   const ctx = useContext(InventoryContext);
@@ -32,6 +33,7 @@ export function OrderAlertBanner() {
   const [ready, setReady] = useState(false);
   const seen = useRef<Set<string>>(new Set());
   const seenLate = useRef<Set<string>>(new Set());
+  const seenUnconfirmed = useRef<Set<string>>(new Set());
   const acknowledged = useRef<Set<string>>(new Set());
   const firstLoad = useRef(true);
   const lastBeep = useRef(0);
@@ -75,7 +77,7 @@ export function OrderAlertBanner() {
   const counts = attentionCount(orders);
   const needs = counts.pending + counts.late > 0;
 
-  // Ao entrar em /rooms (ou clicar em Ver pedidos), interrompe o som de imediato e reconhece os pedidos atuais
+  // Ao entrar em /rooms (ou clicar em Ver pedidos), interrompe o som inicial e reconhece os pedidos atuais
   useEffect(() => {
     if (pathname.startsWith("/rooms")) {
       stopOrderAlert();
@@ -93,10 +95,16 @@ export function OrderAlertBanner() {
   const unackCounts = attentionCount(unackOrders);
   const needsSound = unackCounts.pending + unackCounts.late > 0;
 
-  // Aviso sonoro por voz: novo pedido ("Você recebeu um novo pedido") ou pedido atrasado ("Atenção: verifique a entrega do pedido")
+  // Aviso sonoro por voz:
+  // - Novo pedido: "Você recebeu um novo pedido"
+  // - Pedido não confirmado há mais de 3 min: "Atenção, pedido por confirmar"
+  // - Pedido com entrega atrasada: "Atenção: verifique a entrega do pedido"
   useEffect(() => {
     const newPending = orders.some((o) => o.status === "pending" && !seen.current.has(o.id));
     orders.forEach((o) => seen.current.add(o.id));
+
+    const newUnconfirmed = orders.some((o) => o.status === "pending" && orderUrgency(o) === "accept-late" && !seenUnconfirmed.current.has(o.id));
+    orders.filter((o) => o.status === "pending" && orderUrgency(o) === "accept-late").forEach((o) => seenUnconfirmed.current.add(o.id));
 
     const newLate = orders.some((o) => o.status === "confirmed" && orderUrgency(o) === "delivery-late" && !seenLate.current.has(o.id));
     orders.filter((o) => o.status === "confirmed" && orderUrgency(o) === "delivery-late").forEach((o) => seenLate.current.add(o.id));
@@ -106,19 +114,30 @@ export function OrderAlertBanner() {
     if (muted) return;
     const now = Date.now();
 
-    if (newLate && !wasFirst) {
+    if (newUnconfirmed && !wasFirst) {
+      if (playUnconfirmedAlert()) lastBeep.current = now;
+    } else if (newLate && !wasFirst) {
       if (playLateAlert()) lastBeep.current = now;
     } else if (newPending && !wasFirst) {
       if (playOrderAlert()) lastBeep.current = now;
     }
   }, [orders, muted]);
 
-  // Repetição de 30 em 30 s apenas enquanto ninguém clicou em "Ver pedidos" nem está na página dos quartos
+  // Repetição de 30 em 30 s:
+  // - Pedido por confirmar há mais de 3 min: repete SEMPRE (mesmo na página de quartos) até ser confirmado!
+  // - Pedido atrasado na entrega / novo pedido não visto: repete fora da página de quartos
   useEffect(() => {
-    if (!needsSound || muted || pathname.startsWith("/rooms")) return;
+    if (muted) return;
+    const hasUnconfirmed = counts.unconfirmed > 0;
+    const hasUnack = !pathname.startsWith("/rooms") && needsSound;
+
+    if (!hasUnconfirmed && !hasUnack) return;
+
     const t = setInterval(() => {
       if (Date.now() - lastBeep.current >= REPEAT_MS) {
-        if (unackCounts.late > 0) {
+        if (counts.unconfirmed > 0) {
+          if (playUnconfirmedAlert()) lastBeep.current = Date.now();
+        } else if (unackCounts.late > 0) {
           if (playLateAlert()) lastBeep.current = Date.now();
         } else if (unackCounts.pending > 0) {
           if (playOrderAlert()) lastBeep.current = Date.now();
@@ -126,7 +145,7 @@ export function OrderAlertBanner() {
       }
     }, 5_000);
     return () => clearInterval(t);
-  }, [needsSound, unackCounts, muted, pathname]);
+  }, [counts.unconfirmed, needsSound, unackCounts, muted, pathname]);
 
   if (!enabled) return null;
 
@@ -144,13 +163,21 @@ export function OrderAlertBanner() {
   const onRooms = pathname.startsWith("/rooms");
   if (!needs) return null;
 
+  const unconfirmedNames = orders.filter((o) => o.status === "pending" && orderUrgency(o) === "accept-late").map((o) => o.roomName).filter(Boolean);
   const names = orders.filter((o) => o.status === "pending").map((o) => o.roomName).filter(Boolean);
-  const text = counts.pending > 0
+
+  const text = counts.unconfirmed > 0
+    ? counts.unconfirmed === 1 ? `Atenção: pedido por confirmar há mais de 3 min${unconfirmedNames[0] ? ` — ${unconfirmedNames[0]}` : ""}` : `Atenção: ${counts.unconfirmed} pedidos por confirmar há mais de 3 min`
+    : counts.pending > 0
     ? counts.pending === 1 ? `Pedido novo${names[0] ? ` — ${names[0]}` : ""}` : `${counts.pending} pedidos novos por aceitar`
     : counts.late === 1 ? "Há 1 pedido atrasado na entrega" : `Há ${counts.late} pedidos atrasados na entrega`;
 
+  const bannerBg = counts.unconfirmed > 0
+    ? "bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 animate-pulse"
+    : "bg-gradient-to-r from-amber-600 to-rose-600";
+
   return (
-    <div role="alert" className="sticky top-0 z-[60] flex flex-wrap items-center justify-center gap-3 bg-gradient-to-r from-amber-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-md">
+    <div role="alert" className={`sticky top-0 z-[60] flex flex-wrap items-center justify-center gap-3 px-4 py-2 text-sm font-bold text-white shadow-md ${bannerBg}`}>
       <span className="flex items-center gap-2"><BellRing className="h-4 w-4 animate-pulse" />{text}</span>
       {!onRooms && (
         <Link href="/rooms" onClick={handleAcknowledge} className="rounded-md bg-white px-3 py-1 text-xs font-bold text-rose-700 shadow-sm">Ver pedidos</Link>

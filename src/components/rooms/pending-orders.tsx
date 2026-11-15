@@ -9,6 +9,7 @@ import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { formatCurrency, cn } from '@/lib/utils';
 import { ETA_CHOICES, minutesLeft, orderUrgency } from '@/lib/order-alert';
+import { stopOrderAlert } from '@/lib/beep';
 
 type OrderLine = { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; notes?: string; weightKg?: number };
 type PendingOrder = {
@@ -71,6 +72,7 @@ export function PendingRoomOrders() {
   }, [load]);
 
   const confirmOrder = async (order: PendingOrder) => {
+    stopOrderAlert();
     setBusyId(order.id);
     const orderEta = etas[order.id] ?? 15;
     try {
@@ -85,6 +87,7 @@ export function PendingRoomOrders() {
   };
 
   const deliverOrder = async (order: PendingOrder) => {
+    stopOrderAlert();
     setBusyId(order.id);
     try {
       await authedFetch('/api/room-orders', 'POST', { companyId, orderId: order.id, action: 'delivered' });
@@ -98,6 +101,7 @@ export function PendingRoomOrders() {
   };
 
   const rejectOrder = async (order: PendingOrder) => {
+    stopOrderAlert();
     setBusyId(order.id);
     try {
       await authedFetch('/api/room-orders', 'POST', { companyId, orderId: order.id, action: 'reject', reason });

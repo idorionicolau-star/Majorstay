@@ -17,13 +17,14 @@ describe('urgência dos pedidos', () => {
   it('entregue ou recusado nunca alerta', () => {
     expect(orderUrgency({ id: '1', status: 'delivered', etaAt: ago(30) }, now)).toBe('ok');
   });
-  it('conta pendentes e atrasados', () => {
+  it('conta pendentes, atrasados e não confirmados há mais de 3 min', () => {
     const r = attentionCount([
       { id: 'a', status: 'pending', createdAt: ago(1) },
       { id: 'b', status: 'confirmed', etaAt: ago(2) },
       { id: 'c', status: 'confirmed', etaAt: inMin(5) },
+      { id: 'd', status: 'pending', createdAt: ago(4) },
     ], now);
-    expect(r).toEqual({ pending: 1, late: 1 });
+    expect(r).toEqual({ pending: 2, late: 1, unconfirmed: 1 });
   });
   it('minutos que faltam', () => {
     expect(minutesLeft(inMin(4), now)).toBe(4);
