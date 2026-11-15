@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { isDishRef, dishIdOf, dishAvailable } from '@/lib/dishes';
 import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
@@ -85,6 +86,31 @@ export async function POST(req: Request) {
     // Produtos do catálogo (preço e nome da base de dados)
     const lines: { productId: string; productName: string; quantity: number; unitPrice: number; totalPrice: number; weightKg?: number; notes?: string }[] = [];
     for (const [productId, quantity] of wanted) {
+      if (isDishRef(productId)) {
+        // Prato do dia: preço do servidor e doses disponíveis (o desconto só acontece quando a receção confirma)
+        const dSnap = await db.doc(`companies/${companyId}/dishes/${dishIdOf(productId)}`).get();
+        const dData = dSnap.exists ? dSnap.data() || {} : null;
+        const left = dishAvailable(dData);
+        if (!dData || left <= 0) {
+          return NextResponse.json({ error: `"${String(dData?.name || 'Prato')}" está esgotado. Atualize a página.` }, { status: 400 });
+        }
+        if (quantity > left) {
+          return NextResponse.json({ error: `"${String(dData.name)}": só há ${left} dose(s) disponível(is).` }, { status: 400 });
+        }
+        const dPrice = Number(dData.price);
+        if (!Number.isFinite(dPrice) || dPrice <= 0) {
+          return NextResponse.json({ error: 'Um dos pratos não tem preço definido.' }, { status: 400 });
+        }
+        lines.push({
+          productId,
+          productName: String(dData.name || 'Prato').trim(),
+          quantity,
+          unitPrice: dPrice,
+          totalPrice: dPrice * quantity,
+          ...(itemNotes.has(productId) ? { notes: itemNotes.get(productId) } : {}),
+        });
+        continue;
+      }
       const snap = await db.doc(`companies/${companyId}/products/${productId}`).get();
       const data = snap.exists ? snap.data() || {} : null;
       if (!data || data.deletedAt || (!KITCHEN_ENABLED && isKitchenProduct(data))) {

@@ -31,6 +31,7 @@ import type { Stay, Room, HospitalityService } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
 import { toast } from '@/hooks/use-toast';
+import { useDishes } from '@/hooks/use-dishes';
 import { ServicesManagerDialog } from './services-manager-dialog';
 import { availableUnits, isDishProduct } from '@/lib/dish-stock';
 
@@ -91,9 +92,14 @@ export function RoomConsumptionDialog({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
   // Unir produtos cadastrados no inventário com itens típicos de bar
+  const { dishes } = useDishes(open);
+  const dishItems = useMemo(
+    () => dishes.map((d) => ({ id: `dish:${d.id}`, name: d.name, category: 'Pratos do dia', price: d.price, stock: d.available, isDish: false, rawIngredientId: undefined, rawIngredientName: undefined, rawQuantityPerPortion: undefined, soldByWeight: false })),
+    [dishes]
+  );
   const availableItems = useMemo(() => {
     if (products && products.length > 0) {
-      return products.map((p) => ({
+      return [...dishItems, ...products.map((p) => ({
         id: p.id,
         name: p.name,
         category: p.category || 'Geral',
@@ -105,7 +111,7 @@ export function RoomConsumptionDialog({
         rawIngredientName: p.rawIngredientName,
         rawQuantityPerPortion: p.rawQuantityPerPortion,
         soldByWeight: Boolean(p.soldByWeight),
-      }));
+      }))];
     }
     return DEFAULT_HOSPITALITY_ITEMS.map((item, idx) => ({
       id: `default-${idx}`,
@@ -115,7 +121,7 @@ export function RoomConsumptionDialog({
       stock: null,
       soldByWeight: false,
     }));
-  }, [products]);
+  }, [products, dishItems]);
 
   const categories = useMemo(() => {
     const set = new Set(availableItems.map((i) => i.category));

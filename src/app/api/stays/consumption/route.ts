@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { isDishRef, dishIdOf, dishAvailable, dishDayKey } from '@/lib/dishes';
 import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
@@ -149,11 +150,20 @@ export async function POST(req: Request) {
           new Set(
             addItems
               .map((it) => (typeof it.productId === 'string' ? it.productId.trim() : ''))
-              .filter((id) => id !== '')
+              .filter((id) => id !== '' && !isDishRef(id))
           )
         );
         const snaps = await Promise.all(productIds.map((id) => transaction.get(db.doc(`companies/${companyId}/products/${id}`))));
         productIds.forEach((id, idx) => productSnaps.set(id, snaps[idx]));
+
+        // Pratos do dia: ler já as doses disponíveis (antes de qualquer escrita)
+        const dishSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+        const dishIds = Array.from(new Set(addItems.map((it) => (isDishRef(it.productId) ? dishIdOf(String(it.productId).trim()) : '')).filter((id) => id !== '')));
+        if (dishIds.length > 0) {
+          const dSnaps = await Promise.all(dishIds.map((id) => transaction.get(db.doc(`companies/${companyId}/dishes/${id}`))));
+          dishIds.forEach((id, idx) => dishSnaps.set(id, dSnaps[idx]));
+        }
+        const dishLeft = new Map<string, number>();
 
         // Leitura prévia dos serviços cadastrados (se existirem)
         const serviceSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
@@ -207,8 +217,22 @@ export async function POST(req: Request) {
           let rawDeductionRecord: StayConsumptionItem['rawDeduction'] = undefined;
           let isService = Boolean(rawItem.isService);
           let resolvedServiceId: string | undefined = undefined;
+          let resolvedDishId: string | undefined = undefined;
 
-          if (rawItem.productId && typeof rawItem.productId === 'string' && rawItem.productId.trim() !== '') {
+          if (isDishRef(rawItem.productId)) {
+            // Prato do dia: preço do servidor; desconta as doses disponíveis (sem stock nem ingredientes)
+            const dId = dishIdOf(String(rawItem.productId).trim());
+            const dSnap = dishSnaps.get(dId);
+            const dData = dSnap && dSnap.exists ? dSnap.data() || {} : null;
+            if (!dData || dData.deletedAt) throw new Error('Este prato já não existe.');
+            const left = dishLeft.has(dId) ? (dishLeft.get(dId) as number) : dishAvailable(dData);
+            if (qty > left) throw new Error(`"${dData.name || 'Prato'}": só há ${left} dose(s) disponível(is) hoje.`);
+            dishLeft.set(dId, left - qty);
+            resolvedUnitPrice = Number(dData.price) || 0;
+            if (!(resolvedUnitPrice > 0)) throw new Error(`Preço inválido no prato "${dData.name || dId}".`);
+            resolvedProductName = String(dData.name || resolvedProductName || 'Prato');
+            resolvedDishId = dId;
+          } else if (rawItem.productId && typeof rawItem.productId === 'string' && rawItem.productId.trim() !== '') {
             // Produto do catálogo: lê da base de dados e ignora o unitPrice do cliente
             const prodRef = db.doc(`companies/${companyId}/products/${rawItem.productId.trim()}`);
             const prodSnap = productSnaps.get(rawItem.productId.trim());
@@ -350,7 +374,8 @@ export async function POST(req: Request) {
           const totalPrice = weighedKg ? Math.round(weighedKg * resolvedUnitPrice * 100) / 100 : qty * resolvedUnitPrice;
           const consumptionItem: StayConsumptionItem = {
             id: `cons-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
-            ...(rawItem.productId ? { productId: rawItem.productId } : {}),
+            ...(rawItem.productId && !resolvedDishId ? { productId: rawItem.productId } : {}),
+            ...(resolvedDishId ? { dishId: resolvedDishId } : {}),
             ...(resolvedServiceId ? { serviceId: resolvedServiceId } : {}),
             isService: isService || Boolean(resolvedServiceId),
             productName: resolvedProductName,
@@ -368,6 +393,11 @@ export async function POST(req: Request) {
 
           newItems.push(consumptionItem);
         }
+
+        // Descontar as doses dos pratos vendidos
+        dishLeft.forEach((left, dId) => {
+          transaction.update(db.doc(`companies/${companyId}/dishes/${dId}`), { available: left, availableDay: dishDayKey(), updatedAt: new Date().toISOString() });
+        });
 
         updatedConsumptions = [...currentConsumptions, ...newItems];
 
@@ -424,6 +454,14 @@ export async function POST(req: Request) {
               userName: employeeName,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
+          }
+        } else if (targetItem.dishId) {
+          // Prato do dia: as doses voltam a ficar disponíveis (só se ainda for o mesmo dia)
+          const dRef = db.doc(`companies/${companyId}/dishes/${targetItem.dishId}`);
+          const dSnap = await transaction.get(dRef);
+          if (dSnap.exists && (dSnap.data() || {}).availableDay === dishDayKey()) {
+            const dData = dSnap.data() || {};
+            transaction.update(dRef, { available: dishAvailable(dData) + targetItem.quantity, availableDay: dishDayKey(), updatedAt: new Date().toISOString() });
           }
         } else if (targetItem.productId) {
           // Devolução de stock convencional se o item tiver productId
