@@ -24,6 +24,7 @@ export function OpenTabs() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [search, setSearch] = useState('');
   const [payment, setPayment] = useState(PAYMENTS[0]);
   const [stayId, setStayId] = useState('');
@@ -65,12 +66,12 @@ export function OpenTabs() {
   };
 
   const create = async () => {
-    const r = await run({ action: 'open', clientName: newName });
-    if (r?.id) { setNewOpen(false); setNewName(''); setActiveId(r.id); }
+    const r = await run({ action: 'open', clientName: newName, phone: newPhone });
+    if (r?.id) { setNewOpen(false); setNewName(''); setNewPhone(''); setActiveId(r.id); }
   };
 
   return (
-    <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 p-3">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-bold"><Receipt className="h-4 w-4 text-[#007bb9]" /> Contas abertas ({tabs.length})</div>
         <Button size="sm" className="h-9 rounded-full gap-1 bg-[#007bb9] hover:bg-[#006194] text-white" onClick={() => setNewOpen(true)}><Plus className="h-4 w-4" /> Nova conta</Button>
@@ -89,7 +90,8 @@ export function OpenTabs() {
       <Dialog open={newOpen} onOpenChange={(o) => !busy && setNewOpen(o)}>
         <DialogContent className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-[380px] rounded-3xl">
           <DialogHeader><DialogTitle>Nova conta</DialogTitle><DialogDescription>Nome do cliente (obrigatório).</DialogDescription></DialogHeader>
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={60} className="h-11 text-base rounded-2xl" autoFocus />
+          <Input value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={60} placeholder="Nome do cliente" className="h-11 text-base rounded-2xl" autoFocus />
+          <Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} maxLength={20} inputMode="tel" placeholder="Telefone (opcional)" className="h-11 text-base rounded-2xl" />
           <Button className="rounded-2xl bg-[#007bb9] hover:bg-[#006194] text-white" disabled={busy || newName.trim().length < 2} onClick={create}>Abrir conta</Button>
         </DialogContent>
       </Dialog>
@@ -100,16 +102,19 @@ export function OpenTabs() {
             <>
               <DialogHeader className="px-5 pt-5">
                 <DialogTitle>Conta de {active.clientName}</DialogTitle>
-                <DialogDescription>Aberta por {active.openedByName}. O stock desce ao lançar.</DialogDescription>
+                <DialogDescription>{active.phone ? `${active.phone} · ` : ''}Aberta por {active.openedByName}. O stock desce ao lançar.</DialogDescription>
               </DialogHeader>
               <div className="flex-1 overflow-y-auto px-5 space-y-3 pb-3">
                 <div className="space-y-1">
                   {active.items.length === 0 && <p className="text-xs text-slate-500">Ainda sem itens.</p>}
                   {active.items.map((it) => (
                     <div key={it.id} className="flex items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0 truncate">{it.quantity}x {it.productName}</span>
-                      <span className="flex items-center gap-2 shrink-0">
-                        {formatCurrency(it.totalPrice)}
+                      <span className="min-w-0 truncate">{it.productName}</span>
+                      <span className="flex items-center gap-1.5 shrink-0">
+                        <button aria-label="Menos um" disabled={busy || it.quantity <= 1} className="h-8 w-8 rounded-full border text-base disabled:opacity-30" onClick={() => run({ action: 'dec', tabId: active.id, itemId: it.id })}>−</button>
+                        <b className="w-6 text-center">{it.quantity}</b>
+                        <button aria-label="Mais um" disabled={busy} className="h-8 w-8 rounded-full border text-base" onClick={() => run({ action: 'add', tabId: active.id, productId: it.productId, quantity: 1 })}>+</button>
+                        <span className="w-20 text-right">{formatCurrency(it.totalPrice)}</span>
                         <button aria-label="Retirar" disabled={busy} className="text-rose-600" onClick={() => {
                           const reason = window.prompt('Motivo para retirar este item?');
                           if (reason && reason.trim().length >= 3) run({ action: 'remove', tabId: active.id, itemId: it.id, reason });
