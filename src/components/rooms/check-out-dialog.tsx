@@ -27,6 +27,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import type { Stay, Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
+import { DISCOUNT_REASONS } from '@/lib/discount';
 import { calculateStayPricing, formatStayDuration, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
 
 interface CheckOutDialogProps {
@@ -54,6 +55,9 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [discountInput, setDiscountInput] = useState('');
+  const [discountReason, setDiscountReason] = useState('');
+  const [discountNote, setDiscountNote] = useState('');
 
   // Atualizar o relógio a cada 10 segundos enquanto o diálogo estiver aberto
   useEffect(() => {
@@ -82,8 +86,14 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     blockHours: stay.blockHours,
   });
 
+  // Desconto: sem valor fixo, mas com motivo obrigatório (o servidor volta a validar)
+  const discountAmount = Math.min(pricing.totalAmountDue, Math.max(0, Math.round((Number(discountInput.replace(',', '.')) || 0) * 100) / 100));
+  const discountReasonFull = [discountReason, discountNote.trim()].filter(Boolean).join(' — ');
+  const discountMissingReason = discountAmount > 0 && discountReasonFull.length < 3;
+  const finalTotal = Math.round((pricing.totalAmountDue - discountAmount) * 100) / 100;
+
   const previousPaid = Number(stay.totalAmountPaid) || 0;
-  const balanceToPay = Math.max(0, pricing.totalAmountDue - previousPaid);
+  const balanceToPay = Math.max(0, finalTotal - previousPaid);
 
 
   const handlePrintReceipt = () => {
@@ -102,8 +112,9 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
         stayLabel: stay.packagePrice ? `Pacote ${stay.packageHours || pricing.billedHours}h` : `${pricing.billedHours}h de estadia`,
         stayAmount: pricing.stayAmountDue,
         consumptions: stay.consumptions || [],
-        total: pricing.totalAmountDue,
-        paid: pricing.totalAmountDue,
+        discount: discountAmount,
+        total: finalTotal,
+        paid: finalTotal,
         paymentMethod,
         final: true,
         operator: user?.username,
@@ -118,7 +129,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
       ...stay,
       checkOutAt: new Date(),
       billedHours: pricing.billedHours,
-      totalAmountPaid: pricing.totalAmountDue,
+      totalAmountPaid: finalTotal,
       paymentMethod,
     };
     const msg = buildStayReceiptWhatsAppMessage(simulatedStay, room, companyData?.name);
@@ -127,17 +138,25 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stay.id) return;
+    if (discountMissingReason) {
+      toast({ variant: 'destructive', title: 'Indique o motivo do desconto' });
+      return;
+    }
 
     try {
       setLoading(true);
       await checkOutStay(stay.id, {
-        amountPaid: pricing.totalAmountDue,
+        amountPaid: finalTotal,
+        ...(discountAmount > 0 ? { discountAmount, discountReason: discountReasonFull } : {}),
         paymentMethod,
         roomNextStatus,
         notes: notes.trim(),
       });
       onOpenChange(false);
       setNotes('');
+      setDiscountInput('');
+      setDiscountReason('');
+      setDiscountNote('');
     } catch (err: any) {
       console.error('Erro no checkout:', err);
       toast({
@@ -267,9 +286,15 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
                 Total Oficial a Cobrar:
               </span>
               <span className="text-3xl font-black text-[#007bb9] dark:text-sky-400">
-                {formatCurrency(pricing.totalAmountDue)}
+                {formatCurrency(finalTotal)}
               </span>
             </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                <span>Tabela {formatCurrency(pricing.totalAmountDue)} − Desconto</span>
+                <span>−{formatCurrency(discountAmount)}</span>
+              </div>
+            )}
 
             {previousPaid > 0 && (
               <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-blue-200/40 dark:border-slate-800">
@@ -283,6 +308,22 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
                 <span>Saldo a Pagar Agora:</span>
                 <span className="text-base font-extrabold">{formatCurrency(balanceToPay)}</span>
               </div>
+            )}
+          </div>
+
+          {/* Desconto (opcional, com motivo obrigatório) */}
+          <div className="space-y-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 p-3">
+            <Label htmlFor="discountInput" className="text-xs font-bold text-slate-700 dark:text-slate-200">Desconto (MT) <span className="text-slate-400 font-normal text-[10px]">(opcional)</span></Label>
+            <input id="discountInput" type="number" inputMode="decimal" min="0" value={discountInput} onChange={(e) => setDiscountInput(e.target.value)} placeholder="0" className="h-10 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-base sm:text-xs font-semibold" />
+            {discountAmount > 0 && (
+              <>
+                <Select value={discountReason} onValueChange={setDiscountReason}>
+                  <SelectTrigger className="h-10 text-xs rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><SelectValue placeholder="Motivo do desconto *" /></SelectTrigger>
+                  <SelectContent>{DISCOUNT_REASONS.map((r) => <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>)}</SelectContent>
+                </Select>
+                <input value={discountNote} onChange={(e) => setDiscountNote(e.target.value)} placeholder="Nota (opcional)" className="h-10 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-base sm:text-xs" />
+                {discountMissingReason && <p className="text-[11px] font-bold text-rose-600">Escolha o motivo para aplicar o desconto.</p>}
+              </>
             )}
           </div>
 

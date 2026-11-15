@@ -82,3 +82,11 @@ describe('recibo no check-in', () => {
     expect(doc.totals.some((t) => t.left === 'Em falta')).toBe(false);
   });
 });
+
+describe('recibo com desconto', () => {
+  it('mostra a linha de desconto', () => {
+    const doc = buildStayReceipt({ hotel: 'H', roomName: 'Q1', checkIn: new Date(), checkOut: new Date(), stayLabel: '3h', stayAmount: 650, consumptions: [], discount: 150, total: 500, paid: 500, final: true });
+    expect(doc.lines.some((l) => l.left === 'Desconto' && l.right?.includes('150'))).toBe(true);
+    expect(doc.totals[0].right).toContain('500');
+  });
+});
