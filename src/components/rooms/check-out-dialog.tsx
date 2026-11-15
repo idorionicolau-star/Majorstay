@@ -79,6 +79,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     consumptions: stay.consumptions || [],
     packagePrice: stay.packagePrice,
     packageHours: stay.packageHours,
+    blockHours: stay.blockHours,
   });
 
   const previousPaid = Number(stay.totalAmountPaid) || 0;

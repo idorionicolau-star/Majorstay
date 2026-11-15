@@ -242,6 +242,7 @@ export function RoomConsumptionDialog({
       consumptions: stay.consumptions || [],
       packagePrice: stay.packagePrice,
       packageHours: stay.packageHours,
+      blockHours: stay.blockHours,
     });
     const ok = printReceipt(
       buildStayReceipt({

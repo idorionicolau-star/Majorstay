@@ -180,6 +180,7 @@ export function HospitalityDashboard() {
             consumptions: stay.consumptions,
             packagePrice: stay.packagePrice,
             packageHours: stay.packageHours,
+            blockHours: stay.blockHours,
           });
           return { stay, realtime, pricing };
         })

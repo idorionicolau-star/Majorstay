@@ -170,6 +170,7 @@ export async function POST(req: Request) {
         consumptions: [],
         packagePrice: Number(stayData.packagePrice) || undefined,
         packageHours: Number(stayData.packageHours) || undefined,
+        blockHours: Number(stayData.blockHours) || undefined,
       }).stayAmountDue;
     } catch { /* mantém o valor contratado */ }
 

@@ -129,14 +129,17 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
     Number(selectedRoom?.dailyPrice) > 0 && { type: 'diaria' as const, label: 'Diária', hours: 24, price: Number(selectedRoom?.dailyPrice) },
   ].filter(Boolean) as { type: 'pernoite' | 'diaria'; label: string; hours: number; price: number }[];
   const activePkg = pkgOptions.find((o) => o.type === pkg) || null;
-  const totalAmount = activePkg ? activePkg.price : contractedHours * ratePerHour;
+  // Quartos com mínimo de horas: a taxa é por bloco (ex.: 1100 a cada 2h). Horas arredondadas para cima ao bloco.
+  const blockHours = Math.max(1, Math.floor(selectedRoom?.minimumHours || 1));
+  const billedHours = activePkg ? contractedHours : Math.ceil(contractedHours / blockHours) * blockHours;
+  const totalAmount = activePkg ? activePkg.price : Math.round((billedHours / blockHours) * ratePerHour * 100) / 100;
   const pickHours = (h: number) => { setPkg(null); setContractedHours(h); };
 
   const expectedCheckOutFormatted = useMemo(() => {
     const d = new Date();
-    d.setHours(d.getHours() + contractedHours);
+    d.setHours(d.getHours() + billedHours);
     return d.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
-  }, [contractedHours]);
+  }, [billedHours]);
 
   const handleRoomChange = (newRoomId: string) => {
     setRoomId(newRoomId);
@@ -170,15 +173,16 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         vehicleBrand: vehicleBrand.trim(),
         vehicleModel: vehicleModel.trim(),
         vehicleColor: vehicleColor.trim(),
-        contractedHours,
-        ratePerHour,
+        contractedHours: billedHours,
+        ratePerHour: ratePerHour / blockHours,
+        ...(!activePkg && blockHours > 1 ? { blockHours } : {}),
         paymentMethod,
         notes: notes.trim(),
         ...(activePkg ? { packageType: activePkg.type, packagePrice: activePkg.price } : {}),
       });
       if (printOnCheckIn) {
         const now = new Date();
-        const out = new Date(now.getTime() + (activePkg ? activePkg.hours : contractedHours) * 3600_000);
+        const out = new Date(now.getTime() + (activePkg ? activePkg.hours : billedHours) * 3600_000);
         printReceipt(
           buildStayReceipt({
             hotel: companyData?.name || 'Alojamento',
@@ -190,7 +194,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
             vehicleColor: vehicleColor.trim() || undefined,
             checkIn: now,
             expectedCheckOut: out,
-            stayLabel: activePkg ? activePkg.label : `${contractedHours}h de estadia`,
+            stayLabel: activePkg ? activePkg.label : `${billedHours}h de estadia`,
             stayAmount: totalAmount,
             consumptions: [],
             total: totalAmount,
@@ -365,7 +369,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
               <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                 <Tag className="w-3.5 h-3.5 text-[#fd761a]" />
                 <span>
-                  Tarifa base deste quarto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{formatCurrency(ratePerHour)}/hora</strong>
+                  Tarifa base deste quarto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{formatCurrency(ratePerHour)}{blockHours > 1 ? ` a cada ${blockHours}h` : "/hora"}</strong>
                 </span>
               </div>
             )}
