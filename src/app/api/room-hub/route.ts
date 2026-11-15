@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { DISH_PREFIX, dishAvailable } from '@/lib/dishes';
 import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
@@ -107,7 +108,7 @@ export async function GET(req: Request) {
     }
 
     // 4. Produtos do bar e cozinha
-    const barProducts: { id: string; name: string; price: number; category?: string; isDish?: boolean; soldByWeight?: boolean; unit?: string }[] = [];
+    const barProducts: { id: string; name: string; price: number; category?: string; isDish?: boolean; soldByWeight?: boolean; unit?: string; available?: number }[] = [];
     try {
       const prodSnap = await db
         .collection(`companies/${companyId}/products`)
@@ -138,6 +139,15 @@ export async function GET(req: Request) {
         });
 
         if (barProducts.length >= 30) break;
+      }
+      // Pratos do dia: só os que ainda têm doses hoje
+      const dishSnap = await db.collection(`companies/${companyId}/dishes`).limit(60).get();
+      for (const d of dishSnap.docs) {
+        const dd = d.data() || {};
+        const left = dishAvailable(dd);
+        const price = Number(dd.price);
+        if (left <= 0 || !Number.isFinite(price) || price <= 0) continue;
+        barProducts.push({ id: `${DISH_PREFIX}${d.id}`, name: String(dd.name || 'Prato').trim(), price, category: 'Pratos do dia', isDish: true, unit: 'un', available: left });
       }
     } catch (e) {
       console.warn('Erro ao carregar produtos do bar:', e);

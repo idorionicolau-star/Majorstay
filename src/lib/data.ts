@@ -25,6 +25,7 @@ export const mainNavItems: NavItem[] = [
   { title: 'Quartos', href: '/rooms', id: 'rooms', icon: BedDouble, group: 'inicio' },
   // Serviços de Alojamento (Lavandaria, Massagens, Transfers, Limpeza extra, etc.)
   { title: 'Serviços', href: '/services', id: 'rooms', icon: ConciergeBell, group: 'inicio' },
+  { title: 'Pratos do dia', href: '/pratos', id: 'rooms', icon: Utensils, group: 'vender' },
   // Cozinha & Restaurante
   ...(KITCHEN_ENABLED ? [{ title: 'Cozinha & Restaurante', href: '/restaurante', id: 'rooms', icon: Utensils, group: 'vender' } as NavItem] : []),
   // Lounge (as vendas do bar)

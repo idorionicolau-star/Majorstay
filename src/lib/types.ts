@@ -620,6 +620,7 @@ export type StayConsumptionItem = {
   /** Venda ao peso: peso consumido em kg */
   weightKg?: number;
   /** Registo da dedução de matéria-prima alimentar em kg */
+  dishId?: string; // Prato do dia (sem stock; desconta as doses disponíveis)
   rawDeduction?: {
     ingredientId: string;
     ingredientName: string;
