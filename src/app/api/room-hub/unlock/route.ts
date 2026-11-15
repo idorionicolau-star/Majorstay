@@ -147,6 +147,8 @@ export async function POST(req: Request) {
             total: Number(d.total || 0),
             createdAt: d.createdAt ? normalizeDate(d.createdAt).toISOString() : new Date().toISOString(),
             rejectReason: d.rejectReason || null,
+            etaAt: d.etaAt || null,
+            deliveredAt: d.deliveredAt || null,
           };
         });
       }

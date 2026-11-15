@@ -80,6 +80,7 @@ export async function POST(req: Request) {
       consumptionId,
       reason = '',
       orderId,
+      etaMinutes,
     } = body;
 
     if (!companyId || !stayId || !action) {
@@ -404,6 +405,9 @@ export async function POST(req: Request) {
         if (orderRef) {
           transaction.update(orderRef, {
             status: 'confirmed',
+            ...(Number.isInteger(etaMinutes) && etaMinutes >= 1 && etaMinutes <= 120
+              ? { etaMinutes, etaAt: new Date(Date.now() + etaMinutes * 60_000).toISOString() }
+              : {}),
             resolvedAt: new Date().toISOString(),
             resolvedBy: decoded.uid,
             resolvedByName: employeeName,

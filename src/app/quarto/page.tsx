@@ -80,11 +80,12 @@ interface RoomOrderItem {
 
 interface RoomOrder {
   id: string;
-  status: 'pending' | 'confirmed' | 'rejected';
+  status: 'pending' | 'confirmed' | 'delivered' | 'rejected';
   items: RoomOrderItem[];
   total: number;
   createdAt: string;
   rejectReason?: string | null;
+  etaAt?: string | null;
 }
 
 interface PricingSummary {
@@ -893,6 +894,35 @@ function QuartoPortalContent() {
                       </div>
                     ))}
                 </div>
+              </div>
+            )}
+
+            {/* Pedidos aceites: a preparar, com a hora prevista */}
+            {orders.filter((o) => o.status === 'confirmed').length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-sky-50/90 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900 space-y-2">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-sky-900 dark:text-sky-200">
+                  <Hourglass className="w-4 h-4 text-sky-600" />
+                  A preparar o seu pedido
+                </span>
+                {orders
+                  .filter((o) => o.status === 'confirmed')
+                  .map((ord) => {
+                    const eta = ord.etaAt ? new Date(ord.etaAt) : null;
+                    const mins = eta ? Math.ceil((eta.getTime() - Date.now()) / 60000) : null;
+                    return (
+                      <div key={ord.id} className="bg-white/80 dark:bg-black/20 p-2.5 rounded-xl border border-sky-200/60 text-xs space-y-1">
+                        <div className="flex items-center justify-between font-semibold text-stone-800 dark:text-stone-200">
+                          <span className="font-mono text-[11px]">Pedido #{ord.id.slice(-5).toUpperCase()}</span>
+                          <span className="text-sky-700 dark:text-sky-300 font-bold">
+                            {mins === null ? 'Em preparação' : mins > 0 ? `Pronto em cerca de ${mins} min` : 'A chegar já'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-stone-600 dark:text-stone-300">
+                          {ord.items.map((it) => `${it.quantity}× ${it.productName}`).join(' · ')}
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
 
