@@ -1,5 +1,6 @@
 "use client";
 
+import { nowMs } from '@/lib/server-time';
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -112,7 +113,7 @@ export function OrderAlertBanner() {
     const wasFirst = firstLoad.current;
     firstLoad.current = false;
     if (muted) return;
-    const now = Date.now();
+    const now = nowMs();
 
     if (newUnconfirmed && !wasFirst) {
       if (playUnconfirmedAlert()) lastBeep.current = now;

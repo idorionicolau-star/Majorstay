@@ -1,5 +1,6 @@
 'use client';
 
+import { nowMs, syncServerTime } from '@/lib/server-time';
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -134,6 +135,7 @@ function QuartoPortalContent() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sendingOrder, setSendingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  useEffect(() => { syncServerTime(); }, []);
   const [orderSent, setOrderSent] = useState<{ id: string; total: number; lines: { name: string; qty: number; price: number; kg?: boolean }[] } | null>(null);
   const [now, setNow] = useState<number>(Date.now());
 
@@ -908,7 +910,7 @@ function QuartoPortalContent() {
                   .filter((o) => o.status === 'confirmed')
                   .map((ord) => {
                     const eta = ord.etaAt ? new Date(ord.etaAt) : null;
-                    const mins = eta ? Math.ceil((eta.getTime() - Date.now()) / 60000) : null;
+                    const mins = eta ? Math.ceil((eta.getTime() - nowMs()) / 60000) : null;
                     return (
                       <div key={ord.id} className="bg-white/80 dark:bg-black/20 p-2.5 rounded-xl border border-sky-200/60 text-xs space-y-1">
                         <div className="flex items-center justify-between font-semibold text-stone-800 dark:text-stone-200">

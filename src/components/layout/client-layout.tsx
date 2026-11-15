@@ -36,6 +36,7 @@ import { clearNavHint } from '@/lib/nav-hint';
 import { isSuperAdminEmail } from '@/lib/super-admin';
 import { GuestBanner } from './guest-banner';
 import { OrderAlertBanner } from './order-alert-banner';
+import { ServerTimeSync } from './server-time-sync';
 import { AppLoader } from './app-loader';
 import { BootProgress } from './boot-progress';
 import { SubscriptionExpired } from './subscription-expired';
@@ -215,6 +216,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             </a>
           </div>
         )}
+
+        <ServerTimeSync />
 
         {/* Pedidos dos quartos: aviso e som em qualquer página */}
         {!waiting && <OrderAlertBanner />}

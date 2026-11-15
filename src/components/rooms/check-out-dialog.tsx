@@ -1,5 +1,7 @@
 'use client';
 
+import { formatHotelTime } from '@/lib/server-time';
+import { nowMs, nowDate } from '@/lib/server-time';
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -54,7 +56,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   const [roomNextStatus, setRoomNextStatus] = useState<'cleaning' | 'free'>('cleaning');
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState(nowDate());
   const [discountInput, setDiscountInput] = useState('');
   const [discountReason, setDiscountReason] = useState('');
   const [discountNote, setDiscountNote] = useState('');
@@ -62,8 +64,8 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   // Atualizar o relógio a cada 10 segundos enquanto o diálogo estiver aberto
   useEffect(() => {
     if (!open) return;
-    setNow(new Date());
-    const interval = setInterval(() => setNow(new Date()), 10000);
+    setNow(nowDate());
+    const interval = setInterval(() => setNow(nowDate()), 10000);
     return () => clearInterval(interval);
   }, [open]);
 
@@ -127,7 +129,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     if (!stay) return;
     const simulatedStay: Stay = {
       ...stay,
-      checkOutAt: new Date(),
+      checkOutAt: nowDate(),
       billedHours: pricing.billedHours,
       totalAmountPaid: finalTotal,
       paymentMethod,
@@ -221,13 +223,13 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
               <div>
                 <span className="text-slate-400 font-bold block text-[10px] uppercase tracking-wider">Check-in:</span>
                 <span className="font-extrabold text-slate-900 dark:text-white text-sm">
-                  {checkInDate.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
+                  {formatHotelTime(checkInDate)}
                 </span>
               </div>
               <div>
                 <span className="text-slate-400 font-bold block text-[10px] uppercase tracking-wider">Saída (Agora):</span>
                 <span className="font-extrabold text-slate-900 dark:text-white text-sm">
-                  {now.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
+                  {formatHotelTime(now)}
                 </span>
               </div>
             </div>
