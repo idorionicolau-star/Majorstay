@@ -37,6 +37,7 @@ export function ShiftBar() {
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
+  const [openTabs, setOpenTabs] = useState(0);
 
   const load = useCallback(async () => {
     if (isGuest || !companyId) return;
@@ -51,6 +52,7 @@ export function ShiftBar() {
       setClosedToday(json.closedToday || null);
       setOtherOpen(json.otherOpen || null);
       setLoaded(true);
+      try { const t = await authedFetch('/api/tabs', 'POST', { companyId, action: 'list' }); setOpenTabs((t.tabs || []).length); } catch { setOpenTabs(0); }
     } catch {
       /* sem ligação: tenta na próxima vez */
     }
@@ -133,6 +135,11 @@ export function ShiftBar() {
           </Button>
         ) : null}
       </div>
+      {openTabs > 0 && (
+        <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
+          Há {openTabs} {openTabs === 1 ? 'conta aberta' : 'contas abertas'} no Lounge & Bar{!current && !closedToday ? ' (podem ser do turno anterior)' : ''}.
+        </p>
+      )}
 
       <Dialog open={dialog !== null} onOpenChange={(o) => !o && !busy && setDialog(null)}>
         <DialogContent className="flex flex-col max-h-[92dvh] w-full max-w-[calc(100vw-1.5rem)] sm:max-w-[420px] rounded-3xl p-0 overflow-hidden">
@@ -143,6 +150,11 @@ export function ShiftBar() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">
+            {dialog === 'close' && openTabs > 0 && (
+              <p className="rounded-2xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                Atenção: ainda há {openTabs} {openTabs === 1 ? 'conta aberta' : 'contas abertas'} no Lounge & Bar. Pode fechar o turno, mas a conta passa para o colega seguinte.
+              </p>
+            )}
             {dialog === 'close' && live && (
               <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 p-3 text-xs space-y-1">
                 <div className="flex justify-between"><span>Fundo de caixa</span><b>{formatCurrency(current?.openingCash || 0)}</b></div>
