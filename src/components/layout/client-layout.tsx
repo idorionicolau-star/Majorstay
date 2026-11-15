@@ -35,6 +35,7 @@ import { markAppReady } from '@/lib/app-ready';
 import { clearNavHint } from '@/lib/nav-hint';
 import { isSuperAdminEmail } from '@/lib/super-admin';
 import { GuestBanner } from './guest-banner';
+import { OrderAlertBanner } from './order-alert-banner';
 import { AppLoader } from './app-loader';
 import { BootProgress } from './boot-progress';
 import { SubscriptionExpired } from './subscription-expired';
@@ -214,6 +215,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             </a>
           </div>
         )}
+
+        {/* Pedidos dos quartos: aviso e som em qualquer página */}
+        {!waiting && <OrderAlertBanner />}
 
         {/* quem veio da EscalePay já pagou lá: sem contagem do teste. Nas páginas de venda não aparece: há um cliente à espera */}
         {!waiting && isTrial && isManager && !pathname.startsWith('/pos') && (fromEscalepay ? <EscalepayPendingBanner daysLeft={daysLeft} /> : <TrialBanner companyId={authContext?.companyId} daysLeft={daysLeft} coupon={authContext?.companyData?.coupon} />)}

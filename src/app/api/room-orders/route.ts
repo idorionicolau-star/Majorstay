@@ -48,9 +48,12 @@ export async function GET(req: Request) {
     const auth = await authorize(req, companyId, 'read');
     if ('error' in auth) return auth.error;
 
-    const snap = await auth.db
-      .collection(`companies/${companyId}/roomOrders`)
-      .where('status', '==', statusParam)
+    // 'active' = ainda não terminados: por aceitar (pending) e aceites mas por entregar (confirmed)
+    const base = auth.db.collection(`companies/${companyId}/roomOrders`);
+    const snap = await (statusParam === 'active'
+      ? base.where('status', 'in', ['pending', 'confirmed'])
+      : base.where('status', '==', statusParam)
+    )
       .limit(50)
       .get();
     const orders = snap.docs
@@ -71,13 +74,26 @@ export async function POST(req: Request) {
     const action = body.action;
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
 
-    if (!orderId || (action !== 'reject' && action !== 'preparing')) {
+    if (!orderId || (action !== 'reject' && action !== 'preparing' && action !== 'delivered')) {
       return NextResponse.json({ error: 'Pedido inválido.' }, { status: 400 });
     }
     const auth = await authorize(req, companyId, 'write');
     if ('error' in auth) return auth.error;
 
     const ref = auth.db.doc(`companies/${companyId}/roomOrders/${orderId}`);
+
+    if (action === 'delivered') {
+      const snap = await ref.get();
+      if (!snap.exists) return NextResponse.json({ error: 'Pedido não encontrado.' }, { status: 404 });
+      if (snap.data()?.status !== 'confirmed') return NextResponse.json({ error: 'Este pedido não está a aguardar entrega.' }, { status: 409 });
+      await ref.update({
+        status: 'delivered',
+        deliveredAt: new Date().toISOString(),
+        deliveredBy: auth.decoded.uid,
+        deliveredByName: auth.employeeName,
+      });
+      return NextResponse.json({ success: true, status: 'delivered' });
+    }
 
     if (action === 'preparing') {
       const snap = await ref.get();
