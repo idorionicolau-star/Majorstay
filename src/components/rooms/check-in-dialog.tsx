@@ -123,6 +123,8 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   }, [freeRooms, roomSearch]);
 
   const selectedRoom = rooms.find((r) => r.id === roomId);
+  // Quarto já escolhido (clicou no quarto): sem seletor, fica em destaque no topo
+  const roomLocked = Boolean(preselectedRoomId) && selectedRoom?.id === preselectedRoomId;
   const ratePerHour = selectedRoom?.ratePerHour || 0;
   const pkgOptions = [
     Number(selectedRoom?.overnightPrice) > 0 && { type: 'pernoite' as const, label: 'Pernoite', hours: Math.max(1, Number(selectedRoom?.overnightHours) || 12), price: Number(selectedRoom?.overnightPrice) },
@@ -255,6 +257,21 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
           <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-7 py-3 space-y-4">
           {/* Seleção do Quarto: Pesquisa Rápida + Faixa com Scroll Horizontal + Dropdown */}
           <div className="space-y-2">
+            {roomLocked && selectedRoom ? (
+              <div className="rounded-2xl border-2 border-[#007bb9] bg-gradient-to-r from-[#007bb9]/15 to-transparent p-4 flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-[#007bb9] text-white flex items-center justify-center shrink-0">
+                  <BedDouble className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#007bb9] dark:text-sky-300">Check-in no</p>
+                  <p className="text-xl font-extrabold leading-tight text-slate-900 dark:text-white truncate">{selectedRoom.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {formatCurrency(ratePerHour)}{blockHours > 1 ? ` a cada ${blockHours}h` : '/hora'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
             <div className="flex items-center justify-between">
               <Label htmlFor="roomSelect" className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-wide">
                 Quarto a Ocupar <span className="text-[#fd761a]">*</span>
@@ -263,6 +280,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00855b] dark:bg-emerald-400" /> {freeRooms.length} {freeRooms.length === 1 ? 'Disponível' : 'Disponíveis'}
               </span>
             </div>
+
 
             {/* Barra de Pesquisa Rápida */}
             <div className="relative">
@@ -364,8 +382,10 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                 ))}
               </SelectContent>
             </Select>
+              </>
+            )}
 
-            {selectedRoom && (
+            {selectedRoom && !roomLocked && (
               <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                 <Tag className="w-3.5 h-3.5 text-[#fd761a]" />
                 <span>
