@@ -343,10 +343,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     isFirstStayRun.current = false;
   }, [rooms, openStays, notifyManagers, tick]);
 
-  // Monitorização proativa de higienização de quartos (Alerta sonoro e notificação aos Administradores)
+  // Monitorização proativa de higienização de quartos (Alerta sonoro e notificação quando o tempo é excedido)
   const alertedCleaningsRef = useRef<Set<string>>(new Set());
   const isFirstCleaningRun = useRef(true);
-  const prevRoomStatusRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     if (!rooms || rooms.length === 0) return;
@@ -355,14 +354,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const isFirst = isFirstCleaningRun.current;
 
     rooms.forEach((room) => {
-      // 1. Alerta sonoro quando um quarto conclui a limpeza (camareira marcou como limpo)
-      const prevStatus = prevRoomStatusRef.current.get(room.id);
-      if (!isFirst && prevStatus === 'cleaning' && room.status === 'free') {
-        playCleanAlert();
-      }
-      prevRoomStatusRef.current.set(room.id, room.status);
-
-      // 2. Alerta sonoro e notificação quando a limpeza excede o tempo configurado
+      // Alerta sonoro e notificação quando a limpeza excede o tempo configurado
       if (room.status !== 'cleaning' || !room.cleaningStartedAt) return;
 
       const cleaningStatus = computeRoomCleaningStatus({
