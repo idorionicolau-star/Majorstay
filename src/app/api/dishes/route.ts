@@ -53,14 +53,17 @@ export async function POST(req: Request) {
       const price = Math.round((Number(body.price) || 0) * 100) / 100;
       if (name.length < 2) return NextResponse.json({ error: 'Indique o nome do prato.' }, { status: 400 });
       if (!(price > 0) || price > 1e7) return NextResponse.json({ error: 'Indique um preço válido.' }, { status: 400 });
+      const hasQty = body.qty !== undefined && body.qty !== null && body.qty !== '';
+      const qty = hasQty ? Math.floor(Number(body.qty)) : 0;
+      if (hasQty && (!Number.isFinite(qty) || qty < 0 || qty > 999)) return NextResponse.json({ error: 'Quantidade inválida.' }, { status: 400 });
       if (body.id) {
         const ref = col.doc(String(body.id));
         if (!(await ref.get()).exists) return NextResponse.json({ error: 'Prato não encontrado.' }, { status: 404 });
-        await ref.update({ name, price, updatedAt: new Date().toISOString() });
+        await ref.update({ name, price, ...(hasQty ? { available: qty, availableDay: dishDayKey() } : {}), updatedAt: new Date().toISOString() });
         return NextResponse.json({ success: true, id: ref.id });
       }
       const ref = col.doc();
-      await ref.set({ name, price, active: true, available: 0, availableDay: dishDayKey(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      await ref.set({ name, price, active: true, available: qty, availableDay: dishDayKey(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       return NextResponse.json({ success: true, id: ref.id });
     }
 
