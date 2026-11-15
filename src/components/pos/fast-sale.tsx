@@ -24,6 +24,7 @@ import { variantChoice, variantLabel } from "@/lib/variants";
 import { VariantChooser, chooserKey } from "@/components/catalog/variant-chooser";
 import { Check, ChevronDown, ChevronUp, GraduationCap, LayoutGrid, Loader2, MapPin, Minus, Plus, ScanBarcode, Search, ShoppingCart, Trash2, Truck, X, BedDouble } from "lucide-react";
 import { useRooms } from "@/context/rooms-context";
+import { OpenTabs } from "@/components/pos/open-tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/scan/barcode-scanner";
 import { UNKNOWN_CODE } from "@/lib/scan-gate";
@@ -488,6 +489,8 @@ export function FastSale() {
                     </Button>
                 </div>
             </div>
+
+            {!demo && <OpenTabs />}
 
             {isMultiLocation && locations.length > 0 && (
                 <Select value={location} onValueChange={setLocation}>
