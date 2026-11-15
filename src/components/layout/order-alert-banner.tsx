@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { BellRing, Volume2, VolumeX } from "lucide-react";
 import { InventoryContext } from "@/context/inventory-context";
 import { authedFetch } from "@/lib/api-client";
-import { attentionCount, type AlertOrder } from "@/lib/order-alert";
-import { audioReady, playOrderAlert, stopOrderAlert, unlockAudio } from "@/lib/beep";
+import { attentionCount, orderUrgency, type AlertOrder } from "@/lib/order-alert";
+import { audioReady, playLateAlert, playOrderAlert, stopOrderAlert, unlockAudio } from "@/lib/beep";
 
 type Order = AlertOrder & { roomName?: string };
 
@@ -17,6 +17,8 @@ const MUTE_KEY = "majorstay.orderSound";
 
 /**
  * Aviso de pedidos dos quartos em QUALQUER página: faixa no topo + aviso sonoro por voz.
+ * - Novo pedido: "Você recebeu um novo pedido"
+ * - Pedido atrasado: "Atenção: verifique a entrega do pedido"
  * O som para assim que alguém clica em "Ver pedidos" ou entra na página de quartos.
  */
 export function OrderAlertBanner() {
@@ -29,6 +31,7 @@ export function OrderAlertBanner() {
   const [muted, setMuted] = useState(false);
   const [ready, setReady] = useState(false);
   const seen = useRef<Set<string>>(new Set());
+  const seenLate = useRef<Set<string>>(new Set());
   const acknowledged = useRef<Set<string>>(new Set());
   const firstLoad = useRef(true);
   const lastBeep = useRef(0);
@@ -90,15 +93,22 @@ export function OrderAlertBanner() {
   const unackCounts = attentionCount(unackOrders);
   const needsSound = unackCounts.pending + unackCounts.late > 0;
 
-  // Aviso sonoro por voz: logo que chega um pedido novo toca o aviso uma vez
+  // Aviso sonoro por voz: novo pedido ("Você recebeu um novo pedido") ou pedido atrasado ("Atenção: verifique a entrega do pedido")
   useEffect(() => {
     const newPending = orders.some((o) => o.status === "pending" && !seen.current.has(o.id));
     orders.forEach((o) => seen.current.add(o.id));
+
+    const newLate = orders.some((o) => o.status === "confirmed" && orderUrgency(o) === "delivery-late" && !seenLate.current.has(o.id));
+    orders.filter((o) => o.status === "confirmed" && orderUrgency(o) === "delivery-late").forEach((o) => seenLate.current.add(o.id));
+
     const wasFirst = firstLoad.current;
     firstLoad.current = false;
     if (muted) return;
     const now = Date.now();
-    if (newPending && !wasFirst) {
+
+    if (newLate && !wasFirst) {
+      if (playLateAlert()) lastBeep.current = now;
+    } else if (newPending && !wasFirst) {
       if (playOrderAlert()) lastBeep.current = now;
     }
   }, [orders, muted]);
@@ -107,12 +117,16 @@ export function OrderAlertBanner() {
   useEffect(() => {
     if (!needsSound || muted || pathname.startsWith("/rooms")) return;
     const t = setInterval(() => {
-      if (Date.now() - lastBeep.current >= REPEAT_MS && playOrderAlert()) {
-        lastBeep.current = Date.now();
+      if (Date.now() - lastBeep.current >= REPEAT_MS) {
+        if (unackCounts.late > 0) {
+          if (playLateAlert()) lastBeep.current = Date.now();
+        } else if (unackCounts.pending > 0) {
+          if (playOrderAlert()) lastBeep.current = Date.now();
+        }
       }
     }, 5_000);
     return () => clearInterval(t);
-  }, [needsSound, muted, pathname]);
+  }, [needsSound, unackCounts, muted, pathname]);
 
   if (!enabled) return null;
 
