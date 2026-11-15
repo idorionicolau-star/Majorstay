@@ -138,6 +138,7 @@ export async function POST(req: Request) {
         consumptions: sanitizedConsumptions,
         packagePrice: Number(stayData.packagePrice) || undefined,
         packageHours: Number(stayData.packageHours) || undefined,
+        blockHours: Number(stayData.blockHours) || undefined,
       });
 
       const totalAmountDue = pricing.totalAmountDue;

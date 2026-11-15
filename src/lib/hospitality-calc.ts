@@ -43,13 +43,16 @@ export function calculateBilledHours(
   checkInAt: any,
   checkOutAt: any = new Date(),
   contractedHours: number = 1,
-  graceMinutes: number = 10
+  graceMinutes: number = 10,
+  blockHours: number = 1
 ): number {
   const minContracted = Math.max(1, Math.floor(contractedHours || 1));
   const durationMin = calculateDurationMinutes(checkInAt, checkOutAt);
 
   // Se a estadia for inferior ou igual à duração contratada (em minutos), fatura o contratado
   const contractedMinutes = minContracted * 60;
+  const block = Math.max(1, Math.floor(blockHours || 1));
+  const toBlock = (h: number) => Math.ceil(h / block) * block;
   if (durationMin <= contractedMinutes + graceMinutes) {
     return minContracted;
   }
@@ -58,7 +61,7 @@ export function calculateBilledHours(
   const effectiveMinutes = Math.max(0, durationMin - graceMinutes);
   const calculatedHours = Math.ceil(effectiveMinutes / 60);
 
-  return Math.max(minContracted, calculatedHours);
+  return Math.max(minContracted, toBlock(calculatedHours));
 }
 
 /**
@@ -74,8 +77,9 @@ export function stayChargeForHours(
   const h = Math.max(0, hours || 0);
   const price = Number(stay.packagePrice) || 0;
   const covered = Math.floor(Number(stay.packageHours) || 0);
-  if (price > 0 && covered > 0) return price + Math.max(0, h - covered) * rate;
-  return h * rate;
+  const money = (n: number) => Math.round(n * 100) / 100;
+  if (price > 0 && covered > 0) return money(price + Math.max(0, h - covered) * rate);
+  return money(h * rate);
 }
 
 /** Valor do alojamento já contratado (horas iniciais + prorrogações), sem excesso de tempo. */
@@ -111,10 +115,12 @@ export function calculateStayPricing(params: {
   /** Preço fixo do pacote (pernoite/diária) e as horas que ele cobre; sem isto cobra tudo por hora. */
   packagePrice?: number;
   packageHours?: number;
+  /** Quartos com mínimo de horas: horas a faturar em múltiplos deste bloco. */
+  blockHours?: number;
 }): StayPricingResult {
-  const { checkInAt, checkOutAt, contractedHours, ratePerHour, graceMinutes = 10, consumptions = [], packagePrice, packageHours } = params;
+  const { checkInAt, checkOutAt, contractedHours, ratePerHour, graceMinutes = 10, consumptions = [], packagePrice, packageHours, blockHours } = params;
   const durationMinutes = calculateDurationMinutes(checkInAt, checkOutAt);
-  const billedHours = calculateBilledHours(checkInAt, checkOutAt, contractedHours, graceMinutes);
+  const billedHours = calculateBilledHours(checkInAt, checkOutAt, contractedHours, graceMinutes, blockHours);
   const normalizedContracted = Math.max(1, Math.floor(contractedHours || 1));
   const overtimeHours = Math.max(0, billedHours - normalizedContracted);
   const safeRate = Math.max(0, ratePerHour || 0);

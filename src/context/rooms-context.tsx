@@ -540,6 +540,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     packageType?: 'pernoite' | 'diaria';
     packagePrice?: number;
     packageHours?: number;
+    blockHours?: number;
   }): Promise<string> => {
     const contracted = Math.max(1, data.contractedHours || 1);
     const pkg = data.packageType && Number(data.packagePrice) > 0
@@ -582,6 +583,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         contractedHours: contracted,
         extensions: [],
         ratePerHourApplied: data.ratePerHour,
+        ...(data.blockHours && data.blockHours > 1 ? { blockHours: data.blockHours } : {}),
         ...pkg,
         totalAmountDue: totalDue,
         totalAmountPaid: totalDue,
@@ -626,6 +628,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       contractedHours: contracted,
       extensions: [],
       ratePerHourApplied: data.ratePerHour,
+      ...(data.blockHours && data.blockHours > 1 ? { blockHours: data.blockHours } : {}),
       ...pkg,
       totalAmountDue: totalDue,
       totalAmountPaid: totalDue,

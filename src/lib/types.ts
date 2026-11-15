@@ -692,7 +692,8 @@ export type Stay = {
   extensions?: StayExtension[]; // Prorrogações efetuadas
   consumptions?: StayConsumptionItem[]; // Consumos do Bar / Cozinha / Minibar
   billedHours?: number; // Total de horas faturadas (hora começada = hora paga)
-  ratePerHourApplied: number; // Tarifa horária aplicada na estadia
+  ratePerHourApplied: number; // Tarifa horária aplicada na estadia (taxa do quarto ÷ blockHours)
+  blockHours?: number; // Quartos com mínimo de horas: a taxa é por bloco desse tamanho (ex.: 1100 a cada 2h)
   packageType?: 'pernoite' | 'diaria'; // Pacote de preço fixo escolhido no check-in (sem isto: por hora)
   packagePrice?: number; // Preço fixo do pacote
   packageHours?: number; // Horas cobertas pelo pacote

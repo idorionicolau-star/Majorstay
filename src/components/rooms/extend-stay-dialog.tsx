@@ -37,11 +37,13 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
   if (!stay) return null;
 
   const currentExpected = calculateExpectedCheckOut(stay.checkInAt, stay.contractedHours, stay.extensions);
-  const tempExtensions = [...(stay.extensions || []), { hours, addedAt: new Date(), addedBy: '' }];
+  const blk = Math.max(1, stay.blockHours || 1);
+  const extHours = Math.ceil(hours / blk) * blk;
+  const tempExtensions = [...(stay.extensions || []), { hours: extHours, addedAt: new Date(), addedBy: '' }];
   const newExpected = calculateExpectedCheckOut(stay.checkInAt, stay.contractedHours, tempExtensions);
 
   const ratePerHour = stay.ratePerHourApplied || room?.ratePerHour || 0;
-  const extraAmount = hours * ratePerHour;
+  const extraAmount = Math.round(extHours * ratePerHour * 100) / 100;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +51,7 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
 
     try {
       setLoading(true);
-      await extendStay(stay.id, hours, notes.trim());
+      await extendStay(stay.id, extHours, notes.trim());
       onOpenChange(false);
       setHours(1);
       setNotes('');
@@ -192,7 +194,7 @@ export function ExtendStayDialog({ open, onOpenChange, stay, room }: ExtendStayD
               disabled={loading}
             >
               <PlusCircle className="w-4 h-4" />
-              {loading ? 'A Prorrogar...' : `Adicionar +${hours}h (${formatCurrency(extraAmount)})`}
+              {loading ? 'A Prorrogar...' : `Adicionar +${extHours}h (${formatCurrency(extraAmount)})`}
             </Button>
           </DialogFooter>
         </form>
