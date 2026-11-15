@@ -77,6 +77,16 @@ ${doc.totals.length ? `<div class="hr"></div>${doc.totals.map(row).join('')}` : 
 /** Envia o HTML para a impressão através de um iframe escondido. Só no navegador. */
 export function printReceiptHtml(html: string): boolean {
   if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+  // Na app de Windows (.exe): imprime direto na térmica, sem janela de impressão; se falhar, usa o método normal
+  const desktop = (window as unknown as { desktopAPI?: { printHtml?: (h: string, o?: object) => Promise<{ success: boolean }> } }).desktopAPI;
+  if (desktop?.printHtml) {
+    desktop.printHtml(html).then((r) => { if (!r?.success) printViaIframe(html); }).catch(() => printViaIframe(html));
+    return true;
+  }
+  return printViaIframe(html);
+}
+
+function printViaIframe(html: string): boolean {
   const iframe = document.createElement('iframe');
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
