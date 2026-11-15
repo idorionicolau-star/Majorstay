@@ -134,7 +134,11 @@ export function OrderAlertBanner() {
     const next = !muted;
     setMuted(next);
     try { localStorage.setItem(MUTE_KEY, next ? "0" : "1"); } catch { /* ignora */ }
-    if (!next) unlockAudio().then(setReady);
+    if (next) {
+      stopOrderAlert();
+    } else {
+      unlockAudio().then(setReady);
+    }
   };
 
   const onRooms = pathname.startsWith("/rooms");

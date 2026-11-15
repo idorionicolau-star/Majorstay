@@ -43,6 +43,7 @@ import { calculateExpectedCheckOut, computeStayRealtimeStatus,
   computeRoomCleaningStatus,
   totalContractedHours, stayChargeForHours, contractedStayAmount } from '@/lib/hospitality-calc';
 import { formatCurrency } from '@/lib/utils';
+import { playCleanAlert, playStayAlert } from '@/lib/beep';
 
 export interface RoomStats {
   total: number;
@@ -295,15 +296,73 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     });
   }, [rawRooms, openStays]);
 
-  // Monitorização proativa de higienização de quartos (Alerta aos Administradores e Dono)
+  // Monitorização proativa de check-out / tempo de estadia excedido
+  const alertedStaysRef = useRef<Set<string>>(new Set());
+  const isFirstStayRun = useRef(true);
+
+  useEffect(() => {
+    if (!rooms || rooms.length === 0 || !openStays || openStays.length === 0) return;
+
+    const now = new Date();
+    const isFirst = isFirstStayRun.current;
+
+    openStays.forEach((stay) => {
+      if (stay.status !== 'open') return;
+      const room = rooms.find((r) => r.id === stay.roomId);
+      if (!room) return;
+
+      const realtime = computeStayRealtimeStatus({
+        status: stay.status,
+        checkInAt: stay.checkInAt,
+        contractedHours: stay.contractedHours,
+        extensions: stay.extensions,
+        now,
+      });
+
+      if (!realtime.isOvertime) return;
+
+      const extCount = (stay.extensions || []).length;
+      const dedupeKey = `stay-overtime-${stay.id}-${stay.contractedHours}-${extCount}`;
+
+      if (alertedStaysRef.current.has(dedupeKey)) return;
+      alertedStaysRef.current.add(dedupeKey);
+
+      if (!isFirst) {
+        playStayAlert();
+        notifyManagers?.({
+          title: `⚠️ Alerta de Estadia: ${room.name}`,
+          body: `O tempo de estadia no ${room.name} foi concluído. Verifique o check-out ou tolerância.`,
+          link: '/rooms?filtro=overtime',
+          type: 'stay_overtime',
+          dedupeId: dedupeKey,
+          always: true,
+        });
+      }
+    });
+
+    isFirstStayRun.current = false;
+  }, [rooms, openStays, notifyManagers, tick]);
+
+  // Monitorização proativa de higienização de quartos (Alerta sonoro e notificação aos Administradores)
   const alertedCleaningsRef = useRef<Set<string>>(new Set());
+  const isFirstCleaningRun = useRef(true);
+  const prevRoomStatusRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     if (!rooms || rooms.length === 0) return;
 
     const companyAlertMin = companyData?.notificationSettings?.cleaningAlertMinutes;
+    const isFirst = isFirstCleaningRun.current;
 
     rooms.forEach((room) => {
+      // 1. Alerta sonoro quando um quarto conclui a limpeza (camareira marcou como limpo)
+      const prevStatus = prevRoomStatusRef.current.get(room.id);
+      if (!isFirst && prevStatus === 'cleaning' && room.status === 'free') {
+        playCleanAlert();
+      }
+      prevRoomStatusRef.current.set(room.id, room.status);
+
+      // 2. Alerta sonoro e notificação quando a limpeza excede o tempo configurado
       if (room.status !== 'cleaning' || !room.cleaningStartedAt) return;
 
       const cleaningStatus = computeRoomCleaningStatus({
@@ -320,15 +379,20 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       if (alertedCleaningsRef.current.has(dedupeKey)) return;
       alertedCleaningsRef.current.add(dedupeKey);
 
-      notifyManagers?.({
-        title: `⚠️ Alerta de Higienização: ${room.name}`,
-        body: `O ${room.name} está em higienização há mais de ${cleaningStatus.maxMinutes} min (${cleaningStatus.durationMinutes} min decorridos). Verifique com a equipa de limpeza.`,
-        link: '/rooms?filtro=cleaning',
-        type: 'cleaning_delay',
-        dedupeId: dedupeKey,
-        always: true,
-      });
+      if (!isFirst) {
+        playCleanAlert();
+        notifyManagers?.({
+          title: `⚠️ Alerta de Higienização: ${room.name}`,
+          body: `O ${room.name} está em higienização há mais de ${cleaningStatus.maxMinutes} min (${cleaningStatus.durationMinutes} min decorridos). Verifique com a equipa de limpeza.`,
+          link: '/rooms?filtro=cleaning',
+          type: 'cleaning_delay',
+          dedupeId: dedupeKey,
+          always: true,
+        });
+      }
     });
+
+    isFirstCleaningRun.current = false;
   }, [rooms, companyData, notifyManagers, tick]);
 
   // Estatísticas do painel

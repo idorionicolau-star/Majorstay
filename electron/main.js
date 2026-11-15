@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron');
 const path = require('path');
 
+// Permite reproduzir alertas sonoros sem requerer gesto prévio do utilizador
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
 // Tenta importar electron-updater com fallback seguro caso ainda não esteja instalado
 let autoUpdater = null;
 try {

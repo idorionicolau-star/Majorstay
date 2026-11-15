@@ -1,12 +1,16 @@
 /**
- * Alerta sonoro de pedidos dos quartos:
+ * Alerta sonoro de pedidos dos quartos e hotelaria:
  * - Novo pedido: /sounds/novo-pedido.mp3 ("Você recebeu um novo pedido")
  * - Pedido atrasado: /sounds/pedido-atrasado.mp3 ("Atenção: verifique a entrega do pedido")
+ * - Estadia concluída: /sounds/estadia-concluida.mp3 ("Atenção: tempo de estadia concluído")
+ * - Limpeza concluída / atrasada: /sounds/limpeza-concluida.mp3 ("Atenção: tempo de limpeza concluído")
  * Toca áudio real com fallback para Web Audio.
  */
 let ctx: AudioContext | null = null;
 let orderAudio: HTMLAudioElement | null = null;
 let lateAudio: HTMLAudioElement | null = null;
+let stayAudio: HTMLAudioElement | null = null;
+let cleanAudio: HTMLAudioElement | null = null;
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -42,17 +46,50 @@ function getLateAudio(): HTMLAudioElement | null {
   return lateAudio;
 }
 
+function getStayAudio(): HTMLAudioElement | null {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') return null;
+  if (!stayAudio) {
+    try {
+      stayAudio = new Audio('/sounds/estadia-concluida.mp3');
+      stayAudio.preload = 'auto';
+    } catch {
+      return null;
+    }
+  }
+  return stayAudio;
+}
+
+function getCleanAudio(): HTMLAudioElement | null {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') return null;
+  if (!cleanAudio) {
+    try {
+      cleanAudio = new Audio('/sounds/limpeza-concluida.mp3');
+      cleanAudio.preload = 'auto';
+    } catch {
+      return null;
+    }
+  }
+  return cleanAudio;
+}
+
+export function isAudioMuted(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('majorstay.orderSound') === '0';
+  } catch {
+    return false;
+  }
+}
+
 /** Tenta ativar o som (chamar num clique). Devolve true se o som está pronto. */
 export async function unlockAudio(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  const a1 = getOrderAudio();
-  if (a1) {
-    try { a1.load(); } catch { /* ignora */ }
-  }
-  const a2 = getLateAudio();
-  if (a2) {
-    try { a2.load(); } catch { /* ignora */ }
-  }
+  const audios = [getOrderAudio(), getLateAudio(), getStayAudio(), getCleanAudio()];
+  audios.forEach((a) => {
+    if (a) {
+      try { a.load(); } catch { /* ignora */ }
+    }
+  });
 
   const c = getCtx();
   if (c && c.state === 'suspended') {
@@ -65,71 +102,68 @@ export async function unlockAudio(): Promise<boolean> {
 
 export function audioReady(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!orderAudio || !!lateAudio || (!!ctx && ctx.state === 'running');
+  return !!orderAudio || !!lateAudio || !!stayAudio || !!cleanAudio || (!!ctx && ctx.state === 'running');
+}
+
+function playAudioWithFallback(getAudio: () => HTMLAudioElement | null): boolean {
+  if (typeof window === 'undefined') return false;
+  if (isAudioMuted()) return false;
+
+  const audio = getAudio();
+  if (audio) {
+    try {
+      audio.currentTime = 0;
+      const p = audio.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          playFallbackBeeps();
+        });
+      }
+      return true;
+    } catch {
+      return playFallbackBeeps();
+    }
+  }
+
+  return playFallbackBeeps();
 }
 
 /** Reproduz o aviso de voz: "Você recebeu um novo pedido" */
 export function playOrderAlert(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const audio = getOrderAudio();
-  if (audio) {
-    try {
-      audio.currentTime = 0;
-      const p = audio.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          playFallbackBeeps();
-        });
-      }
-      return true;
-    } catch {
-      return playFallbackBeeps();
-    }
-  }
-
-  return playFallbackBeeps();
+  return playAudioWithFallback(getOrderAudio);
 }
 
 /** Reproduz o aviso de voz: "Atenção: verifique a entrega do pedido" */
 export function playLateAlert(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const audio = getLateAudio();
-  if (audio) {
-    try {
-      audio.currentTime = 0;
-      const p = audio.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          playFallbackBeeps();
-        });
-      }
-      return true;
-    } catch {
-      return playFallbackBeeps();
-    }
-  }
-
-  return playFallbackBeeps();
+  return playAudioWithFallback(getLateAudio);
 }
 
-/** Interrompe imediatamente a reprodução do áudio (ex: quando clica em ver pedido) */
+/** Reproduz o aviso de voz: "Atenção: tempo de estadia concluído" */
+export function playStayAlert(): boolean {
+  return playAudioWithFallback(getStayAudio);
+}
+
+/** Reproduz o aviso de voz: "Atenção: tempo de limpeza concluído" */
+export function playCleanAlert(): boolean {
+  return playAudioWithFallback(getCleanAudio);
+}
+
+/** Interrompe imediatamente qualquer áudio em reprodução */
 export function stopOrderAlert(): void {
   if (typeof window === 'undefined') return;
-  if (orderAudio) {
-    try {
-      orderAudio.pause();
-      orderAudio.currentTime = 0;
-    } catch { /* ignora */ }
-  }
-  if (lateAudio) {
-    try {
-      lateAudio.pause();
-      lateAudio.currentTime = 0;
-    } catch { /* ignora */ }
-  }
+  [orderAudio, lateAudio, stayAudio, cleanAudio].forEach((a) => {
+    if (a) {
+      try {
+        a.pause();
+        a.currentTime = 0;
+      } catch { /* ignora */ }
+    }
+  });
 }
+
+export const stopAllAlerts = stopOrderAlert;
+export const stopStayAlert = stopOrderAlert;
+export const stopCleanAlert = stopOrderAlert;
 
 /** Fallback sintético caso o áudio falhe */
 export function playFallbackBeeps(): boolean {
