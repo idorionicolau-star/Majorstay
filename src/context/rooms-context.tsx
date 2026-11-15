@@ -1,5 +1,6 @@
 'use client';
 
+import { nowDate } from '@/lib/server-time';
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback, useRef } from 'react';
 import type { Room, Stay, StayExtension, RoomStatus, StayConsumptionItem, Booking, BookingStatus, HospitalityService } from '@/lib/types';
 import {
@@ -275,7 +276,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
 
   const rooms = useMemo(() => {
-    const now = new Date();
+    const now = nowDate();
     return rawRooms.map((room) => {
       const activeStay = openStays.find((s) => s.roomId === room.id);
       if (!activeStay) {
@@ -303,7 +304,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!rooms || rooms.length === 0 || !openStays || openStays.length === 0) return;
 
-    const now = new Date();
+    const now = nowDate();
     const isFirst = isFirstStayRun.current;
 
     openStays.forEach((stay) => {
@@ -622,7 +623,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     if (isGuest) {
       const stayId = `stay-${Date.now()}`;
-      const now = new Date();
+      const now = nowDate();
       const expectedOut = new Date(now.getTime() + contracted * 3600 * 1000);
       const newStay: Stay = {
         id: stayId,
@@ -666,7 +667,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     if (!companyId || !user) throw new Error('Sessão ou empresa indisponível.');
 
     const stayRef = doc(collection(db, `companies/${companyId}/stays`));
-    const now = new Date();
+    const now = nowDate();
     const expectedOut = new Date(now.getTime() + contracted * 3600 * 1000);
 
     const batch = writeBatch(db);

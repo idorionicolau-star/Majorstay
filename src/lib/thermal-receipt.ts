@@ -5,6 +5,8 @@
  * (margens a zero, texto a 100% da largura), por isso o mesmo recibo serve para 58 mm e 80 mm.
  * Usa um iframe escondido (e não uma janela nova) para não ser bloqueado como pop-up no telemóvel.
  */
+import { formatHotelDate, formatHotelTime } from '@/lib/server-time';
+
 
 export type ReceiptLine = {
   /** Texto à esquerda (descrição) */
@@ -126,8 +128,8 @@ export function printReceipt(doc: ReceiptDoc): boolean {
 const money = (n: number) =>
   `${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`;
 
-const fmtDate = (d: Date) => d.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
-const fmtTime = (d: Date) => d.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
+const fmtDate = (d: Date) => formatHotelDate(d);
+const fmtTime = (d: Date) => formatHotelTime(d);
 const qtyLabel = (qty: number, weightKg?: number) => (weightKg ? `${String(weightKg).replace('.', ',')} kg` : `${qty}x`);
 
 export type StayReceiptInput = {

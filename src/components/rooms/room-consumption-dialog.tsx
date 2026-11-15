@@ -1,5 +1,6 @@
 'use client';
 
+import { nowMs, nowDate } from '@/lib/server-time';
 import React, { useState, useMemo } from 'react';
 import {
   Dialog,
@@ -238,7 +239,7 @@ export function RoomConsumptionDialog({
   const handlePrintTab = () => {
     if (!stay) return;
     const rate = stay.ratePerHourApplied || room?.ratePerHour || 0;
-    const now = new Date();
+    const now = nowDate();
     const pricing = calculateStayPricing({
       checkInAt: normalizeDate(stay.checkInAt),
       checkOutAt: now,

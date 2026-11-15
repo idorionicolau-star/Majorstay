@@ -1,5 +1,7 @@
 "use client";
 
+import { HotelClock } from './hotel-clock';
+import { nowMs, nowDate } from '@/lib/server-time';
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -43,11 +45,11 @@ function DashboardStayLiveBadge({
   expectedCheckOut: Date;
   graceMinutes?: number;
 }) {
-  const [now, setNow] = useState<number>(() => Date.now());
+  const [now, setNow] = useState<number>(() => nowMs());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setNow(Date.now());
+      setNow(nowMs());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -154,9 +156,9 @@ export function HospitalityDashboard() {
   const isManager = user?.role === "Admin" || user?.role === "Dono";
 
   // o relógio da página: os "restam / excedido há" e o valor a pagar andam com o tempo
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(() => nowDate());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30000);
+    const id = setInterval(() => setNow(nowDate()), 30000);
     return () => clearInterval(id);
   }, []);
 
@@ -268,6 +270,7 @@ export function HospitalityDashboard() {
             <p className="text-blue-100 dark:text-slate-300 text-xs mt-1 font-medium">
               Controlo de ocupação, estadias ativas e balanço financeiro do Major Stay.
             </p>
+            <div className="mt-2 text-white"><HotelClock /></div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="bg-white/15 dark:bg-white/5 backdrop-blur-md rounded-2xl px-4 py-2 text-right border border-white/20 dark:border-white/10">

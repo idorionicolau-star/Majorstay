@@ -1,11 +1,12 @@
+import { nowDate } from '@/lib/server-time';
 import type { StayStatus, StayExtension, StayConsumptionItem } from './types';
 
 /**
  * Normaliza qualquer formato de data (Date, ISO string, número ms, Firestore Timestamp) para Date.
  */
 export function normalizeDate(val: any): Date {
-  if (!val) return new Date();
-  if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
+  if (!val) return nowDate();
+  if (val instanceof Date) return isNaN(val.getTime()) ? nowDate() : val;
   if (typeof val === 'object' && typeof val.toDate === 'function') {
     return val.toDate();
   }
@@ -17,15 +18,15 @@ export function normalizeDate(val: any): Date {
   }
   if (typeof val === 'string') {
     const parsed = new Date(val);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
+    return isNaN(parsed.getTime()) ? nowDate() : parsed;
   }
-  return new Date();
+  return nowDate();
 }
 
 /**
  * Duração da estadia em minutos completos.
  */
-export function calculateDurationMinutes(checkInAt: any, checkOutAt: any = new Date()): number {
+export function calculateDurationMinutes(checkInAt: any, checkOutAt: any = nowDate()): number {
   const start = normalizeDate(checkInAt).getTime();
   const end = normalizeDate(checkOutAt).getTime();
   const diffMs = Math.max(0, end - start);
@@ -41,7 +42,7 @@ export function calculateDurationMinutes(checkInAt: any, checkOutAt: any = new D
  */
 export function calculateBilledHours(
   checkInAt: any,
-  checkOutAt: any = new Date(),
+  checkOutAt: any = nowDate(),
   contractedHours: number = 1,
   graceMinutes: number = 10,
   blockHours: number = 1

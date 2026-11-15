@@ -1,5 +1,7 @@
 'use client';
 
+import { formatHotelTime } from '@/lib/server-time';
+import { nowMs, nowDate } from '@/lib/server-time';
 import React from 'react';
 import {
   BedDouble,
@@ -60,11 +62,11 @@ export function StayLiveSecondsCounter({
   expectedCheckOut: Date;
   graceMinutes?: number;
 }) {
-  const [now, setNow] = React.useState<number>(() => Date.now());
+  const [now, setNow] = React.useState<number>(() => nowMs());
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setNow(Date.now());
+      setNow(nowMs());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -106,11 +108,11 @@ export function CleaningLiveSecondsCounter({
   cleaningStartedAt: any;
   maxMinutes?: number;
 }) {
-  const [now, setNow] = React.useState<number>(() => Date.now());
+  const [now, setNow] = React.useState<number>(() => nowMs());
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setNow(Date.now());
+      setNow(nowMs());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -160,7 +162,7 @@ export function RoomCard({
         checkInAt: stay.checkInAt,
         contractedHours: stay.contractedHours,
         extensions: stay.extensions,
-        now: new Date(),
+        now: nowDate(),
       })
     : null;
 
@@ -178,7 +180,7 @@ export function RoomCard({
         cleaningStartedAt: room.cleaningStartedAt,
         cleaningDurationMinutes: room.cleaningDurationMinutes,
         companyAlertMinutes: companyData?.notificationSettings?.cleaningAlertMinutes,
-        now: new Date(),
+        now: nowDate(),
       })
     : null;
 
@@ -384,13 +386,13 @@ export function RoomCard({
                 <div>
                   <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Entrada:</span>
                   <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {normalizeDate(stay.checkInAt).toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
+                    {formatHotelTime(normalizeDate(stay.checkInAt))}
                   </span>
                 </div>
                 <div>
                   <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Saída Prevista:</span>
                   <span className={cn('font-bold', isOvertime ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100')}>
-                    {realtime.expectedCheckOut.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
+                    {formatHotelTime(realtime.expectedCheckOut)}
                   </span>
                 </div>
               </div>

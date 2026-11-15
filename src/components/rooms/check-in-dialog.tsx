@@ -1,5 +1,7 @@
 'use client';
 
+import { formatHotelTime } from '@/lib/server-time';
+import { nowMs, nowDate } from '@/lib/server-time';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
@@ -140,9 +142,9 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
   const pickHours = (h: number) => { setPkg(null); setContractedHours(h); };
 
   const expectedCheckOutFormatted = useMemo(() => {
-    const d = new Date();
+    const d = nowDate();
     d.setHours(d.getHours() + billedHours);
-    return d.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' });
+    return formatHotelTime(d);
   }, [billedHours]);
 
   const handleRoomChange = (newRoomId: string) => {
@@ -186,7 +188,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
         ...(activePkg ? { packageType: activePkg.type, packagePrice: activePkg.price } : {}),
       });
       if (printOnCheckIn) {
-        const now = new Date();
+        const now = nowDate();
         const out = new Date(now.getTime() + (activePkg ? activePkg.hours : billedHours) * 3600_000);
         printReceipt(
           buildStayReceipt({
