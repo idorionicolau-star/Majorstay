@@ -65,6 +65,28 @@ export function OpenTabs() {
     }
   };
 
+  // Toque rápido: mostra logo no ecrã e confirma com o servidor em segundo plano (sem recarregar a lista).
+  const quick = async (tabId: string, body: Record<string, unknown>, optimistic: (items: Tab['items']) => Tab['items']) => {
+    setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, items: optimistic(t.items) } : t)));
+    try {
+      const r = await authedFetch('/api/tabs', 'POST', { companyId, tabId, ...body });
+      if (Array.isArray(r.items)) setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, items: r.items } : t)));
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Não foi possível', description: e instanceof Error ? e.message : undefined });
+      await load();
+    }
+  };
+  const addOne = (tabId: string, p: { id: string; name: string; price?: number; stock?: number }) => {
+    const price = Number(p.price) || 0;
+    quick(tabId, { action: 'add', productId: p.id, quantity: 1 }, (items) => {
+      const ex = items.find((i) => i.productId === p.id && i.unitPrice === price);
+      if (ex) return items.map((i) => (i === ex ? { ...i, quantity: i.quantity + 1, totalPrice: Math.round((i.quantity + 1) * i.unitPrice * 100) / 100 } : i));
+      return [...items, { id: `tmp-${Date.now()}`, productId: p.id, productName: p.name, quantity: 1, unitPrice: price, totalPrice: price, addedAt: new Date().toISOString(), addedByName: '' }];
+    });
+  };
+  const decOne = (tabId: string, itemId: string) =>
+    quick(tabId, { action: 'dec', itemId }, (items) => items.map((i) => (i.id === itemId && i.quantity > 1 ? { ...i, quantity: i.quantity - 1, totalPrice: Math.round((i.quantity - 1) * i.unitPrice * 100) / 100 } : i)));
+
   const create = async () => {
     const r = await run({ action: 'open', clientName: newName, phone: newPhone });
     if (r?.id) { setNewOpen(false); setNewName(''); setNewPhone(''); setActiveId(r.id); }
@@ -111,9 +133,9 @@ export function OpenTabs() {
                     <div key={it.id} className="flex items-center justify-between gap-2 text-sm">
                       <span className="min-w-0 truncate">{it.productName}</span>
                       <span className="flex items-center gap-1.5 shrink-0">
-                        <button aria-label="Menos um" disabled={busy || it.quantity <= 1} className="h-8 w-8 rounded-full border text-base disabled:opacity-30" onClick={() => run({ action: 'dec', tabId: active.id, itemId: it.id })}>−</button>
+                        <button aria-label="Menos um" disabled={it.quantity <= 1 || it.id.startsWith('tmp-')} className="h-8 w-8 rounded-full border text-base disabled:opacity-30" onClick={() => decOne(active.id, it.id)}>−</button>
                         <b className="w-6 text-center">{it.quantity}</b>
-                        <button aria-label="Mais um" disabled={busy} className="h-8 w-8 rounded-full border text-base" onClick={() => run({ action: 'add', tabId: active.id, productId: it.productId, quantity: 1 })}>+</button>
+                        <button aria-label="Mais um" className="h-8 w-8 rounded-full border text-base" onClick={() => addOne(active.id, { id: it.productId, name: it.productName, price: it.unitPrice })}>+</button>
                         <span className="w-20 text-right">{formatCurrency(it.totalPrice)}</span>
                         <button aria-label="Retirar" disabled={busy} className="text-rose-600" onClick={() => {
                           const reason = window.prompt('Motivo para retirar este item?');
@@ -127,7 +149,7 @@ export function OpenTabs() {
                 <Input placeholder="Procurar produto…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-11 rounded-2xl" />
                 <div className="grid grid-cols-2 gap-2">
                   {list.map((p) => (
-                    <button key={p.id} disabled={busy || (Number(p.stock) || 0) < 1} onClick={() => run({ action: 'add', tabId: active.id, productId: p.id, quantity: 1 })}
+                    <button key={p.id} disabled={(Number(p.stock) || 0) < 1} onClick={() => { if (p.id) addOne(active.id, { id: p.id, name: p.name, price: p.price }); }}
                       className="rounded-xl border border-slate-200 dark:border-slate-700 p-2 text-left text-xs disabled:opacity-40 active:scale-95">
                       <div className="font-semibold truncate">{p.name}</div>
                       <div className="text-slate-500">{formatCurrency(Number(p.price) || 0)} · stock {Number(p.stock) || 0}</div>

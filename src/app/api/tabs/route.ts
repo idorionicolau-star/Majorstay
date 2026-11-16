@@ -87,6 +87,7 @@ export async function POST(req: Request) {
       const productId = String(body.productId || '');
       if (!productId) return NextResponse.json({ error: 'Produto em falta.' }, { status: 400 });
       const prodRef = db.doc(`companies/${companyId}/products/${productId}`);
+      let resultItems: TabItem[] = [];
       await db.runTransaction(async (tx) => {
         const tabSnap = await tx.get(tabRef);
         const prodSnap = await tx.get(prodRef);
@@ -122,11 +123,13 @@ export async function POST(req: Request) {
           ? items.map((i) => (i.id === same.id ? { ...i, quantity: i.quantity + quantity, totalPrice: round2((i.quantity + quantity) * i.unitPrice) } : i))
           : [...items, item];
         tx.update(tabRef, { items: nextItems, updatedAt: now() });
+        resultItems = nextItems;
       });
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, items: resultItems });
     }
 
     if (action === 'dec') {
+      let resultItems: TabItem[] = [];
       await db.runTransaction(async (tx) => {
         const tabSnap = await tx.get(tabRef);
         if (!tabSnap.exists || tabSnap.data()?.status !== 'open') throw new Error('Esta conta já não está aberta.');
@@ -143,9 +146,10 @@ export async function POST(req: Request) {
             reason: `Menos 1 na conta de ${tabSnap.data()?.clientName}`, userId: decoded.uid, userName: name, timestamp: admin.firestore.FieldValue.serverTimestamp(),
           });
         }
-        tx.update(tabRef, { items: items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity - 1, totalPrice: round2((i.quantity - 1) * i.unitPrice) } : i)), updatedAt: now() });
+        resultItems = items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity - 1, totalPrice: round2((i.quantity - 1) * i.unitPrice) } : i));
+        tx.update(tabRef, { items: resultItems, updatedAt: now() });
       });
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, items: resultItems });
     }
 
     if (action === 'remove') {
