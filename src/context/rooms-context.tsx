@@ -94,6 +94,8 @@ interface RoomsContextType {
       discountReason?: string;
     }
   ) => Promise<any>;
+  /** Matrícula, marca, modelo e cor do veículo, depois do check-in (a receção costuma preencher depois). */
+  updateStayVehicle: (stayId: string, v: { vehiclePlate?: string; vehicleBrand?: string; vehicleModel?: string; vehicleColor?: string }) => Promise<void>;
   markRoomCleaned: (roomId: string) => Promise<void>;
   refreshRealtimeStatuses: () => void;
   addStayConsumption: (
@@ -721,6 +723,25 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
   };
 
   // 5. Prorrogar Estadia (Adicionar Horas Extras)
+  const updateStayVehicle = async (
+    stayId: string,
+    v: { vehiclePlate?: string; vehicleBrand?: string; vehicleModel?: string; vehicleColor?: string }
+  ): Promise<void> => {
+    const clean = {
+      vehiclePlate: (v.vehiclePlate || '').trim().toUpperCase().slice(0, 15),
+      vehicleBrand: (v.vehicleBrand || '').trim().slice(0, 30),
+      vehicleModel: (v.vehicleModel || '').trim().slice(0, 30),
+      vehicleColor: (v.vehicleColor || '').trim().slice(0, 30),
+    };
+    if (isGuest) {
+      updateGuestStay(stayId, clean);
+      return;
+    }
+    if (!companyId || !user) throw new Error('Sessão indisponível.');
+    await updateDoc(doc(db, `companies/${companyId}/stays/${stayId}`), clean);
+    toast({ title: 'Veículo guardado' });
+  };
+
   const extendStay = async (stayId: string, hours: number, notes?: string): Promise<void> => {
     const extHours = Math.max(1, hours || 1);
     const currentStay = stays.find((s) => s.id === stayId);
@@ -1134,6 +1155,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         markRoomCleaned,
         refreshRealtimeStatuses,
         addStayConsumption,
+        updateStayVehicle,
         addStayConsumptionsBulk,
         removeStayConsumption,
         bookings,
