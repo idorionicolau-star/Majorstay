@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { criticalProducts, escapeHtml, topProducts } from '@/lib/daily-report';
-import { DEFAULT_REPORT_TIME, REPORT_TIMES, reportDay, reportTime, reportTimeLabel, saleOnDay } from '@/lib/daily-report';
+import { DEFAULT_REPORT_TIME, REPORT_TIMES, closestReportSlot, isMorningSlot, reportDayForSlot, reportDay, reportTime, reportTimeLabel, saleOnDay } from '@/lib/daily-report';
 import vercel from '../../../vercel.json';
 
 describe('Relatório do dia: mais vendidos', () => {
@@ -90,5 +90,15 @@ describe('Hora do relatório', () => {
             const [h, m] = c.path.split('slot=')[1].split(':').map(Number);
             expect(c.schedule).toBe(`${m} ${h - 2} * * *`);
         }
+    });
+
+    it('às 7h30 existe envio próprio e o relatório é do dia anterior inteiro', () => {
+        expect(closestReportSlot('07:30')).toBe('07:30');
+        expect(isMorningSlot('07:30')).toBe(true);
+        expect(isMorningSlot('21:30')).toBe(false);
+        // 16/11 às 07:30 em Maputo (05:30 UTC) → dia 15/11
+        const now = new Date('2026-11-16T05:30:00Z');
+        expect(reportDayForSlot('07:30', now).day).toBe('2026-11-15');
+        expect(reportDayForSlot('21:30', new Date('2026-11-16T19:30:00Z')).day).toBe('2026-11-16');
     });
 });

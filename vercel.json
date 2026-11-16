@@ -1,6 +1,10 @@
 {
     "crons": [
         {
+            "path": "/api/cron/end-of-day?slot=07:30",
+            "schedule": "30 5 * * *"
+        },
+        {
             "path": "/api/cron/end-of-day?slot=17:30",
             "schedule": "30 15 * * *"
         },

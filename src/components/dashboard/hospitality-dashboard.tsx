@@ -1,6 +1,7 @@
 "use client";
 
 import { HotelClock } from './hotel-clock';
+import { useOpenTabs } from '@/hooks/use-open-tabs';
 import { nowMs, nowDate } from '@/lib/server-time';
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -193,7 +194,10 @@ export function HospitalityDashboard() {
   const today = useMemo(() => summarizeDay(sales || [], now), [sales, now]);
   const week = useMemo(() => lastDays(sales || [], now, 7), [sales, now]);
   const weekMax = Math.max(1, ...week.map((b) => b.total));
-  const toReceive = rows.reduce((t, r) => t + r.pricing.totalAmountDue, 0);
+  const { tabs: openTabs, total: tabsTotal } = useOpenTabs();
+  const staysToReceive = rows.reduce((t, r) => t + r.pricing.totalAmountDue, 0);
+  // estadias abertas + contas abertas do Lounge & Bar (também é dinheiro por receber)
+  const toReceive = staysToReceive + tabsTotal;
 
   const delayedCleaningCount = useMemo(() => {
     return (rooms || []).filter((r) => {
@@ -270,6 +274,11 @@ export function HospitalityDashboard() {
             <div className="min-w-0">
               <span className="text-[11px] font-semibold text-blue-100 dark:text-slate-300 block">Total Previsto a Receber</span>
               <span className="text-lg font-black tracking-tight text-white">{formatCurrency(toReceive)}</span>
+              {openTabs.length > 0 && (
+                <span className="block text-[10px] text-blue-100 dark:text-slate-300">
+                  Quartos {formatCurrency(staysToReceive)} · Contas do Lounge ({openTabs.length}) {formatCurrency(tabsTotal)}
+                </span>
+              )}
             </div>
             <Link
               href="/rooms?checkin=1"
