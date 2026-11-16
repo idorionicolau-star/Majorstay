@@ -5,6 +5,7 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { calculateExpectedCheckOut, calculateStayPricing, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
 import { verifyRoomPin } from '@/lib/room-pin';
+import { loadRoomMenu } from '@/lib/room-menu';
 
 /**
  * POST /api/room-hub/unlock
@@ -186,8 +187,11 @@ export async function POST(req: Request) {
     const amountPaid = Number(stayData.totalAmountPaid) || 0;
     const balanceDue = Math.max(0, totalDue - amountPaid);
 
+    const barProducts = await loadRoomMenu(db, companyId);
+
     return NextResponse.json({
       success: true,
+      barProducts,
       stay: {
         id: stayId,
         checkInAt: checkInDate.toISOString(),
