@@ -145,7 +145,7 @@ describe('PARTE 1 — Segurança do PIN e QR (/api/room-hub & /unlock)', () => {
     expect(body.hotel.name).toBe('Hotel Boa Vista');
     expect(body.hotel.phone).toBe('+258 84 999 8888');
     expect(body.pinRequired).toBe(true);
-    expect(body.barProducts).toHaveLength(2); // p3 e p4 excluídos
+    expect(body.barProducts).toHaveLength(0); // com estadia aberta o menu só sai com o PIN (/unlock)
 
     // NUNCA devolve stay, wifi nem accessPin nem dados de hóspede
     expect(body.stay).toBeUndefined();

@@ -170,6 +170,7 @@ function QuartoPortalContent() {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(pinStorageKey, pinToTest);
         }
+        if (Array.isArray(json.barProducts)) setData((d) => (d ? { ...d, barProducts: json.barProducts } : d));
         setStay(json.stay);
         setWifi(json.wifi || null);
         setOrders(Array.isArray(json.orders) ? json.orders : []);
@@ -221,7 +222,8 @@ function QuartoPortalContent() {
         throw new Error('Não foi possível carregar os dados deste quarto.');
       }
       const json: RoomHubData = await res.json();
-      setData(json);
+      // Com estadia aberta o menu só chega depois do PIN: não o apagar quando a página atualiza os dados públicos
+      setData((prev) => (json.pinRequired && !json.barProducts?.length && prev?.barProducts?.length ? { ...json, barProducts: prev.barProducts } : json));
       setError(null);
 
       // Se o quarto estiver livre ou sem estadia aberta, limpar sessão
