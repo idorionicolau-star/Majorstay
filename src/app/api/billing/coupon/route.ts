@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         const paid = await db.collection(`companies/${companyId}/payments`).where('coupon', '==', found.code).where('status', '==', 'paid').get();
         coupon = {
             code: found.code, price: found.def.price, months: found.def.months, monthsUsed: paid.size,
+            ...(found.def.tiers?.length ? { tiers: found.def.tiers } : {}),
             appliedAt: current?.code === found.code && current.appliedAt ? current.appliedAt : new Date().toISOString(),
         };
         update.coupon = coupon;

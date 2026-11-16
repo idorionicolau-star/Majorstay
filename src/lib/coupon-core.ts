@@ -9,10 +9,16 @@ export type CouponDef = {
     months: number;
     /** só para testar pagamentos */
     test?: boolean;
+    /** níveis onde o código vale (por defeito: Pro e o plano antigo) */
+    tiers?: string[];
 };
 
 /** O que fica gravado na empresa (pelo servidor), para mostrar e lembrar. */
-export type CompanyCoupon = { code: string; price: number; months: number; monthsUsed: number; appliedAt?: string };
+export type CompanyCoupon = { code: string; price: number; months: number; monthsUsed: number; appliedAt?: string; tiers?: string[] };
+
+/** O código vale neste nível? Por defeito só no Pro (e no plano antigo), que é o preço para que os códigos foram feitos. */
+export const couponAppliesToTier = (c: { tiers?: string[] } | null | undefined, tier: string) =>
+    (c?.tiers?.length ? c.tiers : ["pro", "atual"]).includes(tier);
 
 /** "  mjtp86 " → "MJTP86" (maiúsculas, sem espaços). */
 export const normalizeCode = (raw: string) => String(raw || "").trim().toUpperCase().replace(/\s+/g, "");

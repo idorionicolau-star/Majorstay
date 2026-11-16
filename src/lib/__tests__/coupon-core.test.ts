@@ -25,3 +25,18 @@ describe('códigos de convite', () => {
         expect(couponMonthsLeft(null)).toBe(0);
     });
 });
+
+import { couponAppliesToTier } from '../coupon-core';
+
+describe('código por nível', () => {
+    it('por defeito vale no Pro e no plano antigo, não no Business', () => {
+        expect(couponAppliesToTier({}, 'pro')).toBe(true);
+        expect(couponAppliesToTier({}, 'atual')).toBe(true);
+        expect(couponAppliesToTier({}, 'business')).toBe(false);
+    });
+    it('um código com níveis só vale neles (PIONEIRO: Business)', () => {
+        expect(couponAppliesToTier({ tiers: ['business'] }, 'business')).toBe(true);
+        expect(couponAppliesToTier({ tiers: ['business'] }, 'pro')).toBe(false);
+        expect(couponAppliesToTier({ tiers: ['business'] }, 'enterprise')).toBe(false);
+    });
+});
