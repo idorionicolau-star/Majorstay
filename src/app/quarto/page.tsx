@@ -183,7 +183,7 @@ function QuartoPortalContent() {
 
       if (res.status === 429) {
         setIsLockedOut(true);
-        setPinError(json.error || 'Demasiadas tentativas incorretas. Acesso bloqueado por 15 minutos.');
+        setPinError(json.error || 'Demasiadas tentativas incorretas. Acesso bloqueado temporariamente.');
         if (typeof window !== 'undefined') {
           sessionStorage.removeItem(pinStorageKey);
         }
@@ -522,7 +522,7 @@ function QuartoPortalContent() {
               Acesso Privado do Hóspede
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-              Para sua total privacidade e confidencialidade, introduza o <b>PIN de 4 dígitos</b> do seu comprovativo de check-in.
+              Para sua total privacidade e confidencialidade, introduza o <b>PIN de 6 dígitos</b> do seu comprovativo de check-in.
             </p>
           </div>
 

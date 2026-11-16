@@ -192,7 +192,7 @@ describe('PARTE 1 — Segurança do PIN e QR (/api/room-hub & /unlock)', () => {
     expect(body.error).toContain('bloqueado');
 
     const stayData = fakeDatabase[`companies/${companyId}/stays/stay-101`];
-    expect(stayData.pinFailedAttempts).toBe(5);
+    expect(stayData.pinFailedAttempts).toBe(0);
     expect(stayData.pinLockedUntil).toBeDefined();
 
     // Próxima chamada dentro dos 15 minutos é imediatamente 429 sem testar PIN

@@ -15,6 +15,7 @@ import type { Room } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
+import { authedFetch } from '@/lib/api-client';
 
 interface RoomQrDialogProps {
   room: Room | null;
@@ -28,6 +29,20 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
   const currentStay = stays.find((s) => s.roomId === room?.id && s.status === 'open');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [renewing, setRenewing] = useState(false);
+
+  const renewPin = async () => {
+    if (!companyId || !room) return;
+    try {
+      setRenewing(true);
+      const r = await authedFetch('/api/room-hub/reset-pin', 'POST', { companyId, roomId: room.id });
+      toast({ title: 'Novo PIN gerado', description: `PIN: ${r.pin}. O bloqueio foi retirado.` });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Não foi possível renovar o PIN', description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setRenewing(false);
+    }
+  };
 
   const safeCompanyId = companyId || 'guest';
   const isGuest = safeCompanyId === 'guest' || safeCompanyId.startsWith('guest_');
@@ -265,6 +280,11 @@ export function RoomQrDialog({ room, open, onOpenChange }: RoomQrDialogProps) {
                 <div className="text-[10px] text-sky-600 dark:text-sky-400">
                   Forneça este código ao hóspede para desbloquear o visor do quarto.
                 </div>
+                {!isGuest && (
+                  <Button type="button" variant="outline" size="sm" className="mt-1 h-9 rounded-full text-xs" onClick={renewPin} disabled={renewing}>
+                    {renewing ? 'A gerar...' : 'Novo PIN / desbloquear'}
+                  </Button>
+                )}
               </div>
             )}
 

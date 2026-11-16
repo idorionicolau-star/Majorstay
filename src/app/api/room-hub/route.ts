@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { loadRoomMenu } from '@/lib/room-menu';
 import { NextResponse } from 'next/server';
+import { rateLimitOk, TOO_MANY } from '@/lib/rate-limit';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
 
@@ -23,6 +24,7 @@ import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
  */
 export async function GET(req: Request) {
   try {
+    if (!rateLimitOk(req, 'hub', 60, 60_000)) return NextResponse.json({ error: TOO_MANY }, { status: 429 });
     const { searchParams } = new URL(req.url);
     const companyId = searchParams.get('c') || '';
     const roomId = searchParams.get('r') || '';

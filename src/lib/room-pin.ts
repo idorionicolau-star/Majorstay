@@ -6,12 +6,15 @@ import { normalizeDate } from '@/lib/hospitality-calc';
  *
  * - Procura a estadia aberta do quarto.
  * - Compara o PIN dentro de uma transacção e conta as falhas na própria estadia (pinFailedAttempts).
- * - Ao 5.º erro bloqueia 15 minutos (pinLockedUntil → 429). Ao acertar, zera os contadores.
+ * - Ao 5.º erro bloqueia (1, 5 e depois 15 minutos, pinLockedUntil → 429). Ao acertar, zera os contadores.
  * - Mensagens genéricas: nunca dizem se o PIN estava perto.
  * - Estadia aberta sem accessPin fica bloqueada (sem PIN por defeito).
  */
 export const PIN_MAX_ATTEMPTS = 5;
 export const PIN_LOCK_MS = 15 * 60 * 1000;
+/** Bloqueio progressivo: 1.º bloqueio 1 min, 2.º 5 min, a partir do 3.º 15 min. */
+export const PIN_LOCK_STEPS_MS = [60 * 1000, 5 * 60 * 1000, PIN_LOCK_MS];
+const lockMessage = (ms: number) => `Demasiadas tentativas incorretas. Acesso bloqueado por ${Math.max(1, Math.round(ms / 60000))} min. A receção pode desbloquear.`;
 
 export type RoomPinResult =
   | { ok: false; status: number; error: string }
@@ -82,20 +85,22 @@ export async function verifyRoomPin(
     const nowMs = Date.now();
     const lockedUntil = stayData.pinLockedUntil ? normalizeDate(stayData.pinLockedUntil).getTime() : 0;
     if (lockedUntil > nowMs) {
-      return { ok: false, status: 429, error: 'Demasiadas tentativas incorretas. Acesso bloqueado por 15 minutos.' };
+      return { ok: false, status: 429, error: lockMessage(lockedUntil - nowMs) };
     }
 
     if (String(stayData.accessPin).trim() !== pin) {
       const failed = Number(stayData.pinFailedAttempts || 0) + 1;
       if (failed >= PIN_MAX_ATTEMPTS) {
-        transaction.update(stayRef, { pinFailedAttempts: failed, pinLockedUntil: new Date(nowMs + PIN_LOCK_MS) });
-        return { ok: false, status: 429, error: 'Demasiadas tentativas incorretas. Acesso bloqueado por 15 minutos.' };
+        const count = Number(stayData.pinLockCount || 0);
+        const lockMs = PIN_LOCK_STEPS_MS[Math.min(count, PIN_LOCK_STEPS_MS.length - 1)];
+        transaction.update(stayRef, { pinFailedAttempts: 0, pinLockCount: count + 1, pinLockedUntil: new Date(nowMs + lockMs) });
+        return { ok: false, status: 429, error: lockMessage(lockMs) };
       }
       transaction.update(stayRef, { pinFailedAttempts: failed });
       return { ok: false, status: 403, error: 'PIN incorreto. Acesso não autorizado.' };
     }
 
-    transaction.update(stayRef, { pinFailedAttempts: 0, pinLockedUntil: null });
+    transaction.update(stayRef, { pinFailedAttempts: 0, pinLockCount: 0, pinLockedUntil: null });
 
     return {
       ok: true,
