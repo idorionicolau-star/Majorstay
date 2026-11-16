@@ -40,6 +40,7 @@ import {
   normalizeDate,
 } from '@/lib/hospitality-calc';
 import { useRooms } from '@/context/rooms-context';
+import { StayVehicle } from '@/components/rooms/stay-vehicle';
 import { useInventory } from '@/context/inventory-context';
 
 interface RoomCardProps {
@@ -536,6 +537,8 @@ export function RoomCard({
               Fazer Check-in
             </Button>
           )}
+
+          {(isOccupied || isOvertime) && stay && <StayVehicle stay={stay} />}
 
           {(isOccupied || isOvertime) && stay && (
             <div className="grid grid-cols-3 gap-2">
