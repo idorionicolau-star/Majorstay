@@ -616,10 +616,10 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     const model = (data.vehicleModel || '').trim().slice(0, 30);
     const color = (data.vehicleColor || '').trim().slice(0, 30);
 
-    // Gerar PIN de 4 dígitos criptograficamente seguro com crypto.getRandomValues
+    // Gerar PIN de 6 dígitos criptograficamente seguro com crypto.getRandomValues
     const pinBuf = new Uint32Array(1);
     crypto.getRandomValues(pinBuf);
-    const accessPin = String(1000 + (pinBuf[0] % 9000));
+    const accessPin = String(100000 + (pinBuf[0] % 900000));
 
     if (isGuest) {
       const stayId = `stay-${Date.now()}`;

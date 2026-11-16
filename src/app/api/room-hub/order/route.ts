@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { isDishRef, dishIdOf, dishAvailable } from '@/lib/dishes';
 import { KITCHEN_ENABLED, isKitchenProduct } from '@/lib/features';
 import { NextResponse } from 'next/server';
+import { rateLimitOk, TOO_MANY } from '@/lib/rate-limit';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { verifyRoomPin } from '@/lib/room-pin';
 
@@ -22,6 +23,7 @@ const MAX_PENDING_PER_STAY = 5;
 
 export async function POST(req: Request) {
   try {
+    if (!rateLimitOk(req, 'order', 10, 60_000)) return NextResponse.json({ error: TOO_MANY }, { status: 429 });
     const body = await req.json().catch(() => ({}));
     const companyId = typeof body.c === 'string' ? body.c.trim() : '';
     const roomId = typeof body.r === 'string' ? body.r.trim() : '';

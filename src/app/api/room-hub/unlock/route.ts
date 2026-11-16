@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import { rateLimitOk, TOO_MANY } from '@/lib/rate-limit';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { calculateExpectedCheckOut, calculateStayPricing, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
 import { getGuestRooms, getGuestStays } from '@/lib/guest-mode';
@@ -15,7 +16,7 @@ import { loadRoomMenu } from '@/lib/room-menu';
  * - O PIN é recebido no corpo do pedido (JSON { c, r, pin }), nunca no URL.
  * - Limite de tentativas no servidor (transação atómica Firestore):
  *   - Contagem de erros em `pinFailedAttempts`.
- *   - Ao 5.º erro consecutivo, bloqueia o acesso por 15 minutos (`pinLockedUntil`), retornando HTTP 429.
+ *   - Ao 5.º erro consecutivo, bloqueia o acesso (1, 5 e depois 15 minutos, `pinLockedUntil`), retornando HTTP 429.
  *   - Ao acertar, zera `pinFailedAttempts` e anula `pinLockedUntil`.
  *   - Mensagens de erro genéricas sem vazar se o PIN estava próximo.
  * - Modo convidado ('guest' ou 'guest_*') aceita '1234' fixo.
@@ -24,6 +25,7 @@ import { loadRoomMenu } from '@/lib/room-menu';
  */
 export async function POST(req: Request) {
   try {
+    if (!rateLimitOk(req, 'unlock', 20, 60_000)) return NextResponse.json({ error: TOO_MANY }, { status: 429 });
     const body = await req.json().catch(() => ({}));
     const companyId = typeof body.c === 'string' ? body.c.trim() : '';
     const roomId = typeof body.r === 'string' ? body.r.trim() : '';
