@@ -258,22 +258,16 @@ export function HospitalityDashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full px-2 sm:px-0">
-      {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#006194] via-[#007bb9] to-[#0284c7] dark:from-[#131B26] dark:via-[#182332] dark:to-[#1B293A] p-6 sm:p-7 text-white shadow-soft border border-blue-400/20 dark:border-blue-900/40">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm text-xs font-semibold mb-2 text-white">
-              <span>✨ Gestão em tempo real</span>
-            </div>
-            <h1 className="text-2xl font-extrabold tracking-tight">Painel de Acompanhamento</h1>
-            <p className="text-blue-100 dark:text-slate-300 text-xs mt-1 font-medium">
-              Controlo de ocupação, estadias ativas e balanço financeiro do Major Stay.
-            </p>
-            <div className="mt-2 text-white"><HotelClock /></div>
+    <div className="flex flex-col gap-4 max-w-7xl mx-auto w-full px-2 sm:px-0">
+      {/* Cabeçalho compacto */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#006194] via-[#007bb9] to-[#0284c7] dark:from-[#131B26] dark:via-[#182332] dark:to-[#1B293A] px-4 py-3 text-white shadow-soft border border-blue-400/20 dark:border-blue-900/40">
+        <div className="relative z-10 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-lg font-extrabold tracking-tight">Painel de Acompanhamento</h1>
+            <div className="text-white shrink-0"><HotelClock /></div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-white/15 dark:bg-white/5 backdrop-blur-md rounded-2xl px-4 py-2 text-right border border-white/20 dark:border-white/10">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <span className="text-[11px] font-semibold text-blue-100 dark:text-slate-300 block">Total Previsto a Receber</span>
               <span className="text-lg font-black tracking-tight text-white">{formatCurrency(toReceive)}</span>
             </div>
@@ -286,9 +280,6 @@ export function HospitalityDashboard() {
             </Link>
           </div>
         </div>
-        {/* Decorative subtle background shapes */}
-        <div className="absolute -right-8 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute left-1/2 -top-12 w-36 h-36 rounded-full bg-sky-400/20 blur-2xl pointer-events-none" />
       </div>
 
       {/* 1. Quartos agora */}
