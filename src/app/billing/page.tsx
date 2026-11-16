@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { CheckCircle2, CreditCard, Loader2, ShieldCheck, Smartphone, Ticket, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { couponAmount, couponMonthsLeft, couponReminder } from "@/lib/coupon-core";
+import { couponAmount, couponAppliesToTier, couponMonthsLeft, couponReminder } from "@/lib/coupon-core";
 import { useInventory } from "@/context/inventory-context";
 import { useAuth, useFirestore } from "@/firebase/provider";
 import { useToast } from "@/hooks/use-toast";
@@ -53,8 +53,8 @@ function BillingInner() {
     /** preço deste plano com o código (null = preço normal). O servidor volta a calcular ao pagar. */
     const priceOf = (planId: PlanId, t: PayTier = tier) => {
         const full = tierAmount(t, planId);
-        // o código de convite vale no Pro (ou no plano antigo, ao mesmo preço)
-        const c = coupon && (t === "pro" || t === "atual") ? couponAmount({ price: coupon.price, months: coupon.months }, coupon.monthsUsed, planId) : { amount: null };
+        // o código de convite vale nos níveis indicados (por defeito Pro e plano antigo)
+        const c = coupon && couponAppliesToTier(coupon, t) ? couponAmount({ price: coupon.price, months: coupon.months }, coupon.monthsUsed, planId) : { amount: null };
         return { full, amount: c.amount ?? full, discounted: c.amount != null };
     };
 

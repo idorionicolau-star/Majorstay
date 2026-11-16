@@ -9,6 +9,8 @@ const COUPONS: Record<string, CouponDef> = {
     MAJOR76: { price: 550, months: 3 },
     GD66: { price: 500, months: 3 },
     MJTP86: { price: 450, months: 3 },
+    // Cliente pioneiro: paga 1.500 MT/mês durante 12 meses no plano Business (até 25 quartos, preço normal 3.500)
+    PIONEIRO: { price: 1500, months: 12, tiers: ['business'] },
 };
 
 export function findCoupon(raw: string): { code: string; def: CouponDef } | null {

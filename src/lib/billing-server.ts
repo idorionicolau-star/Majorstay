@@ -2,7 +2,7 @@ import 'server-only';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { GRACE_DAYS, planById, type Plan } from '@/lib/plans';
 import { findAnyCode } from '@/lib/affiliates-server';
-import { couponAmount } from '@/lib/coupon-core';
+import { couponAmount, couponAppliesToTier } from '@/lib/coupon-core';
 import { amountLooksRight, parseZumboError } from '@/lib/zumbopay-core';
 import { isTierId, resolvePayTier, tierAmount, type PayTier } from '@/lib/tiers';
 
@@ -111,7 +111,7 @@ export async function companyPayer(companyId: string, decoded: { uid: string; su
 
 /**
  * O preço a cobrar por um nível (Básico/Pro/Business, ou o plano antigo) num período a esta empresa.
- * Código de convite: preço especial nos primeiros meses do Mensal — só no Pro (ou plano antigo), que é o preço para que foi feito.
+ * Código de convite: preço especial nos primeiros meses do Mensal — por defeito só no Pro (ou plano antigo); um código pode indicar outros níveis (`tiers`).
  * O preço vem da lista do servidor e os meses usados contam-se nos pagamentos (que só o servidor escreve).
  * `tier` null = nível pedido inválido para esta empresa.
  */
@@ -121,8 +121,8 @@ export async function planAmountFor(companyId: string, plan: Plan, requestedTier
     const tier = resolvePayTier(requestedTier, company.data());
     if (!tier) return { amount: 0, coupon: null, tier: null };
     const full = tierAmount(tier, plan.id);
-    const found = tier === 'pro' || tier === 'atual' ? await findAnyCode(company.get('coupon.code') || '') : null;
-    const coupon = found?.def ? { code: found.code, def: found.def } : null;
+    const found = await findAnyCode(company.get('coupon.code') || '');
+    const coupon = found?.def && couponAppliesToTier(found.def, tier) ? { code: found.code, def: found.def } : null;
     let amount = full;
     if (coupon) {
         const used = (await db.collection(`companies/${companyId}/payments`).where('coupon', '==', coupon.code).where('status', '==', 'paid').get()).size;

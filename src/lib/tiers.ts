@@ -39,13 +39,13 @@ export const TIERS: Tier[] = [
     {
         id: 'pro',
         label: 'Pro',
-        monthly: 1000,
+        monthly: 1500,
         forWho: 'Guest Houses, Pensões e Alojamentos',
-        maxRooms: 15,
+        maxRooms: 10,
         maxUsers: 3,
         features: PRO_FEATURES,
         highlights: [
-            'Até 15 quartos e estadias em tempo real',
+            'Até 10 quartos e estadias em tempo real',
             'Visor QR Code e cartão de mesa para quartos',
             'Cobrança por hora e pernoita',
             'Lounge & Bar com comanda digital',
@@ -57,13 +57,13 @@ export const TIERS: Tier[] = [
     {
         id: 'business',
         label: 'Business',
-        monthly: 1500,
+        monthly: 3500,
         forWho: 'Lodges, Motéis e Hotéis Médios',
-        maxRooms: 30,
+        maxRooms: 25,
         maxUsers: 10,
         features: BUSINESS_FEATURES,
         highlights: [
-            'De 16 até 30 quartos e reservas antecipadas',
+            'De 11 até 25 quartos e reservas antecipadas',
             'Controlo de turnos de receção e auditoria',
             'Gestão de stock de Bar e Frigobar',
             'Serviços de alojamento sem limites',
