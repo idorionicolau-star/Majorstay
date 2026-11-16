@@ -516,6 +516,8 @@ export interface InventoryContextType {
   syncOfflineSales: () => Promise<void>;
   /** Anti-theft alerts to managers (feed + push). Ignored when the actor is a manager unless `always`. */
   notifyManagers: (msg: { title: string; body: string; link?: string; type?: string; dedupeId?: string; always?: boolean }) => void;
+  /** Aviso de venda (feed, push e email, conforme as Definições). Para vendas gravadas pelo servidor. */
+  triggerEmailAlert: (payload: Record<string, unknown>) => Promise<void>;
   addCatalogProduct: (productData: Omit<CatalogProduct, 'id'>) => Promise<void>;
   addCatalogCategory: (categoryName: string) => Promise<void>;
   /** Move produtos do catálogo para a lixeira (podem ser restaurados). Devolve quantos moveu. */

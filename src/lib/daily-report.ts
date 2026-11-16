@@ -90,9 +90,17 @@ export function saleOnDay(date: unknown, day: string): boolean {
  * Horas a que o relatório pode sair (Maputo). Cada uma tem um cron diário em vercel.json (`?slot=HH:MM`); no plano
  * Hobby da Vercel o cron corre algures dentro dessa hora UTC, por isso o email diz sempre "até às HH:MM".
  */
-export const REPORT_TIMES = ['17:30', '18:30', '19:30', '20:30', '21:30', '22:30'] as const;
+export const REPORT_TIMES = ['07:30', '17:30', '18:30', '19:30', '20:30', '21:30', '22:30'] as const;
 export type ReportTime = string;
 export const DEFAULT_REPORT_TIME = '21:30';
+
+/** Envio da manhã: o relatório é do dia anterior, completo (o de hoje ainda mal começou). */
+export const isMorningSlot = (slot: string): boolean => slot < '12:00';
+
+/** O dia a que o relatório se refere: o de hoje (até agora) à noite, o de ontem inteiro de manhã. */
+export function reportDayForSlot(slot: string, now = new Date()) {
+    return reportDay(isMorningSlot(slot) ? new Date(now.getTime() - 86_400_000) : now);
+}
 
 /** Valida se a string representa uma hora válida no formato HH:mm (00:00 a 23:59). */
 export function isValidTime(v: unknown): boolean {

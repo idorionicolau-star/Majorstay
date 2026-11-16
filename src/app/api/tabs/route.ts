@@ -190,7 +190,7 @@ export async function POST(req: Request) {
         const closedAt = new Date();
         items.forEach((it, idx) => {
           tx.set(db.collection(`companies/${companyId}/sales`).doc(), {
-            date: closedAt.toISOString().slice(0, 10),
+            date: closedAt.toISOString(), // com hora, como as outras vendas (ordena bem e conta no dia certo de Maputo)
             productId: it.productId,
             productName: it.productName,
             quantity: it.quantity,

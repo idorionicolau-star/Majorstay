@@ -13,12 +13,13 @@ import { toast } from '@/hooks/use-toast';
 import { formatCurrency, normalizeString } from '@/lib/utils';
 import { tabTotal, type Tab } from '@/lib/tabs';
 import { isKitchenProduct } from '@/lib/features';
+import { itemsSummary, saleLines } from '@/lib/sale-summary';
 
 const PAYMENTS = ['Numerário', 'M-Pesa', 'e-Mola', 'Transferência', 'POS / Cartão'];
 
 /** Contas abertas: o cliente consome e paga no fim (ou passa a conta para o quarto). */
 export function OpenTabs() {
-  const { companyId, products, isGuest } = useInventory();
+  const { companyId, products, isGuest, triggerEmailAlert, user } = useInventory();
   const { openStays } = useRooms();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -164,7 +165,21 @@ export function OpenTabs() {
                     <SelectContent>{PAYMENTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
                   </Select>
                   <Button className="h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white" disabled={busy || active.items.length === 0}
-                    onClick={async () => { const r = await run({ action: 'close', tabId: active.id, paymentMethod: payment }, 'Conta paga'); if (r) setActiveId(null); }}>
+                    onClick={async () => {
+                      const items = active.items;
+                      const r = await run({ action: 'close', tabId: active.id, paymentMethod: payment }, 'Conta paga');
+                      if (!r) return;
+                      // a venda foi gravada pelo servidor: faltava o aviso (feed, push e email) que o caixa normal envia
+                      try {
+                        await triggerEmailAlert({
+                          type: 'SALE', clientName: active.clientName, soldBy: user?.username || '', paymentMethod: payment,
+                          productName: itemsSummary(items.map((i) => i.productName)),
+                          items: saleLines(items.map((i) => ({ productName: i.productName, quantity: i.quantity, unit: i.unit, totalValue: i.totalPrice }))),
+                          totalValue: r.total ?? tabTotal(items), guideNumber: r.guideNumber, location: 'Principal',
+                        });
+                      } catch { /* o aviso nunca impede o fecho da conta */ }
+                      setActiveId(null);
+                    }}>
                     Cobrar {formatCurrency(tabTotal(active.items))}
                   </Button>
                 </div>

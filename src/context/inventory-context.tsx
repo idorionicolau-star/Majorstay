@@ -20,7 +20,7 @@ export const InventoryContext = createContext<InventoryContextType | undefined>(
 
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const core = useInventoryCore();
-  const { isGuest, toast, loading, productsLoading, salesLoading, productionsLoading, ordersLoading, stockMovementsLoading, catalogProductsLoading, catalogCategoriesLoading, rawMaterialsLoading, recipesLoading, companyId, firestore, user, productsData, salesData, stockMovementsData, lastSaleTimestamp, firebaseUser, isReadOnly, isTrial, daysLeft, renewInDays, subscriptionReason, logout, profilePicture, handleSetProfilePicture, canView, canEdit, companyData, products, productionsData, ordersData, catalogProductsData, catalogProductsRaw, catalogCategoriesData, rawMaterialsData, recipesData, locations: allLocations, isMultiLocation, siteScope, firstLocationId, notifications, monthlySalesChartData, dashboardStats, businessStartDate, chatHistory, setChatHistory, updateCompany, markNotificationAsRead, markAllAsRead, clearNotifications, addNotification, categorizeProductWithAI, notifyManagers } = core;
+  const { isGuest, toast, loading, productsLoading, salesLoading, productionsLoading, ordersLoading, stockMovementsLoading, catalogProductsLoading, catalogCategoriesLoading, rawMaterialsLoading, recipesLoading, companyId, firestore, user, productsData, salesData, stockMovementsData, lastSaleTimestamp, firebaseUser, isReadOnly, isTrial, daysLeft, renewInDays, subscriptionReason, logout, profilePicture, handleSetProfilePicture, canView, canEdit, companyData, products, productionsData, ordersData, catalogProductsData, catalogProductsRaw, catalogCategoriesData, rawMaterialsData, recipesData, locations: allLocations, isMultiLocation, siteScope, firstLocationId, notifications, monthlySalesChartData, dashboardStats, businessStartDate, chatHistory, setChatHistory, updateCompany, markNotificationAsRead, markAllAsRead, clearNotifications, addNotification, categorizeProductWithAI, notifyManagers, triggerEmailAlert } = core;
   const authActions = useAuthActions(core);
   const { login, loginWithGoogle, resetPassword, changePassword, registerCompany, registerCompanyWithGoogle } = authActions;
   const productActions = useProductActions(core);
@@ -245,6 +245,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
     confirmAction,
     notifyManagers,
+    triggerEmailAlert,
   }), [
     isGuest, guestBlocked, guestQuiet,
     user, firebaseUser, companyId, isDataLoading, isReadOnly, isTrial, daysLeft, renewInDays, subscriptionReason,
@@ -276,6 +277,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     setAutoThresholds,
     confirmAction,
     notifyManagers,
+    triggerEmailAlert,
   ]);
 
 
