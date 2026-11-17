@@ -207,7 +207,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
               💳 Pagar agora
             </a>
             <a 
-              href={whatsappLink("Olá, a minha conta MajorStockX está em modo leitura. Preciso de ajuda para reactivar.")}
+              href={whatsappLink("Olá, a minha conta MajorStay está em modo leitura. Preciso de ajuda para reactivar.")}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white text-rose-700 hover:bg-white/90 px-3 py-1 rounded-md text-xs font-bold transition-all shadow-sm flex items-center gap-1"

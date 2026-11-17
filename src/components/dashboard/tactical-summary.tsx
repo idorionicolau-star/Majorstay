@@ -92,7 +92,7 @@ export const TacticalSummary = () => {
 
     try {
       const { generateInsightsPDF } = await import('@/lib/pdf-generator');
-      generateInsightsPDF(insights, companyData?.name || 'MajorStockX', new Date());
+      generateInsightsPDF(insights, companyData?.name || 'MajorStay', new Date());
     } catch (error) {
       console.error("Erro ao gerar PDF de insights:", error);
     }
@@ -105,7 +105,7 @@ export const TacticalSummary = () => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Insights - ${companyData?.name || 'MajorStockX'}</title>
+          <title>Insights - ${companyData?.name || 'MajorStay'}</title>
           <style>
             body { font-family: sans-serif; padding: 40px; color: #333; line-height: 1.6; }
             h1 { color: #0f172a; border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -116,11 +116,11 @@ export const TacticalSummary = () => {
         </head>
         <body>
           <h1>Relatório de Insights Operacionais</h1>
-          <div class="date">${companyData?.name || 'MajorStockX'} • ${new Date().toLocaleDateString()}</div>
+          <div class="date">${companyData?.name || 'MajorStay'} • ${new Date().toLocaleDateString()}</div>
           <div class="content">
             ${insights?.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
           </div>
-          <div class="footer">Gerado por MajorStockX - Inteligência de Negócio</div>
+          <div class="footer">Gerado por MajorStay - Inteligência de Negócio</div>
         </body>
       </html>
     `);

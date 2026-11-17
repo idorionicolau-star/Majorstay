@@ -13,7 +13,7 @@ export const generateInventoryReportPDF = (products: any[], company: Company | n
 
     // Header
     doc.setFontSize(20);
-    doc.text(company?.name || 'MajorStockX', 14, 22);
+    doc.text(company?.name || 'MajorStay', 14, 22);
 
     doc.setFontSize(14);
     doc.setTextColor(52, 152, 219); // Blue
@@ -63,7 +63,7 @@ export const generateInventoryReportPDF = (products: any[], company: Company | n
     // Footer
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(`MajorStockX - ${new Date().getFullYear()}`, 105, 290, { align: 'center' });
+    doc.text(`MajorStay - ${new Date().getFullYear()}`, 105, 290, { align: 'center' });
 
     doc.save(`Inventario_${new Date().toISOString().split('T')[0]}.pdf`);
 };
@@ -81,7 +81,7 @@ export const generateOrdersPDF = (orders: any[], company: Company | null) => {
     ]);
 
     doc.setFontSize(20);
-    doc.text(company?.name || 'MajorStockX', 14, 22);
+    doc.text(company?.name || 'MajorStay', 14, 22);
     doc.setFontSize(10);
     doc.text("Relatório de Encomendas", 14, 30);
     doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 35);
@@ -112,7 +112,7 @@ export const generateProductionPDF = (productions: any[], company: Company | nul
     ]);
 
     doc.setFontSize(20);
-    doc.text(company?.name || 'MajorStockX', 14, 22);
+    doc.text(company?.name || 'MajorStay', 14, 22);
     doc.setFontSize(10);
     doc.text("Relatório de Produção", 14, 30);
     doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 35);
@@ -132,7 +132,7 @@ export const generateProductionPDF = (productions: any[], company: Company | nul
 export const generateRawMaterialsPDF = (type: 'materials' | 'recipes' | 'costs', data: any[], company: Company | null) => {
     const doc = new jsPDF();
     doc.setFontSize(20);
-    doc.text(company?.name || 'MajorStockX', 14, 22);
+    doc.text(company?.name || 'MajorStay', 14, 22);
     doc.setFontSize(10);
 
     let title = "";
@@ -198,7 +198,7 @@ export const generateCriticalStockPDF = (products: any[], company: Company | nul
 
     doc.setFontSize(12);
     doc.setTextColor(0);
-    doc.text(company?.name || 'MajorStockX', 14, 30);
+    doc.text(company?.name || 'MajorStay', 14, 30);
     doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 38);
     doc.text(`${products.length} itens necessitam de reposição`, 14, 46);
 
@@ -318,7 +318,7 @@ export const generateReportPDF = (sales: any[], summary: any, company: Company |
 
     doc.setFontSize(16);
     doc.setTextColor(30, 41, 59); // Slate-800
-    doc.text(company?.name || 'MajorStockX', 14, 22);
+    doc.text(company?.name || 'MajorStay', 14, 22);
 
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -463,10 +463,10 @@ export const generateInsightsPDF = (insights: string, companyName: string, date:
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184); // Slate-400
-        doc.text(`${companyName} © MajorStockX - Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+        doc.text(`${companyName} © MajorStay - Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
     }
 
-    doc.save(`Insights_MajorStockX_${date.toISOString().split('T')[0]}.pdf`);
+    doc.save(`Insights_MajorStay_${date.toISOString().split('T')[0]}.pdf`);
 };
 
 export type MovementPdfRow = { date: string; type: string; product: string; quantity: number; location: string; reason: string; user: string };
@@ -479,7 +479,7 @@ export const generateMovementsPDF = (rows: MovementPdfRow[], company: Company | 
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(15);
-    doc.text(company?.name || 'MajorStockX', 14, 18);
+    doc.text(company?.name || 'MajorStay', 14, 18);
     doc.setFontSize(13);
     doc.text('Movimentos de Stock', W - 14, 18, { align: 'right' });
     doc.setFont('helvetica', 'normal');
@@ -500,7 +500,7 @@ export const generateMovementsPDF = (rows: MovementPdfRow[], company: Company | 
             const H = doc.internal.pageSize.getHeight();
             doc.setFontSize(7.5);
             doc.setTextColor(130);
-            doc.text(`${company?.name || 'MajorStockX'} · MajorStockX`, 14, H - 8);
+            doc.text(`${company?.name || 'MajorStay'} · MajorStay`, 14, H - 8);
             doc.setTextColor(0);
         },
     });

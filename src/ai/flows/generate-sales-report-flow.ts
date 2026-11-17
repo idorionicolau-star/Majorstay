@@ -20,7 +20,7 @@ export async function generateSalesReport(input: GenerateSalesReportInput): Prom
     throw new Error("GEMINI_API_KEY not found in environment variables.");
   }
 
-  const prompt = `És um analista de vendas especialista da MajorStockX. Com base nos seguintes dados ou pedido, gera um resumo conciso e perspicaz do relatório de vendas. A resposta deve ser em português e formatada em Markdown.
+  const prompt = `És um analista de vendas especialista da MajorStay. Com base nos seguintes dados ou pedido, gera um resumo conciso e perspicaz do relatório de vendas. A resposta deve ser em português e formatada em Markdown.
 
 Pedido/dados do utilizador:
 ${input}`;

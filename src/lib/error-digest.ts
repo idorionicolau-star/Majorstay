@@ -48,8 +48,8 @@ export function buildErrorDigest(args: {
     const groups = groupErrors(errors);
     const total = errors.length + billing.length;
     const subject = total === 0
-        ? `✅ MajorStockX: sem erros nas últimas 24 h${newCompanies.length ? ` · ${newCompanies.length} novo${newCompanies.length === 1 ? '' : 's'} em teste` : ''}`
-        : `⚠️ MajorStockX: ${errors.length} erro${errors.length === 1 ? '' : 's'}${groups.length > 1 ? ` (${groups.length} tipos)` : ''}${billing.length ? ` · ${billing.length} pagamento${billing.length === 1 ? '' : 's'} com erro` : ''} nas últimas 24 h`;
+        ? `✅ MajorStay: sem erros nas últimas 24 h${newCompanies.length ? ` · ${newCompanies.length} novo${newCompanies.length === 1 ? '' : 's'} em teste` : ''}`
+        : `⚠️ MajorStay: ${errors.length} erro${errors.length === 1 ? '' : 's'}${groups.length > 1 ? ` (${groups.length} tipos)` : ''}${billing.length ? ` · ${billing.length} pagamento${billing.length === 1 ? '' : 's'} com erro` : ''} nas últimas 24 h`;
 
     const name = (id: string) => escapeHtml(companyNames[id] || id);
     const cell = 'padding:6px 8px;border-bottom:1px solid #e5e7eb;vertical-align:top;font-size:13px';

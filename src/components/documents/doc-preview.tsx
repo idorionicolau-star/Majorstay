@@ -177,7 +177,7 @@ export function DocPreview({ model, company }: { model: DocModel; company: Compa
                     )}
                 </div>
 
-                {decor ? <DecorFooter d={decor} text={st.footerNote?.trim() || `${company?.name || "MajorStockX"} © ${new Date().getFullYear()} · Processado por computador (MajorStockX)`} accent={accent} hl={hl} company={company} /> : (
+                {decor ? <DecorFooter d={decor} text={st.footerNote?.trim() || `${company?.name || "MajorStay"} © ${new Date().getFullYear()} · Processado por computador (MajorStay)`} accent={accent} hl={hl} company={company} /> : (
                     <div style={{ position: "absolute", left: 48, right: 48, bottom: 28, borderTop: "1px solid #e4e4e7", paddingTop: 6, fontSize: 9.5, color: "#71717a", display: "flex", justifyContent: "space-between" }}>
                         <span>{company?.name}{st.footerNote ? ` · ${st.footerNote}` : ""}</span><span>Pág. 1</span>
                     </div>

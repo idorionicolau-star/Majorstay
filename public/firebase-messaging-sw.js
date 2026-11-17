@@ -18,7 +18,7 @@ const messaging = firebase.messaging();
 // Mensagens "data-only" (o servidor envia assim para controlar ícone e link no Android).
 messaging.onBackgroundMessage((payload) => {
     const d = payload.data || {};
-    const title = d.title || payload.notification?.title || 'MajorStockX';
+    const title = d.title || payload.notification?.title || 'MajorStay';
     self.registration.showNotification(title, {
         body: d.body || payload.notification?.body || '',
         icon: '/icon-192.png',

@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const dayOfMonth = now.getDate();
 
     const systemPrompt = `
-      Atue como um Consultor Sênior de Operações e BI para a empresa **${data.company?.name || 'MajorStockX'}**.
+      Atue como um Consultor Sênior de Operações e BI para a empresa **${data.company?.name || 'MajorStay'}**.
       Analise os dados fornecidos e gere "Insights da IA" baseados nestes pilares:
       
       === CONTEXTO TEMPORAL ===
@@ -59,9 +59,9 @@ export async function POST(req: NextRequest) {
       - IMPORTANTE: Se hoje for o início do mês (dia 1 a 7), não critique o baixo volume de vendas mensais. Em vez disso, projete a tendência ou dê sugestões preventivas para o mês que começa.
 
       === TONALIDADE E BRANDING ===
-      - Seja um parceiro estratégico da **${data.company?.name || 'MajorStockX'}**.
+      - Seja um parceiro estratégico da **${data.company?.name || 'MajorStay'}**.
       - Use um tom profissional, encorajador e focado em soluções (Empático).
-      - Evite mencionar o nome do software "MajorStockX", foque no nome da empresa.
+      - Evite mencionar o nome do software "MajorStay", foque no nome da empresa.
 
       === PILARES DA ANÁLISE ===
       1. Preditivo: Calcule a velocidade de vendas e preveja quando itens críticos esgotarão.

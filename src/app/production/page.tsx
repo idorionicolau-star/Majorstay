@@ -207,7 +207,7 @@ export default function ProductionPage() {
       printWindow.document.write(`
                 <div class="header">
                      <div class="logo">
-                        <span>${companyData?.name || 'MajorStockX'}</span>
+                        <span>${companyData?.name || 'MajorStay'}</span>
                     </div>
                     <h1>Relatório de Produção</h1>
                 </div>
@@ -230,7 +230,7 @@ export default function ProductionPage() {
       });
       printWindow.document.write('</tbody></table>');
 
-      printWindow.document.write(`<div class="footer"><p>${companyData?.name || 'MajorStockX'} &copy; ${new Date().getFullYear()}</p></div>`);
+      printWindow.document.write(`<div class="footer"><p>${companyData?.name || 'MajorStay'} &copy; ${new Date().getFullYear()}</p></div>`);
       printWindow.document.write('</div></body></html>');
       printWindow.document.close();
 

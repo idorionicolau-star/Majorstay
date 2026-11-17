@@ -1,4 +1,4 @@
-// Contactos do suporte da MajorStockX e a mensagem já preenchida — num só sítio.
+// Contactos do suporte da MajorStay e a mensagem já preenchida — num só sítio.
 // O número é só para WhatsApp (mensagens, não chamadas). O que mais ajuda: uma ou mais capturas de ecrã
 // e uma descrição breve do problema.
 
@@ -22,7 +22,7 @@ export type SupportContext = {
 
 /** A mensagem que vai para o WhatsApp ou para o email, com o que ajuda a resolver mais depressa. */
 export function supportMessage(ctx: SupportContext): string {
-    const lines = ["Olá, preciso de ajuda com a MajorStockX."];
+    const lines = ["Olá, preciso de ajuda com a MajorStay."];
     if (ctx.company) lines.push(`Empresa: ${ctx.company}`);
     if (ctx.user) lines.push(`Utilizador: ${ctx.user}`);
     if (ctx.page) lines.push(`Página: ${ctx.page}`);

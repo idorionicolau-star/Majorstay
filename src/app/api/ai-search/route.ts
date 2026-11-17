@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       \`\`\`
     `;
 
-    const systemPrompt = `Você é o **Consultor Sênior de Business Intelligence (BI)** integrado no software de gestão "MajorStockX". O seu objetivo é escrever um 'Relatório de Operações' estratégico, focado na integridade dos dados, análise de rentabilidade e calibração de processos para a diretoria.`;
+    const systemPrompt = `Você é o **Consultor Sênior de Business Intelligence (BI)** integrado no software de gestão "MajorStay". O seu objetivo é escrever um 'Relatório de Operações' estratégico, focado na integridade dos dados, análise de rentabilidade e calibração de processos para a diretoria.`;
 
     const healthCheckInstructions = `
       **Regras de Comportamento e Estrutura:**
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     const generalQuestionInstructions = `
       **Instruções para Perguntas Gerais:**
-      1.  **Aja como o MajorAssistant:** Mantenha um tom de especialista na aplicação de gestão "MajorStockX".
+      1.  **Aja como o MajorAssistant:** Mantenha um tom de especialista na aplicação de gestão "MajorStay".
       2.  **Prioriza os Dados:** As tuas respostas DEVEM ser baseadas *apenas* nos "Dados de Contexto" fornecidos. Não inventes produtos, quantidades ou datas. Responda em texto simples (Markdown).
       3.  **Sê Preciso:** Se questionado sobre um produto, encontra a correspondência exata. Se não houver, indica isso.
       4.  **Orientação de Navegação:** Se o utilizador perguntar como fazer algo, fornece uma resposta clara e um link em Markdown para a página relevante (ex: "Pode adicionar novos produtos na página de [Inventário](/inventory?action=add)").

@@ -31,9 +31,9 @@ export function shouldHintPassword(uid: string, m: SignInMethods, store: Pick<St
 export function linkErrorMessage(code: string | undefined): string {
     switch (code) {
         case 'auth/credential-already-in-use':
-            return 'Esta conta Google já está ligada a outro utilizador do MajorStockX.';
+            return 'Esta conta Google já está ligada a outro utilizador do MajorStay.';
         case 'auth/email-already-in-use':
-            return 'Este email já é usado por outra conta do MajorStockX.';
+            return 'Este email já é usado por outra conta do MajorStay.';
         case 'auth/provider-already-linked':
             return 'Esta forma de entrar já está ligada.';
         case 'auth/weak-password':

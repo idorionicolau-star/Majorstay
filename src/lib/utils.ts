@@ -308,7 +308,7 @@ export function downloadSaleDocument(saleOrSales: Sale | Sale[], companyData: Co
       <div class="header">
            <div class="logo">
               ${companyData?.logoUrl ? `<img src="${companyData.logoUrl}" class="logo-img" alt="Logo" />` : ''}
-              <span class="logo-text">${companyData?.name || 'MajorStockX'}</span>
+              <span class="logo-text">${companyData?.name || 'MajorStay'}</span>
           </div>
           <div class="doc-type">
               ${isProforma ? '<div class="badge-proforma">Orçamento / Proposta</div>' : ''}
@@ -387,7 +387,7 @@ export function downloadSaleDocument(saleOrSales: Sale | Sale[], companyData: Co
     </div>
   `);
 
-  printWindow.document.write(`<div class="footer"><p>${companyData?.name || 'MajorStockX'} &copy; ${new Date().getFullYear()} &bull; Processado por Software</p></div>`);
+  printWindow.document.write(`<div class="footer"><p>${companyData?.name || 'MajorStay'} &copy; ${new Date().getFullYear()} &bull; Processado por Software</p></div>`);
   printWindow.document.write('</div>');
 
   // Action buttons (hidden during print)

@@ -15,7 +15,7 @@ export function SubscriptionExpired() {
                         Acesso Bloqueado
                     </CardTitle>
                     <CardDescription className="text-slate-500 dark:text-slate-400 mt-2">
-                        O seu período de teste ou assinatura expirou. Para continuar a utilizar o MajorStockX e ter acesso aos seus dados, por favor renove a sua subscrição.
+                        O seu período de teste ou assinatura expirou. Para continuar a utilizar o MajorStay e ter acesso aos seus dados, por favor renove a sua subscrição.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4 pb-6">
@@ -32,7 +32,7 @@ export function SubscriptionExpired() {
                         Pagar subscrição (M-Pesa, e-Mola, cartão)
                     </Button>
                     <Button asChild variant="outline" className="w-full">
-                        <a href={whatsappLink('Olá, preciso de ajuda para renovar a minha subscrição MajorStockX.')} target="_blank" rel="noopener noreferrer">
+                        <a href={whatsappLink('Olá, preciso de ajuda para renovar a minha subscrição MajorStay.')} target="_blank" rel="noopener noreferrer">
                             <MessageCircle className="w-4 h-4 mr-2" />
                             Suporte por WhatsApp ({SUPPORT.whatsappDisplay})
                         </a>

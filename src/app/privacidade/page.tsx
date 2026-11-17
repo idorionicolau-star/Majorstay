@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
 
-export const metadata: Metadata = { title: "Política de Privacidade — MajorStockX" };
+export const metadata: Metadata = { title: "Política de Privacidade — MajorStay" };
 
 export default function PrivacidadePage() {
     return (
         <LegalPage title="Política de Privacidade" updated="13 de Outubro de 2026">
-            <p>Esta política explica que dados a MajorStockX guarda, para quê, e quem os pode ver. Em resumo: os dados são da sua empresa, servem só para a aplicação funcionar, e não os vendemos.</p>
+            <p>Esta política explica que dados a MajorStay guarda, para quê, e quem os pode ver. Em resumo: os dados são da sua empresa, servem só para a aplicação funcionar, e não os vendemos.</p>
 
             <h2>1. Que dados guardamos</h2>
             <ul>
@@ -28,7 +28,7 @@ export default function PrivacidadePage() {
             <h2>3. Quem pode ver</h2>
             <ul>
                 <li>Os utilizadores da sua empresa, conforme as permissões que o administrador lhes der.</li>
-                <li>A equipa da MajorStockX, só quando é preciso para suporte, segurança ou cobrança.</li>
+                <li>A equipa da MajorStay, só quando é preciso para suporte, segurança ou cobrança.</li>
                 <li>Os serviços que alojam e fazem funcionar a aplicação (Google Firebase, Vercel), os de envio de emails e os provedores de pagamento — apenas o necessário para cada função.</li>
                 <li>Autoridades, só quando a lei o exigir.</li>
             </ul>

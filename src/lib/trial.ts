@@ -39,7 +39,7 @@ export function trialMessage(daysLeft: number): string {
     if (daysLeft === 1) return 'Falta 1 dia para o fim do teste gratuito. Depois, a conta fica só em leitura — os seus dados ficam guardados.';
     if (daysLeft <= 3) return `Faltam ${daysLeft} dias para o fim do teste gratuito. Depois, a conta fica só em leitura — os seus dados ficam guardados.`;
     if (daysLeft <= 7) return `O teste gratuito termina em ${daysLeft} dias. Subscreva para não ficar sem poder registar vendas e stock.`;
-    return 'Está no período de teste gratuito do MajorStockX.';
+    return 'Está no período de teste gratuito do MajorStay.';
 }
 
 /**
