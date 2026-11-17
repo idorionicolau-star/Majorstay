@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { BRAND } from '@/lib/brand';
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
 import { companyPayer, planAmountFor } from '@/lib/billing-server';
@@ -10,7 +11,7 @@ import { isManualMethod, manualPaymentEmail, paymentReference } from '@/lib/manu
 import { SUPPORT } from '@/lib/support';
 import { formatCurrency } from '@/lib/utils';
 
-const APP_URL = 'https://stock.majorgroup.app';
+const APP_URL = BRAND.appUrl;
 
 /**
  * Pagamento directo por M-Pesa / e-Mola (ver lib/manual-pay-core.ts): regista o pedido como pendente, com o valor

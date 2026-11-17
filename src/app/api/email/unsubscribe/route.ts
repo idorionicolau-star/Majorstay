@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 
+import { BRAND } from '@/lib/brand';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { checkUnsubscribeToken } from '@/lib/followups-server';
 
@@ -8,7 +9,7 @@ const page = (title: string, text: string, status = 200) => new Response(
 <body style="font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 40px 16px;">
 <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 28px; border: 1px solid #e2e8f0;">
 <h1 style="font-size: 20px; margin-top: 0;">${title}</h1><p style="line-height: 1.6; color: #334155;">${text}</p>
-<p><a href="https://stock.majorgroup.app/settings" style="color: #2563eb;">Abrir o MajorStockX</a></p></div></body></html>`,
+<p><a href="${BRAND.appUrl}/settings" style="color: #2563eb;">Abrir o ${BRAND.name}</a></p></div></body></html>`,
     { status, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
 );
 

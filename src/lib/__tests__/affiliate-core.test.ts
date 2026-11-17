@@ -5,7 +5,7 @@ describe('afiliados', () => {
     it('código sugerido a partir do nome, sem repetir', () => {
         expect(suggestCode('Maria José', new Set(), () => 0.5)).toBe('MARIA55');
         expect(suggestCode('Éder', new Set(['EDER55']), (() => { let i = 0; return () => (i++ === 0 ? 0.5 : 0.1); })())).toBe('EDER19');
-        expect(affiliateLink('MARIA55')).toBe('https://stock.majorgroup.app/register?codigo=MARIA55');
+        expect(affiliateLink('MARIA55')).toBe('https://stay.majorgroup.app/register?codigo=MARIA55');
     });
 
     it('valida: nome, telefone, código único; comissão 40% / 12 meses por defeito; desconto opcional', () => {

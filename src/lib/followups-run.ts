@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 import 'server-only';
 import { Resend } from 'resend';
 import { initializeAdmin } from '@/lib/firebase-admin';
@@ -5,7 +6,7 @@ import { followupEmail, nextFollowup } from '@/lib/followups-core';
 import { companyFacts, companyRecipients, unsubscribeToken } from '@/lib/followups-server';
 import { whatsappLink } from '@/lib/support';
 
-const APP_URL = 'https://stock.majorgroup.app';
+const APP_URL = BRAND.appUrl;
 /** O plano gratuito do Resend dá 100 emails/dia (o relatório diário também usa): fica margem. */
 const MAX_PER_RUN = 60;
 
@@ -40,12 +41,12 @@ export async function runFollowups({ dry = false }: { dry?: boolean } = {}) {
             const unsubscribeUrl = `${APP_URL}/api/email/unsubscribe?c=${encodeURIComponent(c.id)}&t=${unsubscribeToken(c.id)}`;
             const mail = followupEmail(next, {
                 company: c.get('name') || 'a sua empresa', name, appUrl: APP_URL,
-                whatsappUrl: whatsappLink('Olá, preciso de ajuda com o MajorStockX.'),
+                whatsappUrl: whatsappLink(`Olá, preciso de ajuda com o ${BRAND.name}.`),
                 unsubscribeUrl,
                 trialEndsAt: facts.trialEndsAt, subscriptionEndsAt: facts.subscriptionEndsAt, countEveryDays: facts.countEveryDays,
             });
             const res: any = await resend!.emails.send({
-                from: 'MajorStockX <assistant@majorgroup.app>', to: emails, subject: mail.subject, html: mail.html,
+                from: `${BRAND.name} <assistant@majorgroup.app>`, to: emails, subject: mail.subject, html: mail.html,
                 // dicas: o Gmail e outros mostram "Cancelar subscrição" ao lado do remetente
                 ...(next.kind === 'tips' ? { headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
             });
