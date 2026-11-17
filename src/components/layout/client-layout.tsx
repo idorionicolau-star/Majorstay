@@ -36,6 +36,7 @@ import { clearNavHint } from '@/lib/nav-hint';
 import { isSuperAdminEmail } from '@/lib/super-admin';
 import { GuestBanner } from './guest-banner';
 import { OrderAlertBanner } from './order-alert-banner';
+import { ShiftReminder } from './shift-reminder';
 import { ServerTimeSync } from './server-time-sync';
 import { AppLoader } from './app-loader';
 import { BootProgress } from './boot-progress';
@@ -221,6 +222,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
         {/* Pedidos dos quartos: aviso e som em qualquer página */}
         {!waiting && <OrderAlertBanner />}
+
+        {/* Lembrete para abrir o turno (aviso + voz a cada 10 min), sem bloquear nada */}
+        {!waiting && !isAuthPage && !isPublicPage && <ShiftReminder />}
 
         {/* quem veio da EscalePay já pagou lá: sem contagem do teste. Nas páginas de venda não aparece: há um cliente à espera */}
         {!waiting && isTrial && isManager && !pathname.startsWith('/pos') && (fromEscalepay ? <EscalepayPendingBanner daysLeft={daysLeft} /> : <TrialBanner companyId={authContext?.companyId} daysLeft={daysLeft} coupon={authContext?.companyData?.coupon} />)}
