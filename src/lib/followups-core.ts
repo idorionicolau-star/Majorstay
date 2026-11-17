@@ -185,58 +185,58 @@ function body(f: Followup, c: EmailContext): Body {
     const every = countEvery(c.countEveryDays);
     switch (f.type) {
         case 'trial-3d': return {
-            subject: `O seu teste do MajorStockX acaba em breve`,
+            subject: `O seu teste do MajorStay acaba em breve`,
             title: 'O teste gratuito está a acabar',
             paragraphs: [`O período de teste de <b>${esc(c.company)}</b> termina a <b>${fmtDate(c.trialEndsAt)}</b>.`, 'Para continuar a vender e a controlar o stock sem interrupções, escolha um plano. Os seus dados ficam todos guardados.'],
             button: { label: 'Ver planos', path: '/billing' },
         };
         case 'trial-last': return {
-            subject: 'Hoje é o último dia do seu teste do MajorStockX',
+            subject: 'Hoje é o último dia do seu teste do MajorStay',
             title: 'Último dia do teste',
             paragraphs: [`O teste de <b>${esc(c.company)}</b> termina hoje.`, 'Subscreva para não perder o acesso — pode pagar por M-Pesa, e-Mola ou cartão. Nada do que registou se perde.'],
             button: { label: 'Subscrever agora', path: '/billing' },
         };
         case 'trial-ended': return {
-            subject: 'O seu teste do MajorStockX terminou — os dados continuam guardados',
+            subject: 'O seu teste do MajorStay terminou — os dados continuam guardados',
             title: 'O teste terminou',
             paragraphs: [`O teste de <b>${esc(c.company)}</b> terminou. A conta fica só de leitura, mas <b>nada foi apagado</b>.`, 'Assim que subscrever, volta a vender e a registar stock exactamente onde ficou.'],
             button: { label: 'Reactivar a conta', path: '/billing' },
         };
         case 'sub-3d': return {
-            subject: 'A sua subscrição do MajorStockX está a acabar',
+            subject: 'A sua subscrição do MajorStay está a acabar',
             title: 'A subscrição está a acabar',
             paragraphs: [`A subscrição de <b>${esc(c.company)}</b> termina a <b>${fmtDate(c.subscriptionEndsAt)}</b>.`, 'Renove antes do fim para não haver interrupções — pagar antes não perde dias.'],
             button: { label: 'Renovar', path: '/billing' },
         };
         case 'sub-ended': return {
-            subject: 'A sua subscrição do MajorStockX terminou',
+            subject: 'A sua subscrição do MajorStay terminou',
             title: 'A subscrição terminou',
             paragraphs: [`A subscrição de <b>${esc(c.company)}</b> terminou. Tem ${GRACE_DAYS} dias de tolerância; depois a conta fica só de leitura (nada é apagado).`],
             button: { label: 'Renovar agora', path: '/billing' },
         };
         case 'start-products': return {
-            subject: 'Vamos pôr os seus produtos no MajorStockX? Leva 2 minutos',
+            subject: 'Vamos pôr os seus produtos no MajorStay? Leva 2 minutos',
             title: 'Primeiro passo: os seus produtos',
             paragraphs: ['Vimos que ainda não adicionou produtos. É o primeiro passo — depois disso já pode vender e ver o stock a mexer sozinho.', 'Dica: no <b>Stock Rápido</b> escreve o nome, o preço e a quantidade de cada produto, um a seguir ao outro.'],
             button: { label: 'Adicionar produtos', path: '/inventory/quick?modo=entrada' },
         };
         case 'start-sale': return {
-            subject: 'Faça a primeira venda no MajorStockX em 1 minuto',
+            subject: 'Faça a primeira venda no MajorStay em 1 minuto',
             title: 'Já tem produtos — falta a primeira venda',
             paragraphs: ['Na <b>Venda Rápida</b> escolhe o produto, a quantidade e a forma de pagamento. O stock desce sozinho e o documento (factura ou venda a dinheiro) fica pronto a imprimir ou enviar.', 'Se preferir, experimente primeiro a venda de demonstração — nada é gravado.'],
             button: { label: 'Fazer a primeira venda', path: '/pos' },
         };
         case 'inactive-5': return {
-            subject: 'Está tudo bem com o MajorStockX?',
+            subject: 'Está tudo bem com o MajorStay?',
             title: 'Precisa de ajuda?',
             paragraphs: ['Há uns dias que não vemos movimento na sua conta. Se alguma coisa não ficou clara ou não está a funcionar como espera, diga-nos — ajudamos por WhatsApp.', 'Lembre-se: as vendas que não são registadas deixam o stock e os relatórios desactualizados.'],
-            button: { label: 'Abrir o MajorStockX', path: '/dashboard' },
+            button: { label: 'Abrir o MajorStay', path: '/dashboard' },
         };
         case 'inactive-14': return {
-            subject: 'Sentimos a sua falta no MajorStockX',
+            subject: 'Sentimos a sua falta no MajorStay',
             title: 'Podemos ajudar?',
             paragraphs: ['Já passaram duas semanas sem usar a app. Se houve alguma dificuldade, conte-nos — muitas vezes resolve-se em 5 minutos.', 'Os seus dados continuam guardados, prontos para quando voltar.'],
-            button: { label: 'Voltar ao MajorStockX', path: '/dashboard' },
+            button: { label: 'Voltar ao MajorStay', path: '/dashboard' },
         };
         case 'count': return {
             subject: 'Hora de contar o stock',
@@ -253,7 +253,7 @@ export function followupEmail(f: Followup, c: EmailContext): { subject: string; 
     const hello = c.name ? `Olá, ${esc(c.name.split(' ')[0])}!` : 'Olá!';
     const html = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 560px; margin: 20px auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
-  <div style="background-color: #0f172a; padding: 20px 24px; color: white; font-size: 18px; font-weight: bold;">MajorStockX</div>
+  <div style="background-color: #0f172a; padding: 20px 24px; color: white; font-size: 18px; font-weight: bold;">MajorStay</div>
   <div style="padding: 24px;">
     <h2 style="margin-top: 0; font-size: 20px; color: #0f172a;">${b.title}</h2>
     <p>${hello}</p>
@@ -264,7 +264,7 @@ export function followupEmail(f: Followup, c: EmailContext): { subject: string; 
     <p style="font-size: 14px; color: #64748b;">Dúvidas? Fale connosco pelo <a href="${esc(c.whatsappUrl)}" style="color: #059669;">WhatsApp</a> (só mensagens).</p>
   </div>
   <div style="background-color: #f1f5f9; padding: 12px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
-    Recebe este email porque tem uma conta no MajorStockX (${esc(c.company)}).
+    Recebe este email porque tem uma conta no MajorStay (${esc(c.company)}).
     ${f.kind === 'tips' && c.unsubscribeUrl ? `<br/><a href="${esc(c.unsubscribeUrl)}" style="color: #94a3b8;">Não quero receber estas dicas</a>` : ''}
   </div>
 </div>`;

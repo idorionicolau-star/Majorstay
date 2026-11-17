@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
 
-export const metadata: Metadata = { title: "Termos de Uso — MajorStockX" };
+export const metadata: Metadata = { title: "Termos de Uso — MajorStay" };
 
 export default function TermosPage() {
     return (
         <LegalPage title="Termos de Uso" updated="13 de Outubro de 2026">
-            <p>Estes termos explicam as regras de uso da MajorStockX, uma aplicação para registar vendas, stock e documentos da sua empresa. Ao criar uma conta ou usar a aplicação, aceita estes termos.</p>
+            <p>Estes termos explicam as regras de uso da MajorStay, uma aplicação para registar vendas, stock e documentos da sua empresa. Ao criar uma conta ou usar a aplicação, aceita estes termos.</p>
 
             <h2>1. A sua conta</h2>
             <ul>

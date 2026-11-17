@@ -49,7 +49,7 @@ export async function POST(req: Request) {
             method: 'POST',
             headers: { 'Idempotency-Key': reference },
             body: JSON.stringify({
-                title: `MajorStockX ${tierLabel(tier)} — ${plan.label}${withCoupon ? ` (código ${withCoupon})` : ''}`.slice(0, 80),
+                title: `MajorStay ${tierLabel(tier)} — ${plan.label}${withCoupon ? ` (código ${withCoupon})` : ''}`.slice(0, 80),
                 // a nossa referência vai aqui: se o webhook devolver a descrição, é por ela que se encontra o pagamento
                 description: `${reference} · ${company.get('name') || companyId}`.slice(0, 200),
                 amount,

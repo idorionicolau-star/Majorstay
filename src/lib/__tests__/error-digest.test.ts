@@ -27,7 +27,7 @@ describe('resumo diário de erros', () => {
     it('sem erros: diz que está tudo bem (e quantos começaram o teste)', () => {
         const d = buildErrorDigest({ errors: [], billing: [], newCompanies: [{ id: 'n1', name: 'Blocos Lda' }], companyNames: {} });
         expect(d.total).toBe(0);
-        expect(d.subject).toBe('✅ MajorStockX: sem erros nas últimas 24 h · 1 novo em teste');
+        expect(d.subject).toBe('✅ MajorStay: sem erros nas últimas 24 h · 1 novo em teste');
         expect(d.html).toContain('Tudo a funcionar');
         expect(d.html).toContain('Blocos Lda');
     });
@@ -39,7 +39,7 @@ describe('resumo diário de erros', () => {
             newCompanies: [],
             companyNames: { c1: 'Ferragens & Filhos' },
         });
-        expect(d.subject).toBe('⚠️ MajorStockX: 1 erro · 1 pagamento com erro nas últimas 24 h');
+        expect(d.subject).toBe('⚠️ MajorStay: 1 erro · 1 pagamento com erro nas últimas 24 h');
         expect(d.html).toContain('&lt;script&gt;');
         expect(d.html).not.toContain('<script>');
         expect(d.html).toContain('Ferragens &amp; Filhos');

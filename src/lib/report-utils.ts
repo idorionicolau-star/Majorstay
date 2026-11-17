@@ -143,7 +143,7 @@ export function printFinancialReport(data: FinancialReportData) {
 
     printWindow.document.write(`
       <div class="footer">
-          <p>Gerado em ${new Date().toLocaleString('pt-BR')} • MajorStockX</p>
+          <p>Gerado em ${new Date().toLocaleString('pt-BR')} • MajorStay</p>
       </div>
   `);
 

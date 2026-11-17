@@ -1,4 +1,4 @@
-// Pagamento directo (manual) da subscrição: o cliente envia por M-Pesa ou e-Mola para os números da MajorStockX,
+// Pagamento directo (manual) da subscrição: o cliente envia por M-Pesa ou e-Mola para os números da MajorStay,
 // manda o comprovativo por WhatsApp e o super-administrador confirma — a conta é activada nesse momento.
 // Lógica pura (sem Firebase), para ser testada. O cartão continua pela ZumboPay.
 
@@ -19,7 +19,7 @@ export function paymentReference(companyId: string, now: Date): string {
 /** A mensagem do comprovativo, já preenchida, para o WhatsApp. */
 export function manualProofMessage(p: { company?: string | null; email?: string | null; plan: string; amount: string; method: ManualMethod; reference: string }): string {
     return [
-        'Olá, paguei a subscrição da MajorStockX.',
+        'Olá, paguei a subscrição da MajorStay.',
         p.company ? `Empresa: ${p.company}` : '',
         p.email ? `Email: ${p.email}` : '',
         `Plano: ${p.plan}`,
@@ -57,7 +57,7 @@ export function manualPaymentEmail(p: {
       <a href="${esc(p.adminUrl)}" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 24px; border-radius: 8px;">Confirmar ou recusar</a>
     </div>
   </div>
-  <div style="background-color: #f1f5f9; padding: 12px; text-align: center; font-size: 12px; color: #94a3b8;">MajorStockX · pagamentos directos</div>
+  <div style="background-color: #f1f5f9; padding: 12px; text-align: center; font-size: 12px; color: #94a3b8;">MajorStay · pagamentos directos</div>
 </div>`;
     return { subject: `💰 Pagamento ${m.label} a confirmar — ${p.company} · ${p.amount} · ${p.reference}`, html };
 }

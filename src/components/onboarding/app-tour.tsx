@@ -11,7 +11,7 @@ import { rememberSeen } from "@/lib/seen-store";
 
 type Slide = { icon: LucideIcon; title: string; lead: string; points: string[]; href?: string; open?: string; manufacturingOnly?: boolean };
 
-/** Como a MajorStockX funciona, em linguagem simples. Uma ideia por ecrã. */
+/** Como a MajorStay funciona, em linguagem simples. Uma ideia por ecrã. */
 const SLIDES: Slide[] = [
     {
         icon: Zap, title: "Vender é rápido", lead: "A Venda Rápida é o coração da app.",

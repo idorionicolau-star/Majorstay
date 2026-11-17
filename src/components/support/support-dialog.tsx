@@ -69,7 +69,7 @@ export function SupportDialog() {
                     </Button>
                     <p className="-mt-1 text-center text-xs text-muted-foreground">Só mensagens de WhatsApp — este número não atende chamadas.</p>
                     <Button asChild variant="outline" className="h-11">
-                        <a href={emailLink("Ajuda com a MajorStockX", message())} data-tour="support-email">
+                        <a href={emailLink("Ajuda com a MajorStay", message())} data-tour="support-email">
                             <Mail className="mr-2 h-4 w-4" /> Email: {SUPPORT.email}
                         </a>
                     </Button>

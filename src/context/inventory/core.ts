@@ -711,7 +711,7 @@ export function useInventoryCore() {
     trialRestartAsked.current = true;
     authedFetch('/api/billing/trial-restart', 'POST', {})
       .then((r) => {
-        if (r?.restarted) toast({ title: 'Teste gratuito renovado', description: `Tem mais ${TRIAL_DAYS} dias para experimentar o MajorStockX.` });
+        if (r?.restarted) toast({ title: 'Teste gratuito renovado', description: `Tem mais ${TRIAL_DAYS} dias para experimentar o MajorStay.` });
       })
       .catch(() => { trialRestartAsked.current = false; });
   }, [firebaseUser, companyData, toast, isGuest]);

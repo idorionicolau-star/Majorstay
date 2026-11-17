@@ -72,7 +72,7 @@ export function AffiliatesPanel() {
     const copy = async (text: string) => {
         try { await navigator.clipboard.writeText(text); toast({ title: "Link copiado" }); } catch { toast({ title: "Copie à mão", description: text }); }
     };
-    const waText = (a: Row) => `Olá ${a.name.split(" ")[0]}! Este é o seu link de afiliado da MajorStockX: ${a.link}\nO seu código: ${a.code}. Ganha ${a.commissionPct}% do que cada cliente pagar durante ${a.commissionMonths} meses.`;
+    const waText = (a: Row) => `Olá ${a.name.split(" ")[0]}! Este é o seu link de afiliado da MajorStay: ${a.link}\nO seu código: ${a.code}. Ganha ${a.commissionPct}% do que cada cliente pagar durante ${a.commissionMonths} meses.`;
 
     const field = (key: keyof typeof form, label: string, extra?: Partial<React.ComponentProps<typeof Input>>) => (
         <label className="space-y-1 text-xs font-medium text-muted-foreground">

@@ -55,7 +55,7 @@ export function PushSettingsCard() {
             const r = await fetch("/api/push", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ companyId, includeSelf: true, title: "🔔 Teste do MajorStockX", body: "As notificações estão a funcionar neste aparelho.", link: "/dashboard" }),
+                body: JSON.stringify({ companyId, includeSelf: true, title: "🔔 Teste do MajorStay", body: "As notificações estão a funcionar neste aparelho.", link: "/dashboard" }),
             });
             const j = await r.json();
             if (!r.ok) throw new Error(j.details || j.error);

@@ -313,7 +313,7 @@ export default function InventoryPage() {
               <polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
               <line x1="12" y1="22.08" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></line>
             </svg>
-            <span>MajorStockX</span>
+            <span>MajorStay</span>
           </div>
         </div>
       `);
@@ -379,7 +379,7 @@ export default function InventoryPage() {
       printWindow.document.write('</tbody></table>');
 
       printWindow.document.write('<div class="signature-line"><p>Assinatura do Responsável</p></div>');
-      printWindow.document.write('<div class="footer"><p>MajorStockX &copy; ' + new Date().getFullYear() + '</p></div>');
+      printWindow.document.write('<div class="footer"><p>MajorStay &copy; ' + new Date().getFullYear() + '</p></div>');
 
       printWindow.document.write('</div></body></html>');
       printWindow.document.close();
@@ -534,7 +534,7 @@ export default function InventoryPage() {
       printWindow.document.write(`
                 <div class="header">
                      <div class="logo">
-                        <span>${companyData?.name || 'MajorStockX'}</span>
+                        <span>${companyData?.name || 'MajorStay'}</span>
                     </div>
                     <h1>${reportTitle}</h1>
                 </div>
@@ -568,7 +568,7 @@ export default function InventoryPage() {
 
       printWindow.document.write('</tbody></table>');
 
-      printWindow.document.write(`<div class="footer"><p>${companyData?.name || 'MajorStockX'} &copy; ${new Date().getFullYear()}</p></div>`);
+      printWindow.document.write(`<div class="footer"><p>${companyData?.name || 'MajorStay'} &copy; ${new Date().getFullYear()}</p></div>`);
       printWindow.document.write('</div></body></html>');
       printWindow.document.close();
 
