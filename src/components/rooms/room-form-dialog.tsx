@@ -23,6 +23,7 @@ import { BedDouble, Brush, Clock, Coins, AlertTriangle } from 'lucide-react';
 import type { Room, RoomType } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
+import { RoomImagesField } from '@/components/rooms/room-images-field';
 
 interface RoomFormDialogProps {
   open: boolean;
@@ -55,6 +56,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
   const [dailyPrice, setDailyPrice] = useState<string>('');
   const [cleaningDurationMinutes, setCleaningDurationMinutes] = useState<number>(15);
   const [notes, setNotes] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
       setDailyPrice(roomToEdit.dailyPrice ? String(roomToEdit.dailyPrice) : '');
       setCleaningDurationMinutes(roomToEdit.cleaningDurationMinutes || 15);
       setNotes(roomToEdit.notes || '');
+      setImages(Array.isArray(roomToEdit.images) ? roomToEdit.images.slice(0, 3) : []);
     } else {
       setName('');
       setType('standard');
@@ -75,6 +78,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
       setMinimumHours(1);
       setCleaningDurationMinutes(15);
       setNotes('');
+      setImages([]);
     }
   }, [roomToEdit, open]);
 
@@ -102,6 +106,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           dailyPrice: Number(dailyPrice) > 0 ? Number(dailyPrice) : 0,
           cleaningDurationMinutes: Math.max(1, cleaningDurationMinutes || 15),
           notes: notes.trim(),
+          images,
         });
       } else {
         await addRoom({
@@ -115,6 +120,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
           cleaningDurationMinutes: Math.max(1, cleaningDurationMinutes || 15),
           active: true,
           notes: notes.trim(),
+          images,
         });
       }
       onOpenChange(false);
@@ -281,6 +287,8 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
               Alerta automático: a administração é notificada se a higienização exceder este tempo (padrão 15 min).
             </p>
           </div>
+
+          <RoomImagesField value={images} onChange={setImages} />
 
           {/* Notas */}
           <div className="space-y-1.5">

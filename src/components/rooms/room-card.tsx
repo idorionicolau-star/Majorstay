@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RoomPhotos } from './room-photos';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -272,6 +273,7 @@ export function RoomCard({
         {/* Cabeçalho do Cartão: Quarto, Tipo e Badge */}
         <div>
           <div className="flex items-start justify-between gap-2 min-w-0">
+            {room.images && room.images.length > 0 && <RoomPhotos name={room.name} images={room.images} />}
             <div className="min-w-0 flex-1">
               <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight break-words">
                 {room.name}
