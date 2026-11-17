@@ -2,7 +2,9 @@
 // (painel de Administração); cada um recebe um código e um link de registo. As empresas que entram com o código
 // ficam ligadas ao afiliado, que ganha uma percentagem do que elas pagam durante um período a contar do 1.º pagamento.
 
-export const APP_URL = "https://stock.majorgroup.app";
+import { BRAND } from "@/lib/brand";
+
+export const APP_URL = BRAND.appUrl;
 export const DEFAULT_COMMISSION_PCT = 40;
 export const DEFAULT_COMMISSION_MONTHS = 12;
 

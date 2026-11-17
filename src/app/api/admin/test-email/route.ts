@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+import { BRAND } from '@/lib/brand';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
@@ -11,7 +12,7 @@ import { manualPaymentEmail } from '@/lib/manual-pay-core';
 import { whatsappLink } from '@/lib/support';
 import { formatCurrency } from '@/lib/utils';
 
-const APP_URL = 'https://stock.majorgroup.app';
+const APP_URL = BRAND.appUrl;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Super-administrador: quem receberia emails de acompanhamento hoje (nada é enviado). */
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
         } else {
             const f = FOLLOWUP_CATALOG.find((x) => x.type === t)!;
             mail = followupEmail({ type: t as FollowupType, kind: f.kind, key: `teste-${t}` }, {
-                company, name, appUrl: APP_URL, whatsappUrl: whatsappLink('Olá, preciso de ajuda com o MajorStockX.'),
+                company, name, appUrl: APP_URL, whatsappUrl: whatsappLink(`Olá, preciso de ajuda com o ${BRAND.name}.`),
                 // o link funciona de verdade para a empresa de quem testa (volta a ligar em Ajustes → Empresa)
                 unsubscribeUrl: companyId ? `${APP_URL}/api/email/unsubscribe?c=${encodeURIComponent(companyId)}&t=${unsubscribeToken(companyId)}` : null,
                 trialEndsAt: new Date(Date.now() + 3 * 86_400_000).toISOString(),
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
             });
         }
         try {
-            const r: any = await resend.emails.send({ from: 'MajorStockX <assistant@majorgroup.app>', to: [to], subject: `[TESTE] ${mail.subject}`, html: mail.html });
+            const r: any = await resend.emails.send({ from: `${BRAND.name} <assistant@majorgroup.app>`, to: [to], subject: `[TESTE] ${mail.subject}`, html: mail.html });
             if (r?.error) throw new Error(r.error.message || String(r.error));
             sent.push(t);
         } catch (e: any) {

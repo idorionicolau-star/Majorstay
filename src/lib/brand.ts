@@ -11,6 +11,8 @@ export const BRAND = {
   currency: 'MT',
   currencySuffix: 'MTn',
   domain: 'majorstay.app',
+  /** Endereço da app em produção (links dos emails) */
+  appUrl: 'https://stay.majorgroup.app',
   support: {
     whatsappDisplay: '84 233 3717',
     whatsappRaw: '258842333717',

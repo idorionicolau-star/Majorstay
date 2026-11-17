@@ -1,6 +1,7 @@
 
 export const dynamic = 'force-dynamic';
 
+import { BRAND } from '@/lib/brand';
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { formatCurrency } from '@/lib/utils';
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   }
 
   // 1.6 Só para endereços da empresa (avisos, equipa, quem está a enviar) ou, num recibo, para um cliente dela.
-  // Antes qualquer conta podia enviar, em nome da MajorStockX, para qualquer endereço.
+  // Antes qualquer conta podia enviar, em nome da marca, para qualquer endereço.
   const recipients = parseRecipients(to);
   if (recipients.length === 0) {
     return NextResponse.json({ error: 'Nenhum destinatário válido fornecido.' }, { status: 400 });
@@ -67,14 +68,14 @@ export async function POST(req: Request) {
 
   // 1.8 Tudo o que vem do navegador é texto (nunca HTML); o logótipo só por https
   const body = escapeAll(raw);
-  const subject = cleanSubject(raw.subject, 'MajorStockX');
+  const subject = cleanSubject(raw.subject, BRAND.name);
   const logoUrl = escapeHtml(safeImageUrl(raw.logoUrl));
   const { companyName } = body;
 
   try {
     let htmlContent = '';
 
-    const displayName = companyName || 'MajorStockX';
+    const displayName = companyName || BRAND.name;
     const logoHtml = logoUrl
       ? `<img src="${logoUrl}" alt="${displayName}" style="max-height: 48px; max-width: 180px; object-fit: contain; margin-bottom: 8px;" /><br/>`
       : '';
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
       `;
     const footerHtml = `
         <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">
-          &copy; ${new Date().getFullYear()} MajorStockX
+          &copy; ${new Date().getFullYear()} ${BRAND.name}
         </div>
     `;
 
@@ -101,14 +102,14 @@ export async function POST(req: Request) {
                 ⚠️ Alerta de Stock Crítico
               </h2>
               <p>Olá,</p>
-              <p>O sistema registou uma atualização importante no seu inventário:</p>
+              <p>O sistema registou uma atualização importante no seu stock:</p>
               <div style="background-color: ${accentColor}; border: 1px solid ${color}; padding: 16px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 4px 0; font-size: 16px;"><strong>Produto:</strong> ${productName}</p>
                 <p style="margin: 4px 0; font-size: 16px;"><strong>Localização:</strong> ${location}</p>
                 <p style="margin: 4px 0; font-size: 16px;"><strong>Quantidade Atual:</strong> <span style="font-size: 20px; font-weight: bold; color: ${color};">${quantity}</span></p>
                 <p style="margin: 4px 0; font-size: 16px;"><strong>Limite Crítico:</strong> ${threshold}</p>
               </div>
-              <p style="font-size: 14px; color: #64748b;">Este é um e-mail automático enviado pelo seu Sistema de Gestão de Inventário, MajorStockX.</p>
+              <p style="font-size: 14px; color: #64748b;">Este é um e-mail automático enviado pelo seu sistema ${BRAND.name}.</p>
             </div>
             ${footerHtml}
         `;
@@ -142,7 +143,7 @@ export async function POST(req: Request) {
                 <p style="margin: 4px 0; font-size: 16px;"><strong>Localização:</strong> ${location}</p>
                 <p style="margin: 4px 0; font-size: 16px;"><strong>Vendedor:</strong> ${soldBy}</p>
               </div>
-              <p style="font-size: 14px; color: #64748b;">Este é um e-mail automático enviado pelo seu Sistema de Gestão de Inventário, MajorStockX.</p>
+              <p style="font-size: 14px; color: #64748b;">Este é um e-mail automático enviado pelo seu sistema ${BRAND.name}.</p>
             </div>
             ${footerHtml}
         `;
@@ -154,15 +155,15 @@ export async function POST(req: Request) {
             ${headerHtml}
             <div style="padding: 24px;">
               <h2 style="color: ${color}; font-size: 22px; margin-top: 0;">
-                🎉 Bem-vindo ao MajorStockX!
+                🎉 Bem-vindo ao ${BRAND.name}!
               </h2>
               <p>Olá,</p>
               <p>A sua conta para a empresa <strong>${companyName}</strong> foi criada com sucesso. Estamos entusiasmados por tê-lo a bordo.</p>
               <div style="background-color: ${accentColor}; border: 1px solid ${color}; padding: 16px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 4px 0; font-size: 16px;">Pode agora aceder ao seu dashboard para começar a gerir o seu inventário, vendas e produção.</p>
+                <p style="margin: 4px 0; font-size: 16px;">Pode agora aceder ao seu dashboard para começar a gerir os seus quartos, estadias e bar.</p>
                 <a href="${req.headers.get('origin')}/dashboard" style="display: inline-block; background-color: ${color}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px; font-weight: bold;">Aceder ao Dashboard</a>
               </div>
-              <p style="font-size: 14px; color: #64748b;">Este é um e-mail automático enviado pelo seu Sistema de Gestão de Inventário, MajorStockX.</p>
+              <p style="font-size: 14px; color: #64748b;">Este é um e-mail automático enviado pelo seu sistema ${BRAND.name}.</p>
             </div>
             ${footerHtml}
         `;

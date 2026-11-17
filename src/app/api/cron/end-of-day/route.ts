@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+import { BRAND } from '@/lib/brand';
 import { NextResponse } from 'next/server';
 import { isCronRequest } from '@/lib/cron-auth';
 import { initializeAdmin } from '@/lib/firebase-admin';
@@ -10,7 +11,7 @@ import { isCountableSale, saleIncome } from '@/lib/sale-filters';
 import { criticalProducts, escapeHtml, reportDayForSlot, isMorningSlot, reportTime, closestReportSlot, saleOnDay, topProducts } from '@/lib/daily-report';
 import { runFollowups } from '@/lib/followups-run';
 
-const APP_URL = 'https://stock.majorgroup.app';
+const APP_URL = BRAND.appUrl;
 const CRITICAL_SHOWN = 10;
 
 export async function GET(req: Request) {
@@ -77,7 +78,7 @@ export async function GET(req: Request) {
                     const criticalItemsCount = critical.length;
 
                     // 3. Prepare HTML
-                    const displayName = escapeHtml(companyData.name || 'MajorStockX');
+                    const displayName = escapeHtml(companyData.name || BRAND.name);
                     const logoUrl = companyData.logoUrl ? escapeHtml(companyData.logoUrl) : '';
                     const qty = (n: number, unit?: string) => `${n.toLocaleString('pt-PT')}${unit ? ` ${escapeHtml(unit)}` : ''}`;
                     const cell = 'padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;';
@@ -113,7 +114,7 @@ export async function GET(req: Request) {
              `;
                     const footerHtml = `
                <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #94a3b8;">
-                 &copy; ${now.getFullYear()} MajorStockX
+                 &copy; ${now.getFullYear()} ${BRAND.name}
                </div>
            `;
 
@@ -139,7 +140,7 @@ export async function GET(req: Request) {
                ${criticalHtml}
 
                <div style="text-align: center; margin: 28px 0 8px;">
-                 <a href="${APP_URL}/dashboard" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 24px; border-radius: 8px;">Abrir MajorStockX</a>
+                 <a href="${APP_URL}/dashboard" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-weight: bold; padding: 12px 24px; border-radius: 8px;">Abrir ${BRAND.name}</a>
                </div>
              </div>
              ${footerHtml}
