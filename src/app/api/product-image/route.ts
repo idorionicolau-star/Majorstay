@@ -3,9 +3,10 @@ export const dynamic = 'force-dynamic';
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { verifyIdToken } from '@/lib/firebase-admin';
+import { putR2, r2Config } from '@/lib/r2-storage';
 
 /**
- * Recebe a foto de um produto (já comprimida no navegador) e grava-a no Vercel Blob público.
+ * Recebe a foto (já comprimida no navegador) e grava-a no Cloudflare R2 (se as variáveis R2_* existirem) ou no Vercel Blob público.
  * Corre no servidor porque o store do Vercel liga por OIDC e não cria BLOB_READ_WRITE_TOKEN
  * (o envio directo do navegador precisa desse token).
  *
@@ -48,6 +49,18 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const base = (file.name || 'foto').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 40) || 'foto';
     const pathname = `products/${companyId}/${base}.${extension}`;
+
+    const r2 = r2Config();
+    if (r2) {
+        try {
+            const key = `products/${companyId}/${base}-${crypto.randomUUID().slice(0, 8)}.${extension}`;
+            const url = await putR2(key, Buffer.from(await file.arrayBuffer()), file.type, r2);
+            return NextResponse.json({ url });
+        } catch (e) {
+            console.error('Erro em /api/product-image (R2):', e instanceof Error ? e.message : e);
+            return NextResponse.json({ error: 'Não foi possível guardar a foto.' }, { status: 500 });
+        }
+    }
 
     const token = process.env.BLOB_READ_WRITE_TOKEN;
     const storeId = process.env.BLOBS_STORE_ID;
