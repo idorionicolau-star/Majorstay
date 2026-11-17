@@ -76,6 +76,8 @@ export function ShiftBar() {
 
   if (isGuest || !companyId || !loaded) return null;
 
+  // ninguém tem turno aberto e hoje ainda não houve: é a hora de abrir
+  const canOpen = !current && !closedToday && !otherOpen;
   const counted = Number(amount);
   const live = current?.live;
   const diff = live && amount !== '' && Number.isFinite(counted) ? counted - live.expectedCash : null;
@@ -110,7 +112,7 @@ export function ShiftBar() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#191E25] px-3.5 py-2.5">
+      <div className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-3.5 py-2.5 ${canOpen ? 'border-amber-400 bg-amber-50 dark:border-amber-500/60 dark:bg-amber-500/10' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#191E25]'}`}>
         <div className="flex items-center gap-2 min-w-0 text-xs">
           <Wallet className="h-4 w-4 text-[#007bb9] shrink-0" />
           {current ? (
@@ -130,8 +132,8 @@ export function ShiftBar() {
         ) : !closedToday && otherOpen ? (
           <span className="text-[11px] text-slate-500">Abre depois de ele fechar</span>
         ) : !closedToday ? (
-          <Button size="sm" className="h-9 rounded-full gap-1.5 text-xs bg-[#007bb9] hover:bg-[#006194] text-white" onClick={() => { setAmount(''); setDialog('open'); }}>
-            <LogIn className="h-3.5 w-3.5" /> Abrir turno
+          <Button className="h-12 w-full sm:w-auto rounded-full gap-2 px-6 text-base font-bold bg-[#007bb9] hover:bg-[#006194] text-white shadow-md" onClick={() => { setAmount(''); setDialog('open'); }}>
+            <LogIn className="h-5 w-5" /> Abrir turno
           </Button>
         ) : null}
       </div>
