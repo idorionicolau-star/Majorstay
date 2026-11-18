@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RoomPhotos } from './room-photos';
+import { RoomPhotos, NeonBed } from './room-photos';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -266,14 +266,25 @@ export function RoomCard({
       'relative flex flex-col justify-between min-w-0 w-full overflow-hidden rounded-3xl border bg-white dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft-hover',
       statusTheme.cardBorder
     )}>
-      {/* Faixa superior nobre com a cor do estado */}
-      <div className={cn('h-1.5 w-full', statusTheme.topAccent)} />
+      {/* Fundo do cartão: a 1.ª foto do quarto, esbatida, ou uma cama em néon se ainda não tem fotos */}
+      <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden" aria-hidden="true">
+        {room.images && room.images.length > 0 ? (
+          <>
+            <img src={room.images[0]} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover opacity-45 dark:opacity-35" />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/55 via-white/65 to-white/85 dark:from-[#191E25]/60 dark:via-[#191E25]/70 dark:to-[#191E25]/90" />
+          </>
+        ) : (
+          <NeonBed />
+        )}
+      </div>
 
-      <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
+      {/* Faixa superior nobre com a cor do estado */}
+      <div className={cn('relative z-10 h-1.5 w-full', statusTheme.topAccent)} />
+
+      <CardContent className="relative z-10 p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
         {/* Cabeçalho do Cartão: Quarto, Tipo e Badge */}
         <div>
           <div className="flex items-start justify-between gap-2 min-w-0">
-            {room.images && room.images.length > 0 && <RoomPhotos name={room.name} images={room.images} />}
             <div className="min-w-0 flex-1">
               <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-tight break-words">
                 {room.name}
@@ -292,6 +303,9 @@ export function RoomCard({
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-semibold">
                 {formatCurrency(room.ratePerHour)}/hora (mín. {room.minimumHours || 1}h)
               </p>
+              {room.images && room.images.length > 0 && (
+                <div className="mt-2.5"><RoomPhotos name={room.name} images={room.images} /></div>
+              )}
             </div>
 
             {/* Badge de Estado e Menu */}

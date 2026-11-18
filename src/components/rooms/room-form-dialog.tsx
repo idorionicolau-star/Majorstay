@@ -70,7 +70,7 @@ export function RoomFormDialog({ open, onOpenChange, roomToEdit }: RoomFormDialo
       setDailyPrice(roomToEdit.dailyPrice ? String(roomToEdit.dailyPrice) : '');
       setCleaningDurationMinutes(roomToEdit.cleaningDurationMinutes || 15);
       setNotes(roomToEdit.notes || '');
-      setImages(Array.isArray(roomToEdit.images) ? roomToEdit.images.slice(0, 3) : []);
+      setImages(Array.isArray(roomToEdit.images) ? roomToEdit.images.slice(0, 5) : []);
     } else {
       setName('');
       setType('standard');

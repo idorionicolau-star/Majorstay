@@ -7,9 +7,9 @@ import { useInventory } from '@/context/inventory-context';
 import { toast } from '@/hooks/use-toast';
 import { uploadProductImage } from '@/lib/upload-product-image';
 
-export const MAX_ROOM_IMAGES = 3;
+export const MAX_ROOM_IMAGES = 5;
 
-/** Até 3 fotos do quarto. Comprime e envia como as fotos de produtos; o formulário guarda só os endereços. */
+/** Até 5 fotos do quarto. Comprime e envia como as fotos de produtos; o formulário guarda só os endereços. */
 export function RoomImagesField({ value, onChange }: { value: string[]; onChange: (urls: string[]) => void }) {
   const { companyId, isGuest } = useInventory();
   const [busy, setBusy] = useState(false);
@@ -34,7 +34,7 @@ export function RoomImagesField({ value, onChange }: { value: string[]; onChange
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Fotos do quarto (até {MAX_ROOM_IMAGES})</p>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {value.map((url, i) => (
           <div key={url} className="relative aspect-square">
             <img src={url} alt={`Foto ${i + 1} do quarto`} className="h-full w-full rounded-xl border bg-slate-100 object-cover" />
