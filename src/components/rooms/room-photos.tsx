@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Images } from 'lucide-react';
+import { BED_SVG } from './bed-art';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 /** Botão "N fotos"; ao tocar abre uma galeria grande (passa-se com o dedo) para mostrar o quarto ao cliente. */
@@ -37,17 +38,9 @@ export function RoomPhotos({ name, images }: { name: string; images?: string[] }
   );
 }
 
-/** Cama em néon, apagada, para quartos ainda sem fotos (fundo do cartão). */
+/** Cama desenhada, apagada, no canto de baixo à direita, para quartos ainda sem fotos (fundo do cartão). */
 export function NeonBed() {
   return (
-    <svg viewBox="0 0 200 140" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
-      className="w-[62%] max-w-[260px] text-sky-400 opacity-40 dark:opacity-35"
-      style={{ filter: 'drop-shadow(0 0 6px currentColor) drop-shadow(0 0 16px currentColor)' }}>
-      <path d="M18 112V34" />
-      <path d="M18 80h164v32" />
-      <path d="M182 112V80" />
-      <path d="M18 80V62a10 10 0 0 1 10-10h40a10 10 0 0 1 10 10v18" />
-      <path d="M96 80V66a10 10 0 0 1 10-10h58a18 18 0 0 1 18 18v6" />
-    </svg>
+    <div className="absolute -bottom-1 -right-2 w-[62%] max-w-[280px] opacity-60 dark:opacity-50" dangerouslySetInnerHTML={{ __html: BED_SVG }} />
   );
 }
