@@ -266,8 +266,8 @@ export function RoomCard({
       'relative flex flex-col justify-between min-w-0 w-full overflow-hidden rounded-3xl border bg-white dark:bg-[#191E25] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft-hover',
       statusTheme.cardBorder
     )}>
-      {/* Fundo do cartão: a 1.ª foto do quarto, esbatida, ou uma cama em néon se ainda não tem fotos */}
-      <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden" aria-hidden="true">
+      {/* Fundo do cartão: a 1.ª foto do quarto, esbatida, ou uma cama desenhada (canto inferior direito) se ainda não tem fotos */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
         {room.images && room.images.length > 0 ? (
           <>
             <img src={room.images[0]} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover opacity-45 dark:opacity-35" />
