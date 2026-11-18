@@ -593,7 +593,7 @@ export type Room = {
   status: RoomStatus;
   currentStayId?: string; // ID da estadia ativa (quando occupied ou overtime)
   notes?: string;
-  images?: string[]; // até 3 fotos do quarto (endereços)
+  images?: string[]; // até 5 fotos do quarto (endereços)
   createdAt: string | any;
   updatedAt?: string | any;
 };
