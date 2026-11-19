@@ -183,6 +183,7 @@ export async function POST(req: Request) {
         clientName: stayData.clientName || 'Hóspede Particular',
         paymentMethod,
         notes: staySummaryNote,
+        stayId,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       };
 

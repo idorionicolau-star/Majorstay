@@ -28,6 +28,7 @@ vi.mock('@/lib/firebase-admin', () => {
 
   firestoreInstance.FieldValue = {
     serverTimestamp: () => 'SERVER_TIMESTAMP',
+    arrayUnion: (...values: unknown[]) => ({ __arrayUnion: values }),
   };
 
   return {
@@ -466,6 +467,11 @@ describe('PARTE 1 — Consumos do Bar no Servidor', () => {
       const updatedStay = fakeDatabase[`companies/${companyId}/stays/${stayId}`];
       expect(updatedStay.consumptions).toHaveLength(0);
       expect(updatedStay.totalAmountDue).toBe(300);
+      // o consumo anulado fica guardado na estadia, com o motivo e quem anulou
+      const removed = updatedStay.removedConsumptions?.__arrayUnion?.[0];
+      expect(removed?.reason).toBeTruthy();
+      expect(removed?.removedByName).toBeTruthy();
+      expect(removed?.quantity).toBe(3);
 
       // Stock do produto devolvido: 7 + 3 = 10
       const updatedProd = fakeDatabase[`companies/${companyId}/products/${productId}`];

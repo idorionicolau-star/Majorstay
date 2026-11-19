@@ -4,6 +4,8 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { Resend } from 'resend';
 import { formatCurrency } from '@/lib/utils';
 import { isCountableSale, saleIncome } from '@/lib/sale-filters';
+import { checkInsWithoutPlate, openStays, stayRow, staysClosedBetween, totalsByPayment, type StayLike } from '@/lib/stay-report';
+import { noPlateHtml, parkedHtml, paymentsHtml, staysHtml } from '@/lib/stay-report-email';
 import { criticalProducts, escapeHtml, reportDayForSlot, isMorningSlot, reportTime, closestReportSlot, saleOnDay, topProducts } from '@/lib/daily-report';
 
 const APP_URL = BRAND.appUrl;
@@ -96,7 +98,28 @@ export async function runEndOfDay(slot: string, onlyCompanyId?: string): Promise
             const critical = criticalProducts(productsSnapshot.docs.map((d) => d.data() as any), companyData.locations || []);
             const criticalItemsCount = critical.length;
 
-            // 3. Prepare HTML
+            // 3. Estadias (guest houses): fechadas no dia, viaturas no parque agora e check-ins sem matrícula.
+            //    Se falhar, o relatório sai na mesma, sem estas secções.
+            let staysSection = '';
+            try {
+                const start = new Date(startISO), end = new Date(endISO);
+                const col = db.collection(`companies/${companyId}/stays`);
+                const [outSnap, openSnap, inSnap] = await Promise.all([
+                    col.where('checkOutAt', '>=', start).where('checkOutAt', '<=', end).get(),
+                    col.where('status', '==', 'open').get(),
+                    col.where('checkInAt', '>=', start).where('checkInAt', '<=', end).get(),
+                ]);
+                const asStay = (d: FirebaseFirestore.QueryDocumentSnapshot) => ({ id: d.id, ...d.data() } as StayLike);
+                const closedRows = staysClosedBetween(outSnap.docs.map(asStay), start, end).reverse().map(stayRow);
+                const parkedRows = openStays(openSnap.docs.map(asStay)).map(stayRow);
+                const noPlate = checkInsWithoutPlate(inSnap.docs.map(asStay), start, end).map((st) => String(st.roomName || 'Quarto'));
+                staysSection = noPlateHtml(noPlate) + staysHtml(closedRows) + parkedHtml(parkedRows);
+            } catch (e) {
+                console.error('[end-of-day] estadias', companyId, e instanceof Error ? e.message : e);
+            }
+            const payments = totalsByPayment(countable.map((sl) => ({ paymentMethod: sl.paymentMethod, amount: saleIncome(sl) })));
+
+            // 4. Prepare HTML
             const displayName = escapeHtml(companyData.name || BRAND.name);
             const logoUrl = companyData.logoUrl ? escapeHtml(companyData.logoUrl) : '';
             const qty = (n: number, unit?: string) => `${n.toLocaleString('pt-PT')}${unit ? ` ${escapeHtml(unit)}` : ''}`;
@@ -155,6 +178,8 @@ export async function runEndOfDay(slot: string, onlyCompanyId?: string): Promise
          <p style="margin: 4px 0; font-size: 16px;"><strong>Produtos em Stock Crítico:</strong> <span style="font-weight: bold; color: #b91c1c;">${criticalItemsCount}</span></p>
        </div>
  
+       ${staysSection}
+       ${paymentsHtml(payments)}
        ${topHtml}
        ${criticalHtml}
 

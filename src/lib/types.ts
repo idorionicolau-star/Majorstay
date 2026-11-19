@@ -248,6 +248,8 @@ export type Sale = {
   offlinePending?: boolean;
   /** Número provisório que a venda teve antes de receber o oficial. */
   provisionalNumber?: string;
+  /** Venda do check-out: a estadia que lhe deu origem (vendas antigas: procurar pela estadia com saleId). */
+  stayId?: string;
 };
 
 export type CartItem = {
@@ -715,6 +717,8 @@ export type Stay = {
   closedByName?: string;
   status: StayStatus;
   saleId?: string; // ID da venda correspondente gerada no Caixa
+  /** Consumos anulados: o que era, quem anulou, quando e porquê */
+  removedConsumptions?: { productName?: string; quantity?: number; unitPrice?: number; reason?: string; removedAt?: string; removedByName?: string }[];
   notes?: string;
   createdAt: string | any;
 };
