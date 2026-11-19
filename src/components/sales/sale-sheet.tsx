@@ -14,6 +14,9 @@ import { formatSaleMoment } from "@/lib/sale-time";
 import { EditSaleDialog } from "./edit-sale-dialog";
 import { paidInFull, useSaleActions } from "./use-sale-actions";
 import { useSaleDocument } from "./use-sale-document";
+import { RoomsContext } from "@/context/rooms-context";
+import { StayDetails } from "@/components/rooms/stay-details";
+import { stayForSale } from "@/lib/stay-report";
 
 let openId: string | null = null;
 const listeners = new Set<() => void>();
@@ -51,6 +54,9 @@ function SaleSheet({ sale }: { sale: Sale }) {
     const { updateSale, removeSale, canEditSales } = useSaleActions();
     const { customer, sendReceipt, download, print } = useSaleDocument(sale);
     const [editing, setEditing] = useState(false);
+    // venda de um check-out: mostra a estadia toda (viatura, horas, consumos, quem atendeu)
+    const roomsContext = useContext(RoomsContext);
+    const stay = stayForSale(sale, roomsContext?.stays || []);
 
     const isManager = inventoryContext?.user?.role === "Admin" || inventoryContext?.user?.role === "Dono";
     const paid = sale.amountPaid ?? sale.totalValue;
@@ -125,7 +131,12 @@ function SaleSheet({ sale }: { sale: Sale }) {
                     </div>
                 )}
 
-                {sale.notes && <p className="rounded-md border bg-background p-3 text-sm">{sale.notes}</p>}
+                {stay ? (
+                    <div className="rounded-xl border p-3">
+                        <p className="mb-2 font-semibold">Detalhes da estadia</p>
+                        <StayDetails stay={stay} />
+                    </div>
+                ) : sale.notes && <p className="rounded-md border bg-background p-3 text-sm">{sale.notes}</p>}
 
                 <div className="grid grid-cols-2 gap-2" data-tour="sale-sheet-actions">
                     {canEditSales && (

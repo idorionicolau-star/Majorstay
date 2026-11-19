@@ -8,6 +8,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { Sale } from "@/lib/types";
 import Link from "next/link";
 import { useState } from "react";
+import { StayInlineSummary } from "@/components/rooms/stay-inline-summary";
 
 interface SaleCardProps {
     sale: Sale;
@@ -51,6 +52,7 @@ export function SaleCard({ sale, onUpdateSale, onConfirmPickup, onDeleteSale, vi
                 <CardDescription className={cn("text-[10px]", isCondensed && "hidden")}>
                     {sale.documentType} #{sale.guideNumber}{sale.offlinePending ? ' · provisório' : ''}
                 </CardDescription>
+                <StayInlineSummary sale={sale} className="mt-1 space-y-0.5 text-[11px]" />
             </CardHeader>
             <CardContent className="flex-grow space-y-2 p-1 sm:p-2">
                 <div className={cn(

@@ -15,6 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenu
 import { Input } from "@/components/ui/input";
 import Link from 'next/link';
 import { InventoryContext } from "@/context/inventory-context";
+import { RoomsContext } from "@/context/rooms-context";
+import { stayMatchesVehicle } from "@/lib/stay-report";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSaleActions } from "@/components/sales/use-sale-actions";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -123,7 +125,22 @@ export default function SalesPage() {
     return result;
   }, [contextSales, statusFilter, locationFilter, dateFilter, isMultiLocation, locations]);
 
-  const filteredSales = useFuse(preFilteredSales, nameFilter, { keys: ['productName', 'clientName', 'guideNumber'] });
+  const fuseSales = useFuse(preFilteredSales, nameFilter, { keys: ['productName', 'clientName', 'guideNumber'] });
+
+  // Pesquisa por viatura: a matrícula (com ou sem espaços e traços), marca, modelo ou cor da estadia do check-out
+  const roomsContext = useContext(RoomsContext);
+  const allStays = roomsContext?.stays;
+  const filteredSales = useMemo(() => {
+    const q = nameFilter.trim();
+    if (!q || !allStays?.length) return fuseSales;
+    const matched = allStays.filter((st) => stayMatchesVehicle(st, q));
+    if (!matched.length) return fuseSales;
+    const saleIds = new Set(matched.map((st) => st.saleId).filter(Boolean));
+    const stayIds = new Set(matched.map((st) => st.id));
+    const byVehicle = preFilteredSales.filter((sl) => saleIds.has(sl.id) || (!!sl.stayId && stayIds.has(sl.stayId)));
+    const seen = new Set(byVehicle.map((sl) => sl.id));
+    return [...byVehicle, ...fuseSales.filter((sl) => !seen.has(sl.id))];
+  }, [nameFilter, allStays, fuseSales, preFilteredSales]);
 
   // Use filteredSales for display. No more manual pagination.
   const sales = filteredSales;
@@ -169,7 +186,7 @@ export default function SalesPage() {
             <div className="flex flex-col sm:flex-row items-center gap-2">
               <Input
                 data-tour="sales-search"
-                placeholder="Filtrar por produto (nome)..."
+                placeholder="Procurar produto, cliente ou matrícula..."
                 value={nameFilter}
                 onChange={(event) => setNameFilter(event.target.value)}
                 className="w-full sm:max-w-xs shadow-sm h-12 text-sm bg-background/50"

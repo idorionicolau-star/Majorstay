@@ -44,6 +44,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { openSale } from '@/components/sales/sale-sheet';
 import { ReportsTabs } from '@/components/layout/section-tabs';
+import { StaysReport } from '@/components/reports/stays-report';
 
 type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
@@ -104,6 +105,17 @@ export default function ReportsPage() {
   const isPrivilegedUser = user?.role === 'Admin' || user?.role === 'Dono';
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+
+  // o mesmo período da página, para a secção das estadias
+  const periodRange = useMemo(() => {
+    if (!selectedDate) return null;
+    switch (period) {
+      case 'daily': return { start: startOfDay(selectedDate), end: endOfDay(selectedDate) };
+      case 'weekly': return { start: startOfWeek(selectedDate, { locale: pt }), end: endOfWeek(selectedDate, { locale: pt }) };
+      case 'monthly': return { start: startOfMonth(selectedDate), end: endOfMonth(selectedDate) };
+      case 'yearly': return { start: startOfYear(selectedDate), end: endOfYear(selectedDate) };
+    }
+  }, [selectedDate, period]);
 
   const salesForPeriod = useMemo(() => {
     if (!selectedDate || !sales) return [];
@@ -389,6 +401,8 @@ export default function ReportsPage() {
           )}
           <StatCard icon={Trophy} title="Mais Vendido" value={reportSummary.bestSellingProduct.name} subValue={`${reportSummary.bestSellingProduct.quantity} un.`} />
         </div>
+
+        {periodRange && <StaysReport start={periodRange.start} end={periodRange.end} showMoney={isPrivilegedUser} />}
 
         <Card data-tour="rep-details">
           <CardHeader className="text-center">

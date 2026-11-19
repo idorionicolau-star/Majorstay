@@ -28,6 +28,7 @@ vi.mock('@/lib/firebase-admin', () => {
 
   firestoreInstance.FieldValue = {
     serverTimestamp: () => 'SERVER_TIMESTAMP',
+    arrayUnion: (...values: unknown[]) => ({ __arrayUnion: values }),
   };
 
   return {

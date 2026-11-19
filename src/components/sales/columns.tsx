@@ -10,6 +10,7 @@ import { Edit, Printer, FileSearch, CheckCircle, PackageCheck, Download, DollarS
 import { formatCurrency } from "@/lib/utils"
 import { EditSaleDialog } from "./edit-sale-dialog"
 import { openSale } from "./sale-sheet"
+import { StayInlineSummary } from "@/components/rooms/stay-inline-summary"
 import { paidInFull } from "./use-sale-actions"
 import { useSaleDocument } from "./use-sale-document"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
@@ -205,6 +206,7 @@ export const columns = (options: ColumnsOptions): ColumnDef<Sale>[] => {
                             </span>
                         )}
                         <span className="font-medium">{name}</span>
+                        {isRoomStay && <StayInlineSummary sale={row.original} className="basis-full text-xs" />}
                     </div>
                 );
             }

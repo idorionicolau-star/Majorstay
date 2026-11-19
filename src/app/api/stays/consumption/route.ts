@@ -118,6 +118,8 @@ export async function POST(req: Request) {
       const currentConsumptions: StayConsumptionItem[] = stayData.consumptions || [];
       const underStockNotes: string[] = [];
       let updatedConsumptions: StayConsumptionItem[] = [];
+      // consumo anulado: fica guardado na estadia (o quê, quem, quando, porquê) para o detalhe no Histórico
+      let removedEntry: Record<string, unknown> | null = null;
 
       if (action === 'add') {
         let addItems: AddItemPayload[] = Array.isArray(items) ? (items as AddItemPayload[]) : [];
@@ -498,6 +500,14 @@ export async function POST(req: Request) {
         }
 
         updatedConsumptions = currentConsumptions.filter((c) => c.id !== consumptionId);
+        removedEntry = {
+          productName: String(targetItem.productName || 'Item'),
+          quantity: Number(targetItem.quantity) || 0,
+          unitPrice: Number(targetItem.unitPrice) || 0,
+          reason: cleanReason,
+          removedAt: new Date().toISOString(),
+          removedByName: employeeName,
+        };
       }
 
       // Recalcular totais no servidor
@@ -508,13 +518,14 @@ export async function POST(req: Request) {
       transaction.update(stayRef, {
         consumptions: updatedConsumptions,
         totalAmountDue: newTotalDue,
+        ...(removedEntry ? { removedConsumptions: admin.firestore.FieldValue.arrayUnion(removedEntry) } : {}),
       });
 
       // Registar na auditoria de hotelaria
       const auditRef = db.collection(`companies/${companyId}/hospitalityAudit`).doc();
       const auditReason = action === 'add'
         ? `${orderRef ? `Confirmação do pedido do hóspede ${orderRef.id}: ` : 'Lançamento de '}${orderRef ? (orderData.items?.length || 1) : (items?.length || 1)} consumo(s) no quarto ${stayData.roomName || ''}${underStockNotes.length ? ` (${underStockNotes.join('; ')})` : ''}`
-        : `Remoção de consumo: ${(reason || '').trim()}`;
+        : `Remoção de consumo${removedEntry ? ` (${removedEntry.quantity}x ${removedEntry.productName})` : ''}: ${(reason || '').trim()}`;
 
       transaction.set(auditRef, {
         action: action === 'add' ? 'add_consumption' : 'remove_consumption',
