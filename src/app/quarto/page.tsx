@@ -28,6 +28,7 @@ import {
   Hourglass,
   XCircle,
   Utensils,
+  ChevronDown,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -129,6 +130,7 @@ function QuartoPortalContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedWifi, setCopiedWifi] = useState(false);
+  const [showBar, setShowBar] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   // Pedido do bar: confirmação antes de enviar + estado do pedido enviado (pendente até a receção confirmar)
@@ -735,60 +737,6 @@ function QuartoPortalContent() {
           </Card>
         )}
 
-        {/* Card do Wi-Fi Seguro (Apenas visível com PIN Desbloqueado) */}
-        {isUnlocked && wifi?.ssid && wifi?.password && (
-          <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#2A2118] text-[#C58A2C] flex items-center justify-center shrink-0">
-                <Wifi className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Wi-Fi do Quarto</span>
-                <p className="text-xs font-bold truncate text-stone-800 dark:text-stone-200">{wifi.ssid}</p>
-                <p className="text-[11px] font-mono text-stone-500 truncate">
-                  Senha: <strong className="text-stone-700 dark:text-stone-300">{wifi.password}</strong>
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={copyWifiPassword}
-              className="h-9 w-9 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] shrink-0 text-stone-600 dark:text-stone-300"
-              title="Copiar senha"
-            >
-              {copiedWifi ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-            </Button>
-          </Card>
-        )}
-
-        {/* Serviço de Apoio ao Hóspede via WhatsApp */}
-        <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Apoio ao Hóspede</span>
-              <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Serviço de Quarto</p>
-              <p className="text-[11px] text-stone-500">Toalhas, comodidades ou dúvidas</p>
-            </div>
-          </div>
-          <Button
-            asChild
-            variant="outline"
-            className="h-9 text-xs rounded-xl border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold shrink-0"
-          >
-            <a
-              href={`https://wa.me/${hotel.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá receção, estou no ${room.name} e preciso de apoio:`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Falar no WhatsApp
-            </a>
-          </Button>
-        </Card>
-
         {/* Extrato da Estadia & Pedidos Efetuados (Visível com PIN desbloqueado) */}
         {isUnlocked && stay && (
           <div className="space-y-3 pt-1">
@@ -796,33 +744,47 @@ function QuartoPortalContent() {
               <div className="flex items-center gap-2">
                 <Receipt className="w-4 h-4 text-[#C58A2C]" />
                 <h3 className="font-extrabold text-sm text-[#251D18] dark:text-[#F5EFEB]">
-                  A Sua Conta & Pedidos
+                  A Sua Conta
                 </h3>
               </div>
-              <span className="text-[11px] font-bold text-stone-500 font-mono">
-                {pricing ? formatCurrency(pricing.estimatedTotalWithPending) : formatCurrency(stay.contractedHours * stay.ratePerHour)}
-              </span>
             </div>
 
             {/* Resumo da Conta e Total Geral Previsto */}
             <Card className="rounded-3xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 sm:p-5 space-y-3 shadow-xs">
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
-                  <span>Acomodação (horas contratadas e tempo em uso)</span>
+                  <span>Quarto</span>
                   <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">
                     {formatCurrency(pricing?.roomTotal ?? stay.contractedHours * stay.ratePerHour)}
                   </span>
                 </div>
 
                 {stay.consumptions && stay.consumptions.length > 0 && (
-                  <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      Consumos de Bar Confirmados
-                    </span>
-                    <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
-                      {formatCurrency(pricing?.consumptionsTotal ?? 0)}
-                    </span>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowBar((v) => !v)}
+                      aria-expanded={showBar}
+                      className="flex w-full items-center justify-between text-stone-600 dark:text-stone-300"
+                    >
+                      <span className="flex items-center gap-1">
+                        Bar ({stay.consumptions.length})
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showBar ? 'rotate-180' : ''}`} />
+                      </span>
+                      <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">
+                        {formatCurrency(pricing?.consumptionsTotal ?? 0)}
+                      </span>
+                    </button>
+                    {showBar && (
+                      <div className="mt-2 space-y-1 rounded-xl bg-stone-50 dark:bg-black/20 p-2.5">
+                        {stay.consumptions.map((c, idx) => (
+                          <div key={c.id || idx} className="flex items-center justify-between text-[11px] text-stone-600 dark:text-stone-300">
+                            <span>{c.quantity}× {c.productName}</span>
+                            <span className="font-mono">{formatCurrency(c.totalPrice)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -850,13 +812,11 @@ function QuartoPortalContent() {
               <div className="pt-3 border-t border-[#F2ECE1] dark:border-[#2C3440] flex items-center justify-between">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider block">
-                    Falta pagar no Check-out
+                    A pagar no check-out
                   </span>
-                  <span className="text-[11px] text-stone-500">
-                    {pricing && pricing.pendingOrdersTotal > 0
-                      ? '* Inclui pedidos pendentes em validação'
-                      : 'Valor atualizado sem surpresas na saída'}
-                  </span>
+                  {pricing && pricing.pendingOrdersTotal > 0 && (
+                    <span className="text-[11px] text-stone-500">* Inclui pedidos por confirmar</span>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-xl sm:text-2xl font-black text-[#C58A2C] dark:text-[#E88C4A] font-mono tracking-tight">
@@ -921,41 +881,9 @@ function QuartoPortalContent() {
                             {mins === null ? 'Em preparação' : mins > 0 ? `Pronto em cerca de ${mins} min` : 'A chegar já'}
                           </span>
                         </div>
-                        <div className="text-[11px] text-stone-600 dark:text-stone-300">
-                          {ord.items.map((it) => `${it.quantity}× ${it.productName}`).join(' · ')}
-                        </div>
                       </div>
                     );
                   })}
-              </div>
-            )}
-
-            {/* Consumos Confirmados na Conta */}
-            {stay.consumptions && stay.consumptions.length > 0 && (
-              <div className="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    Consumos Confirmados na Conta ({stay.consumptions.length})
-                  </span>
-                  <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-emerald-300 text-[10px] font-bold">
-                    Lançados na Fatura
-                  </Badge>
-                </div>
-                <div className="bg-white/80 dark:bg-black/20 p-2.5 rounded-xl border border-emerald-200/60 text-xs space-y-1.5">
-                  {stay.consumptions.map((c, idx) => (
-                    <div key={c.id || idx} className="flex items-center justify-between text-[11px] text-stone-700 dark:text-stone-300">
-                      <span>{c.quantity}× {c.productName}</span>
-                      <span className="font-bold text-stone-900 dark:text-stone-100 font-mono">
-                        {formatCurrency(c.totalPrice)}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="pt-1.5 border-t border-emerald-200/60 dark:border-emerald-800 flex items-center justify-between font-bold text-emerald-900 dark:text-emerald-200 text-xs">
-                    <span>Subtotal Consumos</span>
-                    <span className="font-mono">{formatCurrency(pricing?.consumptionsTotal ?? 0)}</span>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -977,6 +905,58 @@ function QuartoPortalContent() {
             )}
           </div>
         )}
+
+        {/* Card do Wi-Fi Seguro (Apenas visível com PIN Desbloqueado) */}
+        {isUnlocked && wifi?.ssid && wifi?.password && (
+          <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#FDF6E8] dark:bg-[#2A2118] text-[#C58A2C] flex items-center justify-center shrink-0">
+                <Wifi className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Wi-Fi</span>
+                <p className="text-xs truncate text-stone-800 dark:text-stone-200">
+                  <strong>{wifi.ssid}</strong> · <span className="font-mono">{wifi.password}</span>
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={copyWifiPassword}
+              className="h-9 w-9 rounded-xl border-[#E5DFD6] dark:border-[#2C3440] shrink-0 text-stone-600 dark:text-stone-300"
+              title="Copiar senha"
+            >
+              {copiedWifi ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+            </Button>
+          </Card>
+        )}
+
+        {/* Serviço de Apoio ao Hóspede via WhatsApp */}
+        <Card className="rounded-2xl border border-[#E5DFD6] dark:border-[#2C3440] bg-[#FFFDF9] dark:bg-[#191E25] p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Apoio</span>
+              <p className="text-xs text-stone-800 dark:text-stone-200">Toalhas, comodidades ou dúvidas</p>
+            </div>
+          </div>
+          <Button
+            asChild
+            variant="outline"
+            className="h-9 text-xs rounded-xl border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold shrink-0"
+          >
+            <a
+              href={`https://wa.me/${hotel.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá receção, estou no ${room.name} e preciso de apoio:`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
+          </Button>
+        </Card>
 
         {/* Menu do Restaurante & Bar (Pedidos Rápidos) */}
         {barProducts && barProducts.length > 0 && (
