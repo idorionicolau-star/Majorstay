@@ -52,6 +52,7 @@ export default function SubscriptionsAdminPage() {
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({});
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   // Checks access based on currently logged in user email
@@ -75,6 +76,12 @@ export default function SubscriptionsAdminPage() {
           list.push({ id: doc.id, ...doc.data() } as Company);
         });
         setCompanies(list);
+        if (token) {
+          fetch('/api/admin/owner-emails', { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((j) => { if (j?.emails) setOwnerEmails(j.emails); })
+            .catch(() => null);
+        }
       } catch (error: any) {
         console.error("Error loading companies list:", error);
         toast({
@@ -260,6 +267,7 @@ export default function SubscriptionsAdminPage() {
                     <CompanyRow
                       key={company.id}
                       company={company}
+                      ownerEmail={ownerEmails[company.id]}
                       standing={standing}
                       isUpdating={updatingId === company.id}
                       onSave={(status, trial, sub, tier) => handleUpdateCompany(company.id, status, trial, sub, tier)}
@@ -291,12 +299,14 @@ function CompanyRow({
   company,
   standing,
   isUpdating,
-  onSave
+  onSave,
+  ownerEmail
 }: {
   company: Company;
   standing: CompanyStanding;
   isUpdating: boolean;
   onSave: (status: Company['status'], trial: string, sub: string, tier: string) => void;
+  ownerEmail?: string;
 }) {
   const [status, setStatus] = useState<Company['status']>(company.status || 'trial');
   // as datas vêm em ISO completo; a caixa de data só aceita AAAA-MM-DD (antes ficava vazia)
@@ -321,6 +331,7 @@ function CompanyRow({
       <TableCell className="font-semibold">
         <div className="flex flex-col">
           <span>{company.name}</span>
+          {ownerEmail && <a href={`mailto:${ownerEmail}`} className="break-all text-xs font-normal text-sky-700 hover:underline dark:text-sky-400">{ownerEmail}</a>}
           <span className="text-[10px] text-muted-foreground font-mono">{company.id}</span>
         </div>
       </TableCell>
