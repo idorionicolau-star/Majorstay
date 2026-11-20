@@ -5,6 +5,7 @@ import { findAnyCode } from '@/lib/affiliates-server';
 import { couponAmount, couponAppliesToTier } from '@/lib/coupon-core';
 import { amountLooksRight, parseZumboError } from '@/lib/zumbopay-core';
 import { isTierId, resolvePayTier, tierAmount, type PayTier } from '@/lib/tiers';
+import { sendActivationEmail } from '@/lib/activation-email-server';
 
 const DEFAULT_BASE = 'https://zumbopay.com/api/public/v1';
 
@@ -60,7 +61,7 @@ export async function applyPaidPayment(reference: string, info: { providerId?: s
     const paymentRef = db.doc(`companies/${companyId}/payments/${found.reference}`);
     const companyRef = db.doc(`companies/${companyId}`);
 
-    return db.runTransaction(async (tx) => {
+    const result = await db.runTransaction(async (tx) => {
         const [pSnap, cSnap] = await Promise.all([tx.get(paymentRef), tx.get(companyRef)]);
         if (!pSnap.exists) return { ok: false, reason: 'missing-payment' as const };
         const p = pSnap.data()!;
@@ -98,6 +99,9 @@ export async function applyPaidPayment(reference: string, info: { providerId?: s
         }, { merge: true });
         return { ok: true, end: end.toISOString() };
     });
+    // confirmação de subscrição activada (uma só vez por empresa; nunca falha o pagamento)
+    if (result.ok && !(result as { already?: boolean }).already) await sendActivationEmail(companyId);
+    return result;
 }
 
 /**

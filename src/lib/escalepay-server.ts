@@ -2,6 +2,7 @@ import 'server-only';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { GRACE_DAYS } from '@/lib/plans';
 import { ESCALEPAY_SOURCE, extendFrom, isEmail, normEmail, planForMonths, saleIdFor, saleMonths } from '@/lib/escalepay-core';
+import { sendActivationEmail } from '@/lib/activation-email-server';
 
 // Vendas da EscalePay (ver lib/escalepay-core.ts). Coleção `escalepaySales` — só o servidor (Admin SDK) lhe acede.
 
@@ -37,9 +38,9 @@ export async function claimSales(companyId: string, email: string, now = new Dat
     const store = db();
     const companyRef = store.doc(`companies/${companyId}`);
     const pending = store.collection('escalepaySales').where('email', '==', e).where('claimedBy', '==', null);
-    return store.runTransaction(async (tx) => {
+    const result = await store.runTransaction(async (tx) => {
         const [qs, cs] = await Promise.all([tx.get(pending), tx.get(companyRef)]);
-        if (qs.empty || !cs.exists) return { applied: 0 };
+        if (qs.empty || !cs.exists) return { applied: 0 } as { applied: number; until?: string; companyName?: string };
         const c = cs.data() || {};
         const companyName: string = c.name || '';
         let endIso: string | undefined = c.subscriptionEndsAt;
@@ -76,6 +77,8 @@ export async function claimSales(companyId: string, email: string, now = new Dat
         }, { merge: true });
         return { applied: sales.length, until: endIso, companyName };
     });
+    if (result.applied > 0) await sendActivationEmail(companyId);
+    return result;
 }
 
 /**

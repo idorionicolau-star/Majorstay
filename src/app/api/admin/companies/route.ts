@@ -6,6 +6,7 @@ import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
 import { fromDateInput } from '@/lib/admin-subscription';
 import { GRACE_DAYS } from '@/lib/plans';
 import { isTierId } from '@/lib/tiers';
+import { sendActivationEmail } from '@/lib/activation-email-server';
 
 const STATUSES = ['active', 'trial', 'suspended'];
 
@@ -39,5 +40,6 @@ export async function POST(req: Request) {
         adminUpdatedBy: decoded.email || decoded.uid,
     };
     await ref.update(update);
+    if (status === 'active') await sendActivationEmail(companyId);
     return NextResponse.json({ ok: true, status, trialEndsAt: trial, subscriptionEndsAt: sub, tier: isTierId(tier) ? tier : null });
 }

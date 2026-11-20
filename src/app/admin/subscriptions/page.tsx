@@ -33,6 +33,7 @@ import { EscalepayPanel } from '@/components/admin/escalepay-panel';
 import { ManualPaymentsPanel } from '@/components/admin/manual-payments-panel';
 import { TestEmailsPanel } from '@/components/admin/test-emails-panel';
 import { EndOfDayPanel } from '@/components/admin/end-of-day-panel';
+import { ActivationEmailsPanel } from '@/components/admin/activation-emails-panel';
 import { AffiliatesPanel } from '@/components/admin/affiliates-panel';
 import { getAuth } from 'firebase/auth';
 import { isSuperAdminEmail } from '@/lib/super-admin';
@@ -211,6 +212,7 @@ export default function SubscriptionsAdminPage() {
       <AffiliatesPanel />
 
       <EndOfDayPanel />
+      <ActivationEmailsPanel />
 
       <TestEmailsPanel ownEmail={userEmail} />
 
