@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Wallet } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
+import { sanitizeSchedule, slotAt } from '@/lib/shift-schedule';
 
 const REPEAT_MS = 10 * 60_000; // repete o som a cada 10 minutos enquanto não houver turno
 const CHECK_MS = 60_000;
@@ -15,7 +16,8 @@ const CHECK_MS = 60_000;
  * e não para o gerente/dono. O som só pode tocar depois de o utilizador tocar no ecrã (regra dos navegadores).
  */
 export function ShiftReminder() {
-  const { companyId, isGuest, isReadOnly, user } = useInventory();
+  const { companyId, isGuest, isReadOnly, user, companyData } = useInventory();
+  const scheduleKey = JSON.stringify(sanitizeSchedule((companyData as { shiftSchedule?: unknown } | null | undefined)?.shiftSchedule));
   const pathname = usePathname();
   const [noShift, setNoShift] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -34,9 +36,12 @@ export function ShiftReminder() {
       const json = await res.json();
       // quem acabou de fechar o turno (últimas 12 horas) não é lembrado outra vez
       const since = json.lastClosed ? Date.now() - new Date(json.lastClosed.closedAt).getTime() : Infinity;
-      setNoShift(!json.current && !json.otherOpen && !(since >= 0 && since < 12 * 3600_000));
+      // com turnos definidos, só lembra dentro da hora de um turno (fora disso ninguém devia estar a trabalhar)
+      const schedule = JSON.parse(scheduleKey);
+      const inShiftHours = schedule.length === 0 || !!slotAt(schedule, new Date());
+      setNoShift(!json.current && !json.otherOpen && !(since >= 0 && since < 12 * 3600_000) && inShiftHours);
     } catch { /* sem ligação: tenta na próxima vez */ }
-  }, [active, companyId]);
+  }, [active, companyId, scheduleKey]);
 
   useEffect(() => {
     check();

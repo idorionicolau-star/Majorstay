@@ -24,6 +24,7 @@ import { FullReset } from "@/components/settings/full-reset";
 import { DocumentsStyle } from "@/components/settings/documents-style";
 import { AfterSaleSetting } from "@/components/settings/after-sale-setting";
 import { WifiSetting } from "@/components/settings/wifi-setting";
+import { ShiftScheduleSetting } from "@/components/settings/shift-schedule-setting";
 import { RecycleBin } from "@/components/settings/recycle-bin";
 import { UnitsCategoriesManager } from "@/components/settings/units-categories-manager";
 import { CategoryMergeTool } from "@/components/settings/category-merge-tool";
@@ -1103,6 +1104,7 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
                 <WifiSetting />
+                <ShiftScheduleSetting />
               </TabsContent>
 
               <TabsContent value="documents">
