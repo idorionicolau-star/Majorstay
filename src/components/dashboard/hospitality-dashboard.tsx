@@ -29,7 +29,8 @@ import {
   normalizeDate,
   totalContractedHours,
 } from "@/lib/hospitality-calc";
-import { lastDays, summarizeDay } from "@/lib/hospitality-dashboard";
+import { lastDays, summarizeDay, summarizeWindow } from "@/lib/hospitality-dashboard";
+import { useShiftWindow } from "@/hooks/use-shift-window";
 import { cn, formatCurrency } from "@/lib/utils";
 
 const compact = (v: number) =>
@@ -191,7 +192,17 @@ export function HospitalityDashboard() {
     [openStays, now]
   );
 
-  const today = useMemo(() => summarizeDay(sales || [], now), [sales, now]);
+  // "Hoje no Caixa" segue o turno: abre do zero quando um turno abre. Sem turnos na empresa, fica o dia.
+  const shiftWindow = useShiftWindow();
+  const today = useMemo(
+    () => (shiftWindow ? summarizeWindow(sales || [], shiftWindow.from, shiftWindow.to ?? now) : summarizeDay(sales || [], now)),
+    [sales, now, shiftWindow]
+  );
+  const shiftSubtitle = !shiftWindow
+    ? "Total arrecadado hoje"
+    : shiftWindow.open
+      ? `Turno aberto desde as ${hhmm(shiftWindow.from)}`
+      : `Último turno: ${hhmm(shiftWindow.from)} – ${hhmm(shiftWindow.to ?? shiftWindow.from)}`;
   const week = useMemo(() => lastDays(sales || [], now, 7), [sales, now]);
   const weekMax = Math.max(1, ...week.map((b) => b.total));
   const { tabs: openTabs, total: tabsTotal } = useOpenTabs();
@@ -449,8 +460,8 @@ export function HospitalityDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-2">
           {/* Hoje no Caixa */}
           <section className="flex flex-col gap-3" data-tour="hotel-today">
-            <SectionTitle subtitle="Total arrecadado hoje no fecho de turno">
-              Hoje no Caixa
+            <SectionTitle subtitle={shiftSubtitle}>
+              {shiftWindow ? "No Caixa (turno)" : "Hoje no Caixa"}
             </SectionTitle>
             <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-[#191E25] p-6 shadow-sm">
               <div className="flex items-start justify-between mb-6">
@@ -461,7 +472,7 @@ export function HospitalityDashboard() {
                   <div className="text-xs text-slate-400 font-semibold mt-1 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     {today.tickets === 0
-                      ? "Nenhum movimento registado hoje"
+                      ? (shiftWindow ? "Nenhum movimento neste turno" : "Nenhum movimento registado hoje")
                       : plural(today.tickets, "movimento registado", "movimentos registados")}
                   </div>
                 </div>

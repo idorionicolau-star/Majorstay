@@ -26,6 +26,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, cn } from '@/lib/utils';
+import { useShiftWindow } from '@/hooks/use-shift-window';
+import { summarizeWindow } from '@/lib/hospitality-dashboard';
 import { computeRoomCleaningStatus } from '@/lib/hospitality-calc';
 import { useRooms } from '@/context/rooms-context';
 import { useInventory } from '@/context/inventory-context';
@@ -70,8 +72,14 @@ function RoomsPageContent() {
     services = [],
     maxRoomsAllowed,
   } = useRooms();
-  const { user } = useInventory();
+  const { user, sales: allSales } = useInventory();
+  const shiftWindow = useShiftWindow();
   const isManager = user?.role === 'Admin' || user?.role === 'Dono';
+  // "Faturado" segue o turno (do zero a cada turno). O gerente vê tudo; quem não é gerente, só o que ele próprio vendeu.
+  const shiftRevenue = useMemo(
+    () => (shiftWindow ? summarizeWindow(allSales || [], shiftWindow.from, shiftWindow.to ?? new Date(), isManager ? undefined : user?.username || '').total : null),
+    [shiftWindow, allSales, isManager, user?.username]
+  );
   const activeRoomsCount = useMemo(() => rooms.filter((r) => r.active !== false).length, [rooms]);
 
   // O filtro e o quarto vêm do endereço (?filtro=free|occupied|overtime|cleaning|open e ?quarto=ID),
@@ -445,9 +453,9 @@ function RoomsPageContent() {
               <DollarSign className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Faturado Hoje</p>
+              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">{shiftWindow ? 'Faturado no Turno' : 'Faturado Hoje'}</p>
               <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
-                {formatCurrency(stats.revenueToday)}
+                {formatCurrency(shiftRevenue ?? stats.revenueToday)}
               </p>
             </div>
           </div>

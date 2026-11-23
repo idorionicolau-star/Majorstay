@@ -111,3 +111,34 @@ describe('hospitality-dashboard', () => {
     });
   });
 });
+
+import { summarizeWindow } from '../hospitality-dashboard';
+
+describe('summarizeWindow (totais do turno)', () => {
+  const sale = (id: string, iso: string, v: number, extra: Record<string, unknown> = {}) =>
+    ({ id, productName: 'Cerveja', amountPaid: v, totalValue: v, timestamp: iso, soldBy: 'Ana', ...extra }) as any;
+  const from = new Date('2026-11-23T17:00:00Z');
+  const to = new Date('2026-11-24T05:00:00Z');
+
+  it('conta só o que aconteceu entre a abertura e o fecho, mesmo atravessando a meia-noite', () => {
+    const sales = [
+      sale('a', '2026-11-23T16:59:00Z', 100),
+      sale('b', '2026-11-23T22:30:00Z', 200),
+      sale('c', '2026-11-24T01:00:00Z', 300, { productName: 'Estadia: Quarto 1' }),
+      sale('d', '2026-11-24T05:01:00Z', 400),
+    ];
+    const r = summarizeWindow(sales, from, to);
+    expect(r).toMatchObject({ total: 500, barTotal: 200, roomsTotal: 300, tickets: 2 });
+  });
+
+  it('só as vendas de um funcionário, e ignora apagadas e proformas', () => {
+    const sales = [
+      sale('a', '2026-11-23T20:00:00Z', 100),
+      sale('b', '2026-11-23T21:00:00Z', 50, { soldBy: 'Rui' }),
+      sale('c', '2026-11-23T21:30:00Z', 70, { deletedAt: '2026-11-23T22:00:00Z' }),
+      sale('d', '2026-11-23T21:40:00Z', 80, { documentType: 'Factura Proforma' }),
+    ];
+    expect(summarizeWindow(sales, from, to, 'Ana').total).toBe(100);
+    expect(summarizeWindow(sales, from, to).total).toBe(150);
+  });
+});

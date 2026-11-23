@@ -104,10 +104,12 @@ export async function GET(req: Request) {
     }
     // há outro turno aberto (uma só caixa): quem não tem turno só vê o nome e a hora, para saber porque não pode abrir
     let otherOpen: { employeeName: string; openedAt: string | null } | null = null;
+    let otherOpenData: Record<string, any> | null = null;
     if (!openDoc) {
       const anyOpen = await ctx.db.collection(`companies/${companyId}/shifts`).where('status', '==', 'open').limit(1).get();
       if (!anyOpen.empty) {
         const d = anyOpen.docs[0].data();
+        otherOpenData = d;
         otherOpen = { employeeName: String(d.openedByName || ''), openedAt: iso(d.openedAt) };
       }
     }
@@ -120,7 +122,17 @@ export async function GET(req: Request) {
       const snap = await ctx.db.collection(`companies/${companyId}/shifts`).orderBy('openedAt', 'desc').limit(30).get();
       recent = snap.docs.map((d) => view(d.id, d.data(), true));
     }
-    return NextResponse.json({ current, lastClosed, otherOpen, ...(recent ? { recent } : {}) });
+    // a janela de tempo do turno que conta agora: o aberto (da caixa) ou, se não há, o último fechado — para os totais "do turno"
+    let window: { from: string; to: string | null; status: 'open' | 'closed' } | null = null;
+    const openForWindow = openDoc ? openDoc.data() : otherOpenData;
+    if (openForWindow && iso(openForWindow.openedAt)) {
+      window = { from: iso(openForWindow.openedAt)!, to: null, status: 'open' };
+    } else {
+      const lastShifts = await ctx.db.collection(`companies/${companyId}/shifts`).orderBy('openedAt', 'desc').limit(10).get();
+      const lastShift = lastShifts.docs.map((d) => d.data()).find((d) => d.status === 'closed' && iso(d.openedAt) && iso(d.closedAt));
+      if (lastShift) window = { from: iso(lastShift.openedAt)!, to: iso(lastShift.closedAt), status: 'closed' };
+    }
+    return NextResponse.json({ current, lastClosed, otherOpen, window, ...(recent ? { recent } : {}) });
   } catch (err) {
     console.error('Erro em GET /api/shifts:', err);
     return NextResponse.json({ error: 'Não foi possível carregar o turno.' }, { status: 500 });

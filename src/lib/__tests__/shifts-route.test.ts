@@ -52,7 +52,7 @@ vi.mock('@/lib/firebase-admin', () => {
       return out;
     },
   });
-  (firestoreInstance as any).FieldValue = { serverTimestamp: () => ({ ms: Date.now() }) };
+  (firestoreInstance as any).FieldValue = { serverTimestamp: () => { const ms = Date.now(); return { ms, toDate: () => new Date(ms) }; } };
   (firestoreInstance as any).Timestamp = { fromDate: (d: Date) => ({ ms: d.getTime() }) };
   return { verifyIdToken: (...a: unknown[]) => mockVerify(...a), initializeAdmin: () => ({ firestore: firestoreInstance }) };
 });
@@ -144,5 +144,25 @@ describe('vários turnos, e o email ao fechar', () => {
     const [cid, info] = mockEmail.mock.calls[0];
     expect(cid).toBe(C);
     expect(info).toMatchObject({ employee: 'Ana', openingCash: 500, countedCash: 450, expectedCash: 500, difference: -50, notes: 'troco' });
+  });
+});
+
+describe('janela do turno (para os totais do turno)', () => {
+  const get = async () => (await (await GET(new Request(`http://localhost/api/shifts?companyId=${C}`))).json()).window;
+
+  it('sem turnos não há janela; aberto dá desde a abertura; fechado dá o último turno', async () => {
+    as('ana');
+    expect(await get()).toBeNull();
+    await POST(req({ companyId: C, action: 'open', openingCash: 500 }));
+    const open = await get();
+    expect(open).toMatchObject({ status: 'open', to: null });
+    expect(typeof open.from).toBe('string');
+    as('rui'); // quem não tem o turno também vê a janela da caixa aberta
+    expect((await get()).status).toBe('open');
+    as('ana');
+    await POST(req({ companyId: C, action: 'close', countedCash: 500 }));
+    const closed = await get();
+    expect(closed.status).toBe('closed');
+    expect(typeof closed.to).toBe('string');
   });
 });
