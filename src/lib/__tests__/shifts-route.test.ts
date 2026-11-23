@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 type Doc = Record<string, any>;
 let db: Record<string, Doc> = {};
 const mockVerify = vi.fn();
+const mockEmail = vi.fn();
+let autoId = 0;
+vi.mock('@/lib/shift-email-server', () => ({ sendShiftCloseEmail: (...a: unknown[]) => mockEmail(...a) }));
 
 function docsOf(path: string, wheres: [string, any][]) {
   return Object.keys(db)
@@ -28,6 +31,7 @@ vi.mock('@/lib/firebase-admin', () => {
       const b: any = {
         where: (f: string, op: string, v: any) => { wheres.push([f, op, v]); return b; },
         orderBy: () => b,
+        doc: (id?: string) => refOf(`${path}/${id ?? `auto${++autoId}`}`),
         limit: () => b,
         get: async () => { const docs = docsOf(path, wheres); return { empty: docs.length === 0, docs }; },
       };
@@ -60,6 +64,7 @@ const req = (body: unknown) => new Request('http://localhost/api/shifts', { meth
 const as = (uid: string) => mockVerify.mockResolvedValue({ uid, companyId: C });
 
 beforeEach(() => {
+  mockEmail.mockClear();
   db = {
     [`companies/${C}/employees/ana`]: { username: 'Ana', role: 'Employee', permissions: { rooms: 'write' } },
     [`companies/${C}/employees/rui`]: { username: 'Rui', role: 'Employee', permissions: { rooms: 'write' } },
@@ -107,5 +112,37 @@ describe('uma só caixa: um turno aberto de cada vez', () => {
     expect(j.current).toBeNull();
     expect(j.otherOpen.employeeName).toBe('Ana');
     expect(JSON.stringify(j)).not.toContain('500');
+  });
+});
+
+describe('vários turnos, e o email ao fechar', () => {
+  it('a mesma pessoa fecha e volta a abrir outro turno logo a seguir', async () => {
+    as('ana');
+    expect((await POST(req({ companyId: C, action: 'open', openingCash: 500 }))).status).toBe(200);
+    expect((await POST(req({ companyId: C, action: 'close', countedCash: 500 }))).status).toBe(200);
+    expect((await POST(req({ companyId: C, action: 'open', openingCash: 500 }))).status).toBe(200);
+    expect(Object.keys(db).filter((k) => /\/shifts\/[^/]+$/.test(k))).toHaveLength(2);
+    // continua a ser uma só caixa: não abre um terceiro com o segundo aberto
+    expect((await POST(req({ companyId: C, action: 'open', openingCash: 500 }))).status).toBe(409);
+  });
+
+  it('o GET diz quando a pessoa fechou o último turno', async () => {
+    as('ana');
+    let j = await (await GET(new Request(`http://localhost/api/shifts?companyId=${C}`))).json();
+    expect(j.lastClosed).toBeNull();
+    await POST(req({ companyId: C, action: 'open', openingCash: 500 }));
+    await POST(req({ companyId: C, action: 'close', countedCash: 500 }));
+    j = await (await GET(new Request(`http://localhost/api/shifts?companyId=${C}`))).json();
+    expect(typeof j.lastClosed.closedAt).toBe('string');
+  });
+
+  it('fechar o turno envia o email ao gerente com a diferença', async () => {
+    as('ana');
+    await POST(req({ companyId: C, action: 'open', openingCash: 500 }));
+    await POST(req({ companyId: C, action: 'close', countedCash: 450, notes: 'troco' }));
+    expect(mockEmail).toHaveBeenCalledTimes(1);
+    const [cid, info] = mockEmail.mock.calls[0];
+    expect(cid).toBe(C);
+    expect(info).toMatchObject({ employee: 'Ana', openingCash: 500, countedCash: 450, expectedCash: 500, difference: -50, notes: 'troco' });
   });
 });

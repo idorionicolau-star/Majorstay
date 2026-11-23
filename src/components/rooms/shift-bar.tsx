@@ -24,13 +24,13 @@ const hhmm = (iso: string | null) => {
 };
 
 /**
- * Turno do recepcionista (um por dia): abre com o fundo de caixa e fecha a contar o dinheiro.
+ * Turno do recepcionista: abre com o fundo de caixa e fecha a contar o dinheiro (pode abrir outro a seguir).
  * O esperado vem do servidor (vendas do próprio funcionário desde que abriu), por isso não se pode "acertar" à mão.
  */
 export function ShiftBar() {
   const { companyId, isGuest } = useInventory();
   const [current, setCurrent] = useState<Shift | null>(null);
-  const [closedToday, setClosedToday] = useState<Shift | null>(null);
+  const [lastClosed, setLastClosed] = useState<{ closedAt: string } | null>(null);
   const [otherOpen, setOtherOpen] = useState<{ employeeName: string; openedAt: string | null } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [dialog, setDialog] = useState<'open' | 'close' | null>(null);
@@ -49,7 +49,7 @@ export function ShiftBar() {
       if (!res.ok) return;
       const json = await res.json();
       setCurrent(json.current || null);
-      setClosedToday(json.closedToday || null);
+      setLastClosed(json.lastClosed || null);
       setOtherOpen(json.otherOpen || null);
       setLoaded(true);
       try { const t = await authedFetch('/api/tabs', 'POST', { companyId, action: 'list' }); setOpenTabs((t.tabs || []).length); } catch { setOpenTabs(0); }
@@ -77,7 +77,9 @@ export function ShiftBar() {
   if (isGuest || !companyId || !loaded) return null;
 
   // ninguém tem turno aberto e hoje ainda não houve: é a hora de abrir
-  const canOpen = !current && !closedToday && !otherOpen;
+  const sinceClosedMs = lastClosed ? Date.now() - new Date(lastClosed.closedAt).getTime() : Infinity;
+  const justClosed = sinceClosedMs >= 0 && sinceClosedMs < 2 * 3600_000; // acabou de fechar: abrir é um turno novo
+  const canOpen = !current && !otherOpen && !(sinceClosedMs >= 0 && sinceClosedMs < 12 * 3600_000);
   const counted = Number(amount);
   const live = current?.live;
   const diff = live && amount !== '' && Number.isFinite(counted) ? counted - live.expectedCash : null;
@@ -117,10 +119,10 @@ export function ShiftBar() {
           <Wallet className="h-4 w-4 text-[#007bb9] shrink-0" />
           {current ? (
             <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">Turno aberto desde as {hhmm(current.openedAt)}</span>
-          ) : closedToday ? (
-            <span className="font-semibold text-slate-500 truncate">Turno de hoje fechado às {hhmm(closedToday.closedAt)}</span>
           ) : otherOpen ? (
             <span className="font-semibold text-slate-600 dark:text-slate-300 truncate">Turno de {otherOpen.employeeName || 'outro colega'} aberto desde as {hhmm(otherOpen.openedAt)}</span>
+          ) : lastClosed ? (
+            <span className="font-semibold text-slate-500 truncate">Último turno fechado às {hhmm(lastClosed.closedAt)}</span>
           ) : (
             <span className="font-semibold text-amber-700 dark:text-amber-400 truncate">Sem turno aberto</span>
           )}
@@ -129,17 +131,21 @@ export function ShiftBar() {
           <Button size="sm" variant="outline" className="h-9 rounded-full gap-1.5 text-xs" onClick={() => { setAmount(''); setDialog('close'); }}>
             <LogOut className="h-3.5 w-3.5" /> Fechar turno
           </Button>
-        ) : !closedToday && otherOpen ? (
+        ) : otherOpen ? (
           <span className="text-[11px] text-slate-500">Abre depois de ele fechar</span>
-        ) : !closedToday ? (
+        ) : canOpen ? (
           <Button className="h-12 w-full sm:w-auto rounded-full gap-2 px-6 text-base font-bold bg-[#007bb9] hover:bg-[#006194] text-white shadow-md" onClick={() => { setAmount(''); setDialog('open'); }}>
             <LogIn className="h-5 w-5" /> Abrir turno
           </Button>
-        ) : null}
+        ) : (
+          <Button size="sm" variant="outline" className="h-9 rounded-full gap-1.5 text-xs" onClick={() => { setAmount(''); setDialog('open'); }}>
+            <LogIn className="h-3.5 w-3.5" /> Abrir novo turno
+          </Button>
+        )}
       </div>
       {openTabs > 0 && (
         <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
-          Há {openTabs} {openTabs === 1 ? 'conta aberta' : 'contas abertas'} no Lounge & Bar{!current && !closedToday ? ' (podem ser do turno anterior)' : ''}.
+          Há {openTabs} {openTabs === 1 ? 'conta aberta' : 'contas abertas'} no Lounge & Bar{!current ? ' (podem ser do turno anterior)' : ''}.
         </p>
       )}
 
@@ -152,6 +158,11 @@ export function ShiftBar() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">
+            {dialog === 'open' && justClosed && lastClosed && (
+              <p className="rounded-2xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                Atenção: o seu turno acabou de ser fechado às {hhmm(lastClosed.closedAt)}. Se abrir agora, começa um <b>turno novo</b>, com a caixa a contar do zero.
+              </p>
+            )}
             {dialog === 'close' && openTabs > 0 && (
               <p className="rounded-2xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-400">
                 Atenção: ainda há {openTabs} {openTabs === 1 ? 'conta aberta' : 'contas abertas'} no Lounge & Bar. Pode fechar o turno, mas a conta passa para o colega seguinte.
@@ -185,7 +196,7 @@ export function ShiftBar() {
           <DialogFooter className="px-5 pb-5 pt-2 grid grid-cols-2 gap-2 sm:flex-wrap">
             <Button variant="outline" className="rounded-2xl" onClick={() => setDialog(null)} disabled={busy}>Cancelar</Button>
             <Button className="rounded-2xl bg-[#007bb9] hover:bg-[#006194] text-white" onClick={submit} disabled={busy}>
-              {busy ? 'A guardar...' : dialog === 'open' ? 'Abrir turno' : 'Fechar turno'}
+              {busy ? 'A guardar...' : dialog === 'open' ? (justClosed ? 'Abrir novo turno' : 'Abrir turno') : 'Fechar turno'}
             </Button>
           </DialogFooter>
         </DialogContent>

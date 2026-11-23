@@ -2,11 +2,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
-import { cashDifference, dayKeyMaputo, summarizeShiftSales } from '@/lib/shifts';
+import { cashDifference, summarizeShiftSales } from '@/lib/shifts';
+import { sendShiftCloseEmail } from '@/lib/shift-email-server';
 
 /**
- * Turnos de caixa (um por recepcionista por dia).
- * GET  ?companyId=…            → { current, closedToday, recent? }  (recent só para Admin/Dono)
+ * Turnos de caixa. A mesma pessoa pode abrir vários (um a seguir ao outro); só há uma caixa aberta de cada vez.
+ * GET  ?companyId=…            → { current, lastClosed, otherOpen, recent? }  (recent só para Admin/Dono)
  * POST { companyId, action:'open',  openingCash }
  * POST { companyId, action:'close', countedCash, notes }
  * O servidor calcula o esperado a partir das vendas (nunca confia nos valores do cliente) e guarda tudo em companies/{c}/shifts.
@@ -110,15 +111,16 @@ export async function GET(req: Request) {
         otherOpen = { employeeName: String(d.openedByName || ''), openedAt: iso(d.openedAt) };
       }
     }
-    const todayDoc = await ctx.db.doc(`companies/${companyId}/shifts/${ctx.uid}_${dayKeyMaputo()}`).get();
-    const closedToday = todayDoc.exists && todayDoc.data()?.status === 'closed' ? view(todayDoc.id, todayDoc.data()!, ctx.isManager) : null;
+    // quando esta pessoa fechou o último turno (para o aviso de "acabou de fechar" e para o lembrete não insistir)
+    const lastDoc = await ctx.db.doc(`companies/${companyId}/shiftLast/${ctx.uid}`).get();
+    const lastClosed = lastDoc.exists && lastDoc.data()?.closedAt ? { closedAt: String(lastDoc.data()!.closedAt) } : null;
 
     let recent: ReturnType<typeof view>[] | undefined;
     if (ctx.isManager) {
       const snap = await ctx.db.collection(`companies/${companyId}/shifts`).orderBy('openedAt', 'desc').limit(30).get();
       recent = snap.docs.map((d) => view(d.id, d.data(), true));
     }
-    return NextResponse.json({ current, closedToday, otherOpen, ...(recent ? { recent } : {}) });
+    return NextResponse.json({ current, lastClosed, otherOpen, ...(recent ? { recent } : {}) });
   } catch (err) {
     console.error('Erro em GET /api/shifts:', err);
     return NextResponse.json({ error: 'Não foi possível carregar o turno.' }, { status: 500 });
@@ -146,14 +148,12 @@ export async function POST(req: Request) {
       if (!legacyOpen.empty) {
         return NextResponse.json({ error: busyMessage(String(legacyOpen.docs[0].data().openedByName || 'outro colega')) }, { status: 409 });
       }
-      const ref = ctx.db.doc(`companies/${companyId}/shifts/${ctx.uid}_${dayKeyMaputo()}`);
+      const ref = ctx.db.collection(`companies/${companyId}/shifts`).doc();
       const lockRef = ctx.db.doc(`companies/${companyId}/shiftLock/current`);
       await ctx.db.runTransaction(async (tx) => {
-        const snap = await tx.get(ref);
         const lockSnap = await tx.get(lockRef);
         let lockedShift: FirebaseFirestore.DocumentSnapshot | null = null;
         if (lockSnap.exists) lockedShift = await tx.get(ctx.db.doc(`companies/${companyId}/shifts/${lockSnap.data()?.shiftId}`));
-        if (snap.exists) throw Object.assign(new Error('Já abriu (e fechou) o turno de hoje. Só é possível um turno por dia.'), { status: 409 });
         if (lockSnap.exists && lockedShift?.exists && lockedShift.data()?.status === 'open') {
           throw Object.assign(new Error(busyMessage(String(lockSnap.data()?.name || 'outro colega'))), { status: 409 });
         }
@@ -205,6 +205,22 @@ export async function POST(req: Request) {
       const lockRef = ctx.db.doc(`companies/${companyId}/shiftLock/current`);
       const lockSnap = await lockRef.get();
       if (lockSnap.exists && lockSnap.data()?.shiftId === openDoc.id) await lockRef.delete();
+      const closedAt = new Date();
+      if (data.openedByUid) {
+        await ctx.db.doc(`companies/${companyId}/shiftLast/${data.openedByUid}`).set({ closedAt: closedAt.toISOString(), shiftId: openDoc.id });
+      }
+      await sendShiftCloseEmail(companyId, {
+        employee: String(data.openedByName || 'Funcionário'),
+        closedBy: ctx.name,
+        openedAt: data.openedAt?.toDate ? data.openedAt.toDate() : null,
+        closedAt,
+        openingCash: Number(data.openingCash) || 0,
+        countedCash: counted,
+        expectedCash,
+        difference,
+        totals: live.totals,
+        notes: String(body.notes || '').slice(0, 500),
+      });
       return NextResponse.json(
         ctx.isManager
           ? { success: true, expectedCash, difference, totals: live.totals }
