@@ -11,7 +11,7 @@ const CHECK_MS = 60_000;
 
 /**
  * Lembrete para o funcionário abrir o turno: aviso no topo (em qualquer página) e uma voz curta ("Inicie o seu turno"),
- * a repetir de 10 em 10 minutos. Não bloqueia nada. Só aparece se ninguém tem a caixa aberta (nem hoje já houve turno)
+ * a repetir de 10 em 10 minutos. Não bloqueia nada. Só aparece se ninguém tem a caixa aberta (e a pessoa não fechou um turno há pouco)
  * e não para o gerente/dono. O som só pode tocar depois de o utilizador tocar no ecrã (regra dos navegadores).
  */
 export function ShiftReminder() {
@@ -32,7 +32,9 @@ export function ShiftReminder() {
       const res = await fetch(`/api/shifts?companyId=${encodeURIComponent(companyId!)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
       if (!res.ok) return; // sem permissão para turnos ou sem ligação: não incomoda
       const json = await res.json();
-      setNoShift(!json.current && !json.closedToday && !json.otherOpen);
+      // quem acabou de fechar o turno (últimas 12 horas) não é lembrado outra vez
+      const since = json.lastClosed ? Date.now() - new Date(json.lastClosed.closedAt).getTime() : Infinity;
+      setNoShift(!json.current && !json.otherOpen && !(since >= 0 && since < 12 * 3600_000));
     } catch { /* sem ligação: tenta na próxima vez */ }
   }, [active, companyId]);
 
