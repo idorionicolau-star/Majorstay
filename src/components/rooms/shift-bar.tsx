@@ -10,6 +10,7 @@ import { useInventory } from '@/context/inventory-context';
 import { authedFetch } from '@/lib/api-client';
 import { toast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { sanitizeSchedule, slotAt, slotEnd } from '@/lib/shift-schedule';
 
 type Totals = { cash: number; mobile: number; card: number; other: number; total: number; count: number };
 type Shift = {
@@ -28,7 +29,8 @@ const hhmm = (iso: string | null) => {
  * O esperado vem do servidor (vendas do próprio funcionário desde que abriu), por isso não se pode "acertar" à mão.
  */
 export function ShiftBar() {
-  const { companyId, isGuest } = useInventory();
+  const { companyId, isGuest, companyData } = useInventory();
+  const schedule = sanitizeSchedule((companyData as { shiftSchedule?: unknown } | null | undefined)?.shiftSchedule);
   const [current, setCurrent] = useState<Shift | null>(null);
   const [lastClosed, setLastClosed] = useState<{ closedAt: string } | null>(null);
   const [otherOpen, setOtherOpen] = useState<{ employeeName: string; openedAt: string | null } | null>(null);
@@ -77,6 +79,11 @@ export function ShiftBar() {
   if (isGuest || !companyId || !loaded) return null;
 
   // ninguém tem turno aberto e hoje ainda não houve: é a hora de abrir
+  // o turno previsto para a hora a que abriu, e se já passou (mais de 1 hora) da hora de o fechar
+  const openedDate = current?.openedAt ? new Date(current.openedAt) : null;
+  const plannedSlot = openedDate && schedule.length ? slotAt(schedule, openedDate) : null;
+  const plannedEnd = plannedSlot && openedDate ? slotEnd(plannedSlot, openedDate) : null;
+  const overdue = !!plannedEnd && Date.now() > plannedEnd.getTime() + 3600_000;
   const sinceClosedMs = lastClosed ? Date.now() - new Date(lastClosed.closedAt).getTime() : Infinity;
   const justClosed = sinceClosedMs >= 0 && sinceClosedMs < 2 * 3600_000; // acabou de fechar: abrir é um turno novo
   const canOpen = !current && !otherOpen && !(sinceClosedMs >= 0 && sinceClosedMs < 12 * 3600_000);
@@ -118,7 +125,7 @@ export function ShiftBar() {
         <div className="flex items-center gap-2 min-w-0 text-xs">
           <Wallet className="h-4 w-4 text-[#007bb9] shrink-0" />
           {current ? (
-            <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">Turno aberto desde as {hhmm(current.openedAt)}</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">Turno aberto desde as {hhmm(current.openedAt)}{plannedSlot ? ` · ${plannedSlot.name}` : ''}</span>
           ) : otherOpen ? (
             <span className="font-semibold text-slate-600 dark:text-slate-300 truncate">Turno de {otherOpen.employeeName || 'outro colega'} aberto desde as {hhmm(otherOpen.openedAt)}</span>
           ) : lastClosed ? (
@@ -143,6 +150,11 @@ export function ShiftBar() {
           </Button>
         )}
       </div>
+      {overdue && plannedSlot && (
+        <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
+          O turno {plannedSlot.name} devia acabar às {plannedSlot.end}. Se já terminou, conte a caixa e feche o turno.
+        </p>
+      )}
       {openTabs > 0 && (
         <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
           Há {openTabs} {openTabs === 1 ? 'conta aberta' : 'contas abertas'} no Lounge & Bar{!current ? ' (podem ser do turno anterior)' : ''}.
