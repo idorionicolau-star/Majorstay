@@ -69,6 +69,30 @@ export function summarizeDay(sales: Sale[], now: Date = new Date()): DaySummary 
   return { total: roomsTotal + barTotal, roomsTotal, barTotal, tickets: tickets.size };
 }
 
+/** O mesmo que `summarizeDay`, mas para uma janela de tempo (o turno): vendas feitas entre `from` e `to`. `onlyBy`: só as desse funcionário. */
+export function summarizeWindow(sales: Sale[], from: Date, to: Date, onlyBy?: string): DaySummary {
+  const a = from.getTime();
+  const b = to.getTime();
+  let roomsTotal = 0;
+  let barTotal = 0;
+  const tickets = new Set<string>();
+
+  for (const s of sales || []) {
+    if (!isCounted(s)) continue;
+    if (onlyBy !== undefined && (s.soldBy || '') !== onlyBy) continue;
+    const d = saleDay(s);
+    if (!d) continue;
+    const t = d.getTime();
+    if (t < a || t > b) continue;
+    const value = revenueOf(s);
+    if (isStaySale(s)) roomsTotal += value;
+    else barTotal += value;
+    tickets.add(s.guideNumber || s.id);
+  }
+
+  return { total: roomsTotal + barTotal, roomsTotal, barTotal, tickets: tickets.size };
+}
+
 /** Os últimos `days` dias (do mais antigo para hoje), com o total recebido em cada um. */
 export function lastDays(sales: Sale[], now: Date = new Date(), days = 7): DayBar[] {
   const bars: DayBar[] = [];
