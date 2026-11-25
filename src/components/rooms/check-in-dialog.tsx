@@ -25,6 +25,7 @@ import { useInventory } from '@/context/inventory-context';
 import { buildStayReceipt, printReceipt } from '@/lib/thermal-receipt';
 import { BedDouble, Clock, User, Phone, CreditCard, Check, Moon, Search, Car, Tag } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
+import { roomRateLabel } from '@/lib/room-rate-label';
 import type { Room } from '@/lib/types';
 import { useRooms } from '@/context/rooms-context';
 import { toast } from '@/hooks/use-toast';
@@ -342,7 +343,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                       </div>
                       <div className="flex items-center justify-between gap-1 mt-1">
                         <span className={cn("text-[10px] font-semibold", isSelected ? "text-blue-100" : "text-slate-500 dark:text-slate-400")}>
-                          {formatCurrency(r.ratePerHour)}/h
+                          {roomRateLabel(r.ratePerHour, r.minimumHours, true)}
                         </span>
                         {r.type && (
                           <span className={cn("text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
@@ -381,7 +382,7 @@ export function CheckInDialog({ open, onOpenChange, preselectedRoomId, initialGu
                       )}
                       <span className="text-slate-300 dark:text-slate-600">|</span>
                       <span className="text-slate-600 dark:text-slate-300 font-medium">
-                        {formatCurrency(r.ratePerHour)}/hora {r.minimumHours && r.minimumHours > 1 ? `(mín. ${r.minimumHours}h)` : ''}
+                        {roomRateLabel(r.ratePerHour, r.minimumHours)}
                       </span>
                     </div>
                   </SelectItem>
