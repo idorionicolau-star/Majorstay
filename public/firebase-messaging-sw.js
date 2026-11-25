@@ -50,11 +50,13 @@ self.addEventListener('notificationclick', (event) => {
 // Os dados (produtos, vendas…) já ficam no aparelho pelo Firestore. Aqui guardamos a própria
 // app (páginas e ficheiros JS/CSS) para ela abrir sem internet.
 // Mudar VERSION apaga as caches antigas.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = 'msx-shell-' + VERSION;   // páginas
 const STATIC = 'msx-static-' + VERSION; // JS, CSS, imagens, fontes
 const OFFLINE_URL = '/offline.html';
-const PAGE_TIMEOUT_MS = 4000;           // rede lenta: usa a cópia guardada em vez de esperar
+// Rede lenta: espera até 15 s pela página nova antes de usar a cópia guardada. Com 4 s, quem tinha internet fraca
+// ficava com a versão antiga (preços e regras desatualizados). Sem internet de vez, a cópia guardada continua a abrir.
+const PAGE_TIMEOUT_MS = 15000;
 const MAX_SHELL_ENTRIES = 80;
 
 self.addEventListener('install', (event) => {
