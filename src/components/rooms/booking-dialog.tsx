@@ -25,6 +25,7 @@ import { useInventory } from '@/context/inventory-context';
 import { toast } from '@/hooks/use-toast';
 import { buildBookingWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp';
 import { cn, formatCurrency } from '@/lib/utils';
+import { roomRateLabel } from '@/lib/room-rate-label';
 
 interface BookingDialogProps {
   open: boolean;
@@ -212,7 +213,7 @@ export function BookingDialog({
                   </SelectItem>
                   {rooms.map((r) => (
                     <SelectItem key={r.id} value={r.id} className="text-xs font-medium">
-                      {r.name} ({r.type || 'Standard'}) — {formatCurrency(r.ratePerHour)}/h
+                      {r.name} ({r.type || 'Standard'}) — {roomRateLabel(r.ratePerHour, r.minimumHours, true)}
                     </SelectItem>
                   ))}
                 </SelectContent>

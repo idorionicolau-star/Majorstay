@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatCurrency, cn } from '@/lib/utils';
+import { roomRateLabel } from '@/lib/room-rate-label';
 import type { Room, Stay } from '@/lib/types';
 import {
   computeStayRealtimeStatus,
@@ -301,7 +302,7 @@ export function RoomCard({
                 )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-semibold">
-                {formatCurrency(room.ratePerHour)}/hora (mín. {room.minimumHours || 1}h)
+                {roomRateLabel(room.ratePerHour, room.minimumHours)}
               </p>
               {room.images && room.images.length > 0 && (
                 <div className="mt-2.5"><RoomPhotos name={room.name} images={room.images} /></div>
