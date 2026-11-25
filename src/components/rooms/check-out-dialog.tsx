@@ -1,7 +1,7 @@
 'use client';
 
 import { formatHotelTime } from '@/lib/server-time';
-import { nowMs, nowDate } from '@/lib/server-time';
+import { nowMs, nowDate, syncServerTime } from '@/lib/server-time';
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -65,8 +65,11 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
   useEffect(() => {
     if (!open) return;
     setNow(nowDate());
+    // ao abrir o check-out volta a acertar o relógio com o servidor (o desvio guardado pode estar velho)
+    let alive = true;
+    syncServerTime().then(() => { if (alive) setNow(nowDate()); });
     const interval = setInterval(() => setNow(nowDate()), 10000);
-    return () => clearInterval(interval);
+    return () => { alive = false; clearInterval(interval); };
   }, [open]);
 
   if (!stay) return null;

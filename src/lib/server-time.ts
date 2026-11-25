@@ -38,16 +38,35 @@ export function formatHotelDate(d: Date | number | string): string {
   return date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone });
 }
 
-/** Mede o desvio com o servidor (/api/time). Falhas são ignoradas: mantém o último desvio. */
+/** Uma medição só vale se a resposta foi rápida: com uma resposta atrasada (PC a dormir, separador parado, rede má) a "metade da latência" dá um desvio errado. */
+export const MAX_SYNC_RTT_MS = 2000;
+
+export type TimeSample = { offset: number; rtt: number };
+
+/** A melhor medição: a de menor latência, e só se for rápida o bastante. null = nenhuma serve (mantém o desvio que já tinha). */
+export function pickBestSample(samples: TimeSample[], maxRtt = MAX_SYNC_RTT_MS): TimeSample | null {
+  const ok = samples.filter((s) => Number.isFinite(s.offset) && Number.isFinite(s.rtt) && s.rtt >= 0 && s.rtt <= maxRtt);
+  if (!ok.length) return null;
+  return ok.reduce((best, s) => (s.rtt < best.rtt ? s : best));
+}
+
+/** Mede o desvio com o servidor (/api/time): até 3 medições, fica com a mais rápida. Falhas e respostas lentas são ignoradas: mantém o último desvio. */
 export async function syncServerTime(): Promise<number> {
   if (typeof window === 'undefined') return offsetMs;
-  try {
-    const sent = Date.now();
-    const res = await fetch('/api/time', { cache: 'no-store' });
-    const received = Date.now();
-    if (!res.ok) return offsetMs;
-    const json = await res.json();
-    if (typeof json.now === 'number') setServerOffset(computeOffset(json.now, sent, received));
-  } catch { /* sem ligação: mantém */ }
+  const samples: TimeSample[] = [];
+  for (let i = 0; i < 3; i++) {
+    try {
+      const sentPerf = performance.now(); // a latência mede-se com o relógio monotónico (não salta se o relógio do PC for acertado)
+      const res = await fetch('/api/time', { cache: 'no-store' });
+      const received = Date.now();
+      const rtt = performance.now() - sentPerf;
+      if (!res.ok) continue;
+      const json = await res.json();
+      if (typeof json.now === 'number') samples.push({ offset: Math.round(json.now + rtt / 2 - received), rtt });
+      if (rtt <= 400) break; // já é boa: não precisa de mais
+    } catch { /* sem ligação: tenta a seguinte */ }
+  }
+  const best = pickBestSample(samples);
+  if (best) setServerOffset(best.offset);
   return offsetMs;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { computeOffset, setServerOffset, nowMs, formatHotelTime, setHotelTimeZone } from '../server-time';
+import { computeOffset, setServerOffset, nowMs, formatHotelTime, setHotelTimeZone, pickBestSample } from '../server-time';
 
 describe('hora do servidor', () => {
   beforeEach(() => { setServerOffset(0); setHotelTimeZone(); });
@@ -21,5 +21,18 @@ describe('hora do servidor', () => {
     expect(formatHotelTime(d)).toBe('11:00');
     setHotelTimeZone('fuso-invalido');
     expect(formatHotelTime(d)).toBe('12:00');
+  });
+});
+
+describe('medição do desvio', () => {
+  it('uma resposta atrasada daria um desvio errado (é o que se descarta)', () => {
+    // servidor responde logo, mas a resposta só chega 38 min depois: a "metade da latência" dá -19 min
+    const T = 1_000_000_000_000;
+    expect(computeOffset(T, T, T + 38 * 60_000)).toBe(-19 * 60_000);
+  });
+  it('descarta medições lentas e fica com a mais rápida', () => {
+    expect(pickBestSample([{ offset: -1_140_000, rtt: 2_280_000 }])).toBeNull();
+    expect(pickBestSample([{ offset: 5000, rtt: 900 }, { offset: 4200, rtt: 120 }, { offset: -99, rtt: 5000 }])).toEqual({ offset: 4200, rtt: 120 });
+    expect(pickBestSample([])).toBeNull();
   });
 });
