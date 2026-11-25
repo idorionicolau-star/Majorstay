@@ -378,29 +378,26 @@ service cloud.firestore {
       // Quartos (Quadro de Quartos e Configurações)
       match /rooms/{roomId} {
         allow get, list: if can(companyId, 'rooms', 'read') || can(companyId, 'dashboard', 'read');
-        allow create, update: if can(companyId, 'rooms', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin());
+        // Criar quartos e mudar preços, mínimo de horas, pacotes, nome ou fotos: SÓ pelo servidor (/api/rooms/config, só o
+        // administrador, com registo de quem mudou o quê). Daqui, as funcionárias só mudam o estado do quarto (livre, limpeza...).
+        allow create: if isSuperAdmin();
+        allow update: if isSuperAdmin() || (
+          can(companyId, 'rooms', 'write') && isCompanySubscriptionActive(companyId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'currentStayId', 'cleaningStartedAt', 'updatedAt'])
+        );
         allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
       }
 
       // Estadias (Check-in, Extensões, Check-out com proteção anti-fraude)
       match /stays/{stayId} {
         allow get, list: if can(companyId, 'rooms', 'read');
-        // Check-in: carimbo do servidor obrigatório (request.time), status inicial 'open', e autor = utilizador
-        allow create: if can(companyId, 'rooms', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
-          && request.resource.data.checkInAt == request.time
-          && request.resource.data.status == 'open'
-          && request.resource.data.openedBy == request.auth.uid;
-        // Atualizações: o checkInAt e openedBy são imutáveis;
-        // Fecho exige checkOutAt == request.time se feito pelo cliente (ou gerido pelo endpoint de checkout);
-        // Gestor pode corrigir mediante permissão.
-        allow update: if can(companyId, 'rooms', 'write') && (isCompanySubscriptionActive(companyId) || isSuperAdmin())
-          && request.resource.data.checkInAt == resource.data.checkInAt
-          && request.resource.data.openedBy == resource.data.openedBy
-          && (
-            isManagerOf(companyId) ||
-            // Prorrogação pelo cliente mantendo a estadia aberta (não-gestor não pode fechar directamente nem alterar contractedHours ou consumptions)
-            (request.resource.data.status == 'open' && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['checkInAt', 'openedBy', 'roomId', 'ratePerHourApplied', 'packageType', 'packagePrice', 'packageHours', 'contractedHours', 'consumptions']))
-          );
+        // Check-in e prorrogação: SÓ pelo servidor (/api/stays/checkin e /api/stays/extend), que calcula o preço a partir do
+        // quarto do administrador. Do computador só se grava o veículo; preço, horas, pagamentos e estado não se tocam.
+        allow create: if isSuperAdmin();
+        allow update: if isSuperAdmin() || (
+          can(companyId, 'rooms', 'write') && isCompanySubscriptionActive(companyId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vehiclePlate', 'vehicleBrand', 'vehicleModel', 'vehicleColor'])
+        );
         // Eliminação de estadia: apenas gestor
         allow delete: if isManagerOf(companyId) && can(companyId, 'rooms', 'write');
       }

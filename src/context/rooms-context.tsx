@@ -35,10 +35,9 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
-  writeBatch,
-  getDoc,
 } from 'firebase/firestore';
 import { authedFetch } from '@/lib/api-client';
+import { isConfigKey as isRoomConfigKey } from '@/lib/room-config';
 import { toast } from '@/hooks/use-toast';
 import { calculateExpectedCheckOut, computeStayRealtimeStatus,
   computeRoomCleaningStatus,
@@ -460,16 +459,10 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
     }
 
     if (!companyId) throw new Error('Empresa não selecionada.');
-    const roomsRef = collection(db, `companies/${companyId}/rooms`);
-    const docRef = await addDoc(roomsRef, {
-      ...roomData,
-      status: 'free',
-      active: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    // Preços e dados do quarto só são gravados pelo servidor (só o administrador).
+    const res = await authedFetch('/api/rooms/config', 'POST', { companyId, action: 'create', data: roomData });
     toast({ title: 'Quarto adicionado', description: roomData.name });
-    return docRef.id;
+    return res.roomId as string;
   };
 
   // 2. Atualizar Quarto
@@ -487,6 +480,13 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (!companyId) return;
+    // Preço, mínimo de horas, pacotes, nome, fotos...: só o administrador, pelo servidor (fica registado).
+    // Estado do quarto (livre, limpeza, manutenção): direto, como sempre.
+    if (Object.keys(data).some(isRoomConfigKey)) {
+      await authedFetch('/api/rooms/config', 'POST', { companyId, action: 'update', roomId: id, data });
+      toast({ title: 'Quarto atualizado' });
+      return;
+    }
     const roomDoc = doc(db, `companies/${companyId}/rooms/${id}`);
     await updateDoc(roomDoc, {
       ...payload,
@@ -670,58 +670,32 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     if (!companyId || !user) throw new Error('Sessão ou empresa indisponível.');
 
-    const stayRef = doc(collection(db, `companies/${companyId}/stays`));
-    const now = nowDate();
-    const expectedOut = new Date(now.getTime() + contracted * 3600 * 1000);
-
-    const batch = writeBatch(db);
-
-    batch.set(stayRef, {
+    // O servidor calcula preço, bloco, total, hora de entrada e PIN a partir do quarto do administrador.
+    // `expectedTotal` é o valor que o ecrã mostrou: se já não for o do servidor, não grava.
+    const res = await authedFetch('/api/stays/checkin', 'POST', {
+      companyId,
       roomId: data.roomId,
-      roomName,
-      clientName: data.clientName || 'Hóspede Particular',
-      clientPhone: data.clientPhone || '',
-      clientDoc: data.clientDoc || '',
+      clientName: data.clientName,
+      clientPhone: data.clientPhone,
+      clientDoc: data.clientDoc,
       vehiclePlate: plate,
       vehicleBrand: brand,
       vehicleModel: model,
       vehicleColor: color,
-      accessPin,
-      pinFailedAttempts: 0,
-      pinLockedUntil: null,
-      checkInAt: serverTimestamp(),
-      expectedCheckOutAt: expectedOut.toISOString(),
       contractedHours: contracted,
-      extensions: [],
-      ratePerHourApplied: data.ratePerHour,
-      ...(data.blockHours && data.blockHours > 1 ? { blockHours: data.blockHours } : {}),
-      ...pkg,
-      totalAmountDue: totalDue,
-      totalAmountPaid: data.payAtExit ? 0 : totalDue,
-      ...(data.payAtExit ? { payAtExit: true } : {}),
-      paymentMethod: data.paymentMethod || 'Dinheiro',
-      openedBy: user.id,
-      openedByName: user.username,
-      status: 'open',
-      notes: data.notes || '',
-      createdAt: serverTimestamp(),
+      packageType: data.packageType,
+      payAtExit: data.payAtExit === true,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes,
+      expectedTotal: totalDue,
     });
-
-    const roomRef = doc(db, `companies/${companyId}/rooms/${data.roomId}`);
-    batch.update(roomRef, {
-      status: 'occupied',
-      currentStayId: stayRef.id,
-      updatedAt: serverTimestamp(),
-    });
-
-    await batch.commit();
 
     toast({
       title: 'Check-in efetuado com sucesso!',
-      description: `${roomName} — ${contracted}h contratadas · PIN: ${accessPin}`,
+      description: `${res.roomName || roomName} — ${res.contractedHours ?? contracted}h contratadas · PIN: ${res.accessPin}`,
     });
 
-    return stayRef.id;
+    return res.stayId as string;
   };
 
   // 5. Prorrogar Estadia (Adicionar Horas Extras)
@@ -778,34 +752,11 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     if (!companyId || !user) throw new Error('Sessão indisponível.');
 
-    const stayRef = doc(db, `companies/${companyId}/stays/${stayId}`);
-    const staySnap = await getDoc(stayRef);
-    if (!staySnap.exists()) throw new Error('Estadia não encontrada no servidor.');
-    const stayData = staySnap.data() as Stay;
-
-    const ext: StayExtension = {
-      hours: extHours,
-      addedAt: new Date().toISOString(),
-      addedBy: user.id,
-      addedByName: user.username,
-      notes,
-    };
-
-    const updatedExtensions = [...(stayData.extensions || []), ext];
-    const newExpected = calculateExpectedCheckOut(stayData.checkInAt, stayData.contractedHours, updatedExtensions);
-    const consumptionsTotal = (stayData.consumptions || []).reduce((sum, c) => sum + (Number(c.totalPrice) || 0), 0);
-    const totalHours = totalContractedHours({ contractedHours: stayData.contractedHours, extensions: updatedExtensions });
-    const newTotalDue = stayChargeForHours(stayData as any, totalHours) + consumptionsTotal;
-
-    await updateDoc(stayRef, {
-      extensions: updatedExtensions,
-      expectedCheckOutAt: newExpected.toISOString(),
-      totalAmountDue: newTotalDue,
-    });
-
+    // As horas e o novo total são calculados no servidor, com o preço gravado no check-in.
+    const res = await authedFetch('/api/stays/extend', 'POST', { companyId, stayId, hours: extHours, notes });
     toast({
       title: 'Estadia prorrogada',
-      description: `+${extHours}h adicionadas ao ${stayData.roomName}`,
+      description: `+${extHours}h adicionadas ao ${res.roomName || currentStay.roomName}`,
     });
   };
 
