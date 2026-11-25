@@ -13,6 +13,27 @@ export function computeOffset(serverNow: number, sentAt: number, receivedAt: num
   return Math.round(serverNow + (receivedAt - sentAt) / 2 - receivedAt);
 }
 
+const STORE_KEY = 'msx-clock-offset';
+const STORE_MAX_AGE_MS = 24 * 3600_000;
+
+/** O último desvio bom, guardado no aparelho: ao abrir a app com internet lenta é melhor do que começar sem desvio. */
+function loadStoredOffset(): number | null {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORE_KEY) : null;
+    if (!raw) return null;
+    const o = JSON.parse(raw) as { offset?: number; at?: number };
+    if (!Number.isFinite(o.offset) || !Number.isFinite(o.at) || Date.now() - (o.at as number) > STORE_MAX_AGE_MS) return null;
+    return o.offset as number;
+  } catch { return null; }
+}
+function storeOffset(ms: number) {
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(STORE_KEY, JSON.stringify({ offset: ms, at: Date.now() })); } catch { /* sem armazenamento */ }
+}
+if (typeof window !== 'undefined') {
+  const stored = loadStoredOffset();
+  if (stored !== null) offsetMs = stored;
+}
+
 export const setServerOffset = (ms: number) => { offsetMs = Number.isFinite(ms) ? ms : 0; };
 export const getServerOffset = () => offsetMs;
 
@@ -57,7 +78,9 @@ export async function syncServerTime(): Promise<number> {
   for (let i = 0; i < 3; i++) {
     try {
       const sentPerf = performance.now(); // a latência mede-se com o relógio monotónico (não salta se o relógio do PC for acertado)
-      const res = await fetch('/api/time', { cache: 'no-store' });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000); // internet muito lenta: não fica à espera para sempre
+      const res = await fetch('/api/time', { cache: 'no-store', signal: ctrl.signal }).finally(() => clearTimeout(timer));
       const received = Date.now();
       const rtt = performance.now() - sentPerf;
       if (!res.ok) continue;
@@ -67,6 +90,6 @@ export async function syncServerTime(): Promise<number> {
     } catch { /* sem ligação: tenta a seguinte */ }
   }
   const best = pickBestSample(samples);
-  if (best) setServerOffset(best.offset);
+  if (best) { setServerOffset(best.offset); storeOffset(best.offset); }
   return offsetMs;
 }

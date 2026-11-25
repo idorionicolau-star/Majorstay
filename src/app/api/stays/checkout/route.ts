@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { validateDiscount } from '@/lib/discount';
 import { NextResponse } from 'next/server';
 import { initializeAdmin, verifyIdToken } from '@/lib/firebase-admin';
-import { calculateStayPricing, normalizeDate, totalContractedHours } from '@/lib/hospitality-calc';
+import { buildQuote, priceChanged, stayPricingAt } from '@/lib/checkout-pricing';
 import { nextGuideNumber } from '@/lib/sale-plan';
 import type { Sale } from '@/lib/types';
 
@@ -59,7 +59,7 @@ async function authorizeUser(req: Request, companyId: string) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { companyId, stayId, roomId, amountPaid: customAmountPaid, paymentMethod = 'Dinheiro', notes = '', roomNextStatus = 'cleaning', discountAmount, discountReason } = body;
+    const { action, expectedTotal, companyId, stayId, roomId, amountPaid: customAmountPaid, paymentMethod = 'Dinheiro', notes = '', roomNextStatus = 'cleaning', discountAmount, discountReason } = body;
 
     if (!companyId || !stayId || !roomId) {
       return NextResponse.json({ error: 'Parâmetros obrigatórios em falta: companyId, stayId, roomId.' }, { status: 400 });
@@ -72,6 +72,13 @@ export async function POST(req: Request) {
     const stayRef = db.doc(`companies/${companyId}/stays/${stayId}`);
     const roomRef = db.doc(`companies/${companyId}/rooms/${roomId}`);
     const companyRef = db.doc(`companies/${companyId}`);
+
+    // Cotação: a hora e o valor do check-out pela hora do servidor (o ecrã usa isto em vez do relógio do aparelho). Não grava nada.
+    if (action === 'quote') {
+      const [stayQ, roomQ] = await Promise.all([stayRef.get(), roomRef.get()]);
+      if (!stayQ.exists || stayQ.data()?.status !== 'open') return NextResponse.json({ error: 'Estadia não encontrada ou já encerrada.' }, { status: 404 });
+      return NextResponse.json({ success: true, quote: buildQuote(stayQ.data() || {}, roomQ.data() || {}, new Date()) });
+    }
 
     // Pedidos de bar dos hóspedes ainda por confirmar não podem ficar de fora da fatura.
     const pendingOrders = await db
@@ -111,41 +118,23 @@ export async function POST(req: Request) {
 
       // Carimbo oficial do servidor
       const serverNow = new Date();
-      const checkInDate = normalizeDate(stayData.checkInAt);
-      const contractedHours = totalContractedHours(stayData);
-      const ratePerHour = Number(stayData.ratePerHourApplied || roomData.ratePerHour || 0);
-
-      // Validação e recálculo dos consumos no servidor (sem confiar no totalPrice guardado)
-      const sanitizedConsumptions = (stayData.consumptions || []).map((c: any) => {
-        const qty = Number(c.quantity);
-        const unitPrice = Number(c.unitPrice);
-        if (!Number.isFinite(qty) || !Number.isFinite(unitPrice) || qty <= 0 || unitPrice < 0) {
-          throw new Error(`Consumo com valor inválido detectado na estadia (${c.productName || 'Item'}): quantidade=${c.quantity}, preço=${c.unitPrice}.`);
-        }
-        return {
-          ...c,
-          quantity: qty,
-          unitPrice,
-          totalPrice: qty * unitPrice,
-        };
-      });
-
-      const pricing = calculateStayPricing({
-        checkInAt: checkInDate,
-        checkOutAt: serverNow,
-        contractedHours,
-        ratePerHour,
-        graceMinutes: 10,
-        consumptions: sanitizedConsumptions,
-        packagePrice: Number(stayData.packagePrice) || undefined,
-        packageHours: Number(stayData.packageHours) || undefined,
-        blockHours: Number(stayData.blockHours) || undefined,
-      });
+      const { pricing, checkInDate, sanitizedConsumptions } = (() => {
+        const r = stayPricingAt(stayData, roomData, serverNow);
+        return { pricing: r.pricing, checkInDate: r.checkInDate, sanitizedConsumptions: r.consumptions };
+      })();
 
       // Desconto: motivo obrigatório, nunca acima do total; fica registado com o nome de quem o deu
       const discount = validateDiscount(discountAmount, discountReason, pricing.totalAmountDue);
       const grossTotal = pricing.totalAmountDue;
       const totalAmountDue = Math.round((grossTotal - discount.amount) * 100) / 100;
+      // O valor que o ecrã mostrou tem de ser o do servidor: se a hora do ecrã estava errada, trava e mostra o valor certo
+      if (priceChanged(expectedTotal, totalAmountDue)) {
+        throw Object.assign(new Error('O valor mudou: o servidor calculou o check-out pela hora certa. Confira o novo valor e conclua de novo.'), {
+          code: 'PRICE_CHANGED',
+          quote: buildQuote(stayData, roomData, serverNow),
+          serverTotal: totalAmountDue,
+        });
+      }
       const finalAmountPaid = typeof customAmountPaid === 'number' && !isNaN(customAmountPaid)
         ? customAmountPaid
         : totalAmountDue;
@@ -264,6 +253,9 @@ export async function POST(req: Request) {
       data: result,
     });
   } catch (err: any) {
+    if (err?.code === 'PRICE_CHANGED') {
+      return NextResponse.json({ error: err.message, code: 'PRICE_CHANGED', quote: err.quote, serverTotal: err.serverTotal }, { status: 409 });
+    }
     console.error('Erro no checkout de estadia:', err);
     return NextResponse.json(
       { error: err.message || 'Ocorreu um erro ao processar o check-out.' },

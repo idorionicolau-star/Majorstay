@@ -1,8 +1,8 @@
 'use client';
 
 import { formatHotelTime } from '@/lib/server-time';
-import { nowMs, nowDate, syncServerTime } from '@/lib/server-time';
-import React, { useState, useEffect } from 'react';
+import { useCheckoutClock } from '@/hooks/use-checkout-clock';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -50,27 +50,17 @@ const PAYMENT_METHODS = [
 
 export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialogProps) {
   const { checkOutStay } = useRooms();
-  const { companyData, user } = useInventory();
+  const { companyData, user, companyId, isGuest } = useInventory();
 
   const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
   const [roomNextStatus, setRoomNextStatus] = useState<'cleaning' | 'free'>('cleaning');
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [now, setNow] = useState(nowDate());
+  const clock = useCheckoutClock({ open, enabled: !isGuest, companyId, stayId: stay?.id, roomId: room?.id || stay?.roomId });
+  const now = clock.now();
   const [discountInput, setDiscountInput] = useState('');
   const [discountReason, setDiscountReason] = useState('');
   const [discountNote, setDiscountNote] = useState('');
-
-  // Atualizar o relógio a cada 10 segundos enquanto o diálogo estiver aberto
-  useEffect(() => {
-    if (!open) return;
-    setNow(nowDate());
-    // ao abrir o check-out volta a acertar o relógio com o servidor (o desvio guardado pode estar velho)
-    let alive = true;
-    syncServerTime().then(() => { if (alive) setNow(nowDate()); });
-    const interval = setInterval(() => setNow(nowDate()), 10000);
-    return () => { alive = false; clearInterval(interval); };
-  }, [open]);
 
   if (!stay) return null;
 
@@ -132,7 +122,7 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
     if (!stay) return;
     const simulatedStay: Stay = {
       ...stay,
-      checkOutAt: nowDate(),
+      checkOutAt: now,
       billedHours: pricing.billedHours,
       totalAmountPaid: finalTotal,
       paymentMethod,
@@ -152,6 +142,8 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
       setLoading(true);
       await checkOutStay(stay.id, {
         amountPaid: finalTotal,
+        // o servidor confere: se a hora do ecrã estava errada e o valor é outro, trava e mostra o certo
+        ...(!isGuest ? { expectedTotal: finalTotal } : {}),
         ...(discountAmount > 0 ? { discountAmount, discountReason: discountReasonFull } : {}),
         paymentMethod,
         roomNextStatus,
@@ -163,6 +155,15 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
       setDiscountReason('');
       setDiscountNote('');
     } catch (err: any) {
+      if (err?.data?.code === 'PRICE_CHANGED' && err.data.quote) {
+        clock.applyQuote(err.data.quote);
+        toast({
+          variant: 'destructive',
+          title: 'O valor mudou',
+          description: `Pela hora certa do servidor, o total passou a ser ${formatCurrency(err.data.serverTotal ?? err.data.quote.pricing.totalAmountDue)}. Confira o ecrã e conclua de novo.`,
+        });
+        return;
+      }
       console.error('Erro no checkout:', err);
       toast({
         variant: 'destructive',
@@ -235,6 +236,10 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
                   {formatHotelTime(now)}
                 </span>
               </div>
+              <div className="col-span-2 text-[11px] text-slate-500">
+                Fim do tempo contratado: <strong className="text-slate-700 dark:text-slate-200">{formatHotelTime(new Date(checkInDate.getTime() + contractedHours * 3600_000))}</strong>
+                {!isGuest && clock.source === 'server' && <span className="text-emerald-600"> · hora do servidor</span>}
+              </div>
             </div>
 
             <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 grid grid-cols-2 gap-3 text-xs">
@@ -252,6 +257,13 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
               </div>
             </div>
 
+            {!isGuest && clock.source === 'estimate' && (
+              <div className="p-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-[11px] font-semibold text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>{clock.failed ? 'Sem resposta do servidor: a hora e o valor são estimados.' : 'A confirmar a hora com o servidor…'} Ao concluir, o servidor confere o valor pela hora certa.</span>
+              </div>
+            )}
+
             {/* Alerta de Tempo Excedido */}
             {pricing.isOvertime ? (
               <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2.5">
@@ -262,6 +274,13 @@ export function CheckOutDialog({ open, onOpenChange, stay, room }: CheckOutDialo
                     Regra oficial: Hora iniciada conta como hora inteira. Serão faturadas <strong>{pricing.billedHours} horas</strong>.
                   </p>
                 </div>
+              </div>
+            ) : pricing.durationMinutes < contractedHours * 60 - 10 ? (
+              <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  Saída antes do fim do tempo contratado (faltam {Math.max(1, contractedHours * 60 - pricing.durationMinutes)} min). Cobra-se o mínimo contratado: <strong>{pricing.billedHours}h</strong>.
+                </span>
               </div>
             ) : (
               <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">

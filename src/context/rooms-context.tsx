@@ -92,6 +92,8 @@ interface RoomsContextType {
       notes?: string;
       discountAmount?: number;
       discountReason?: string;
+      /** O total que o ecrã mostrou: se o servidor calcular outro (hora do ecrã errada), o check-out é travado. */
+      expectedTotal?: number;
     }
   ) => Promise<any>;
   /** Matrícula, marca, modelo e cor do veículo, depois do check-in (a receção costuma preencher depois). */
@@ -817,6 +819,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       notes?: string;
       discountAmount?: number;
       discountReason?: string;
+      expectedTotal?: number;
     }
   ): Promise<any> => {
     const currentStay = stays.find((s) => s.id === stayId);
@@ -843,6 +846,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
       notes: options?.notes,
       discountAmount: options?.discountAmount,
       discountReason: options?.discountReason,
+      expectedTotal: options?.expectedTotal,
     });
 
     const data = result.data;
