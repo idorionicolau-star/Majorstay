@@ -25,6 +25,6 @@ export async function authedFetch(url: string, method: string, body: Record<stri
         clearTimeout(timer);
     }
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || `Erro ${res.status}`);
+    if (!res.ok) throw Object.assign(new Error(json.error || `Erro ${res.status}`), { status: res.status, data: json });
     return json;
 }
