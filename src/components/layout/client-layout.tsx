@@ -17,6 +17,7 @@ import { SwipeNav } from './swipe-nav';
 import { PushPrompt } from '@/components/push-notifications';
 import { PriceReviewBanner } from '@/components/price-reviews';
 import { OfflineBanner, UpdateNotice } from '@/components/pwa-register';
+import { VersionWatcher } from '@/components/version-watcher';
 import { InstallPrompt } from '@/components/install-prompt';
 import { TourHost } from '@/components/onboarding/app-tour';
 import { GuideHost } from '@/components/guide/guide-host';
@@ -246,6 +247,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                 <EmailConfirmHost />
                 <OfflineBanner />
                 <UpdateNotice />
+                <VersionWatcher />
                 <InstallPrompt />
                 <PushPrompt />
                 <PriceReviewBanner />

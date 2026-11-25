@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Versão deste código (commit da Vercel): o ecrã compara-a com /api/version e recarrega se estiver desatualizado.
+  env: { NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA || 'dev' },
   // Erros de tipos agora quebram o build (antes eram ignorados e escondiam bugs reais).
   // eslint: {
   //   ignoreDuringBuilds: true,
