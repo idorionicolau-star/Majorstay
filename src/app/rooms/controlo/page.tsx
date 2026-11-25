@@ -11,7 +11,13 @@ import { toast } from '@/hooks/use-toast';
 
 type Rejected = { id: string; roomName: string; total: number; items: { name: string; quantity: number }[]; reason: string; by: string; at: string };
 type ShiftRow = { id: string; employeeName: string; openedAt: string | null; closedAt: string | null; status: 'open' | 'closed'; openingCash: number; countedCash: number | null; expectedCash: number | null; difference: number | null; notes: string };
+type RoomChange = { id: string; action: string; roomName: string; by: string; at: string; before: Record<string, any>; after: Record<string, any> };
 type Removed = { id: string; roomName: string; value: number; reason: string; by: string; at: string };
+
+const ROOM_FIELD_LABEL: Record<string, string> = {
+  name: 'Nome', type: 'Tipo', ratePerHour: 'Preço', minimumHours: 'Mín. horas', overnightPrice: 'Pernoite', overnightEndHour: 'Saída pernoite (h)',
+  dailyPrice: 'Diária', cleaningDurationMinutes: 'Limpeza (min)', notes: 'Notas', imagesCount: 'Fotos', active: 'Ativo',
+};
 
 function when(iso: string) {
   const d = new Date(iso);
@@ -26,6 +32,7 @@ export default function ControloPage() {
   const [rejected, setRejected] = useState<Rejected[]>([]);
   const [removed, setRemoved] = useState<Removed[]>([]);
   const [shifts, setShifts] = useState<ShiftRow[]>([]);
+  const [roomChanges, setRoomChanges] = useState<RoomChange[]>([]);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [closeAmount, setCloseAmount] = useState('');
   const [closeBusy, setCloseBusy] = useState(false);
@@ -57,6 +64,12 @@ export default function ControloPage() {
         const sj = await sr.json().catch(() => ({}));
         setShifts(Array.isArray(sj.recent) ? sj.recent : []);
       } catch { setShifts([]); }
+      // alterações a quartos e preços: se falhar, o resto do controlo continua a aparecer
+      try {
+        const cr = await fetch(`/api/rooms/config?companyId=${encodeURIComponent(companyId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+        const cj = await cr.json().catch(() => ({}));
+        setRoomChanges(Array.isArray(cj.changes) ? cj.changes : []);
+      } catch { setRoomChanges([]); }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível carregar.');
     } finally {
@@ -189,6 +202,30 @@ export default function ControloPage() {
                           </p>
                         )}
                         {t.notes && <p className="text-xs text-slate-500 mt-1">Nota: {t.notes}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">Alterações a quartos e preços ({roomChanges.length})</h2>
+                {roomChanges.length === 0 ? (
+                  <p className="text-sm text-slate-400">Nenhuma alteração registada desde esta proteção.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {roomChanges.map((c) => (
+                      <li key={c.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#191E25] p-3.5 text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold truncate">{c.roomName}{c.action === 'create_room' ? ' (novo)' : ''}</span>
+                          <span className="text-xs text-slate-400 shrink-0">{when(c.at)}</span>
+                        </div>
+                        {c.action === 'update_room' && (
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                            {Object.keys(c.after).map((k) => `${ROOM_FIELD_LABEL[k] || k}: ${c.before[k] ?? '—'} → ${c.after[k]}`).join(' · ')}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500 mt-1">Por <b>{c.by || '—'}</b></p>
                       </li>
                     ))}
                   </ul>
